@@ -1,8 +1,6 @@
 import { isSupabaseConfigured, supabase } from './supabase';
 import { serializeBlocksToHtml, slugify } from './blocks';
 import type {
-  CommentRecord,
-  CommentStatus,
   GutenbergBlock,
   PostRecord,
   PostRevision,
@@ -20,7 +18,6 @@ const memoryStore: {
   revisions: PostRevision[];
   terms: Term[];
   termLinks: Array<{ post_id: string; term_id: string }>;
-  comments: CommentRecord[];
 } = {
   posts: [
     {
@@ -44,7 +41,6 @@ const memoryStore: {
       featured_media_id: null,
       published_at: new Date().toISOString(),
       scheduled_at: null,
-      comment_status: false,
       parent_id: null,
       menu_order: 1,
       meta: {},
@@ -52,7 +48,6 @@ const memoryStore: {
       updated_at: new Date().toISOString(),
       author: { id: 'preview-administrator', display_name: 'Admin Huria', email: 'admin@hkbphutaraja.or.id' },
       terms: [],
-      comment_count: 0,
     },
     {
       id: 'sample-post-1',
@@ -75,7 +70,6 @@ const memoryStore: {
       featured_media_id: null,
       published_at: new Date().toISOString(),
       scheduled_at: null,
-      comment_status: true,
       parent_id: null,
       menu_order: 0,
       meta: {},
@@ -83,7 +77,6 @@ const memoryStore: {
       updated_at: new Date().toISOString(),
       author: { id: 'preview-administrator', display_name: 'Admin Huria', email: 'admin@hkbphutaraja.or.id' },
       terms: [],
-      comment_count: 1,
     },
   ],
   revisions: [],
@@ -123,27 +116,6 @@ const memoryStore: {
     },
   ],
   termLinks: [{ post_id: 'sample-post-1', term_id: 'term-cat-1' }],
-  comments: [
-    {
-      id: 'cmt-1',
-      post_id: 'sample-post-1',
-      parent_id: null,
-      author_id: null,
-      author_name: 'St. M. Lumbantobing',
-      author_email: 'sintua@hkbphutaraja.or.id',
-      content: 'Tuhan memberkati pelayanan seluruh majelis dan jemaat di Ressort Hutaraja.',
-      status: 'pending',
-      ip_address: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      post: {
-        id: 'sample-post-1',
-        title: 'Selamat Datang di Portal Resmi HKBP Ressort Hutaraja',
-        slug: 'selamat-datang-portal-hkbp-hutaraja',
-        type: 'post',
-      },
-    },
-  ],
 };
 
 // ==============================================================================
@@ -162,9 +134,6 @@ export async function fetchPostsByType(type: PostType): Promise<{
           .filter((l) => l.post_id === p.id)
           .map((l) => memoryStore.terms.find((t) => t.id === l.term_id))
           .filter((t): t is Term => Boolean(t)),
-        comment_count: memoryStore.comments.filter(
-          (c) => c.post_id === p.id && c.status !== 'trash'
-        ).length,
       }))
       .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
     return { posts: list, error: null };
@@ -250,7 +219,6 @@ export interface SavePostInput {
   featured_media_id?: string | null;
   published_at?: string | null;
   scheduled_at?: string | null;
-  comment_status: boolean;
   parent_id?: string | null;
   menu_order?: number;
   meta?: Record<string, unknown>;
@@ -289,7 +257,6 @@ export async function savePost(input: SavePostInput): Promise<{
         featured_media_id: input.featured_media_id ?? null,
         published_at: publishedAt,
         scheduled_at: input.scheduled_at ?? null,
-        comment_status: input.comment_status,
         parent_id: input.parent_id ?? null,
         menu_order: input.menu_order ?? 0,
         meta: input.meta ?? existing.meta,
@@ -310,7 +277,6 @@ export async function savePost(input: SavePostInput): Promise<{
         featured_media_id: input.featured_media_id ?? null,
         published_at: publishedAt,
         scheduled_at: input.scheduled_at ?? null,
-        comment_status: input.comment_status,
         parent_id: input.parent_id ?? null,
         menu_order: input.menu_order ?? 0,
         meta: input.meta ?? {},
@@ -369,7 +335,6 @@ export async function savePost(input: SavePostInput): Promise<{
     featured_media_id: input.featured_media_id ?? null,
     published_at: publishedAt,
     scheduled_at: input.scheduled_at ?? null,
-    comment_status: input.comment_status,
     parent_id: input.parent_id ?? null,
     menu_order: input.menu_order ?? 0,
     meta: input.meta ?? {},
@@ -431,7 +396,6 @@ export async function updatePostsStatusOrQuickEdit(
     title: string;
     slug: string;
     published_at: string | null;
-    comment_status: boolean;
   }>,
   categoryIds?: string[]
 ): Promise<{ error: string | null }> {
@@ -613,85 +577,5 @@ export async function deleteTerms(ids: string[]): Promise<{ error: string | null
     return { error: null };
   }
   const { error } = await supabase.from('terms').delete().in('id', ids);
-  return { error: error ? error.message : null };
-}
-
-// ==============================================================================
-// KOMENTAR MODERASI
-// ==============================================================================
-export async function fetchComments(): Promise<{
-  comments: CommentRecord[];
-  error: string | null;
-}> {
-  if (!isSupabaseConfigured || !supabase) {
-    return { comments: [...memoryStore.comments], error: null };
-  }
-
-  const { data, error } = await supabase
-    .from('comments')
-    .select('*, post:posts(id, title, slug, type)')
-    .order('created_at', { ascending: false });
-
-  if (error) return { comments: [], error: error.message };
-  return { comments: (data as CommentRecord[]) || [], error: null };
-}
-
-export async function updateCommentsStatus(
-  ids: string[],
-  status: CommentStatus
-): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured || !supabase) {
-    memoryStore.comments = memoryStore.comments.map((c) =>
-      ids.includes(c.id) ? { ...c, status } : c
-    );
-    return { error: null };
-  }
-  const { error } = await supabase.from('comments').update({ status }).in('id', ids);
-  return { error: error ? error.message : null };
-}
-
-export async function deleteCommentsPermanently(ids: string[]): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured || !supabase) {
-    memoryStore.comments = memoryStore.comments.filter((c) => !ids.includes(c.id));
-    return { error: null };
-  }
-  const { error } = await supabase.from('comments').delete().in('id', ids);
-  return { error: error ? error.message : null };
-}
-
-export async function replyToComment(input: {
-  post_id: string;
-  parent_id: string;
-  author_id: string | null;
-  author_name: string;
-  author_email: string;
-  content: string;
-}): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured || !supabase) {
-    memoryStore.comments.unshift({
-      id: `cmt-${Date.now()}`,
-      post_id: input.post_id,
-      parent_id: input.parent_id,
-      author_id: input.author_id,
-      author_name: input.author_name,
-      author_email: input.author_email,
-      content: input.content,
-      status: 'approved',
-      ip_address: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-    return { error: null };
-  }
-
-  const { error } = await supabase.from('comments').insert({
-    post_id: input.post_id,
-    parent_id: input.parent_id,
-    author_id: input.author_id,
-    author_name: input.author_name,
-    author_email: input.author_email,
-    content: input.content,
-    status: 'approved',
-  });
   return { error: error ? error.message : null };
 }

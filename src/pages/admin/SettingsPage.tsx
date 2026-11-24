@@ -12,7 +12,6 @@ export type SettingsSection =
   | 'general'
   | 'writing'
   | 'reading'
-  | 'discussion'
   | 'media'
   | 'permalink';
 
@@ -20,7 +19,6 @@ const SECTION_TITLES: Record<SettingsSection, string> = {
   general: 'Pengaturan Umum',
   writing: 'Pengaturan Penulisan',
   reading: 'Pengaturan Membaca',
-  discussion: 'Pengaturan Diskusi',
   media: 'Pengaturan Media',
   permalink: 'Pengaturan Permalink',
 };
@@ -185,32 +183,6 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
               />
               <span className="text-[#50575e]">pos per halaman</span>
             </div>
-          </div>
-        )}
-
-        {section === 'discussion' && (
-          <div className="space-y-3">
-            <label className="flex items-start gap-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={options.default_comment_status === 'open'}
-                onChange={(e) =>
-                  setOptions({
-                    ...options,
-                    default_comment_status: e.target.checked ? 'open' : 'closed',
-                  })
-                }
-                className="mt-0.5"
-              />
-              <div>
-                <p className="font-semibold text-[#1d2327]">
-                  Izinkan pengunjung mengirimkan komentar pada artikel baru
-                </p>
-                <p className="text-[12px] text-[#50575e]">
-                  Semua komentar publik otomatis berstatus Menunggu Moderasi hingga disetujui oleh Editor atau Admin.
-                </p>
-              </div>
-            </label>
           </div>
         )}
 

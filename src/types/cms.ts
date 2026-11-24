@@ -18,8 +18,6 @@ export type PostStatus =
   | 'private'
   | 'trash';
 
-export type CommentStatus = 'approved' | 'pending' | 'spam' | 'trash';
-
 export type TaxonomyType = 'category' | 'post_tag';
 
 export interface Wijk {
@@ -117,7 +115,6 @@ export interface PostRecord {
   featured_media_id: string | null;
   published_at: string | null;
   scheduled_at: string | null;
-  comment_status: boolean;
   parent_id: string | null;
   menu_order: number;
   meta: Record<string, unknown>;
@@ -129,7 +126,6 @@ export interface PostRecord {
     email: string;
   } | null;
   terms?: Term[];
-  comment_count?: number;
 }
 
 export interface PostRevision {
@@ -144,26 +140,6 @@ export interface PostRevision {
   created_at: string;
   author?: {
     display_name: string;
-  } | null;
-}
-
-export interface CommentRecord {
-  id: string;
-  post_id: string;
-  parent_id: string | null;
-  author_id: string | null;
-  author_name: string;
-  author_email: string;
-  content: string;
-  status: CommentStatus;
-  ip_address: string;
-  created_at: string;
-  updated_at: string;
-  post?: {
-    id: string;
-    title: string;
-    slug: string;
-    type: PostType;
   } | null;
 }
 
@@ -200,7 +176,6 @@ export interface AdminMenuEntry {
   path: string;
   iconName: string;
   capability: string;
-  badgeCount?: number;
   separatorAfter?: boolean;
   submenus?: AdminSubmenuItem[];
 }
@@ -263,6 +238,26 @@ export interface WidgetRecord {
   updated_at: string;
 }
 
+export type HomepageSectionId =
+  | 'hero'
+  | 'quick_links'
+  | 'announcements'
+  | 'schedule'
+  | 'warta'
+  | 'news'
+  | 'wijk'
+  | 'contact';
+
+export interface HomepageSectionConfig {
+  id: HomepageSectionId;
+  enabled: boolean;
+  title?: string;
+  subtitle?: string;
+  columns?: 1 | 2 | 3 | 4;
+  limit?: number;
+  variant?: 'split' | 'centered' | 'banner' | 'compact';
+}
+
 export interface SiteOptionsMap {
   site_title: string;
   site_tagline: string;
@@ -273,7 +268,6 @@ export interface SiteOptionsMap {
   time_format: string;
   permalink_structure: string;
   posts_per_page: number;
-  default_comment_status: 'open' | 'closed';
   default_category_id?: string;
   max_upload_size_mb: number;
   allowed_upload_mimes: string[];
@@ -288,6 +282,7 @@ export interface SiteOptionsMap {
   church_address: string;
   church_phone?: string;
   daily_verse: { reference: string; text: string };
+  homepage_layout?: HomepageSectionConfig[];
 }
 
 export interface JemaatRecord {

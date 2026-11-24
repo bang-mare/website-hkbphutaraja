@@ -104,7 +104,6 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
   const [excerpt, setExcerpt] = useState('');
   const [status, setStatus] = useState<PostStatus>('draft');
   const [scheduledAt, setScheduledAt] = useState('');
-  const [commentStatus, setCommentStatus] = useState(postType !== 'page');
   const [featuredUrl, setFeaturedUrl] = useState('');
   const [featuredMediaId, setFeaturedMediaId] = useState<string | null>(null);
   const [parentId, setParentId] = useState<string>('');
@@ -156,7 +155,6 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
     tags: true,
     featured: false,
     excerpt: false,
-    discussion: false,
     pageAttr: false,
     wartaMeta: true,
     revisions: true,
@@ -203,7 +201,6 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
         setExcerpt(post.excerpt || '');
         setStatus(post.status);
         setScheduledAt(post.scheduled_at ? post.scheduled_at.slice(0, 16) : '');
-        setCommentStatus(post.comment_status);
         setParentId(post.parent_id || '');
         setMenuOrder(post.menu_order || 0);
         setFeaturedMediaId(post.featured_media_id || null);
@@ -235,7 +232,6 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
         setExcerpt('');
         setStatus('draft');
         setScheduledAt('');
-        setCommentStatus(postType !== 'page');
         setFeaturedMediaId(null);
         setFeaturedUrl('');
         setWartaDate('');
@@ -376,7 +372,6 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
           targetStatus === 'future' && scheduledAt
             ? new Date(scheduledAt).toISOString()
             : null,
-        comment_status: commentStatus,
         parent_id: postType === 'page' && parentId ? parentId : null,
         menu_order: postType === 'page' ? menuOrder : 0,
         meta: {
@@ -441,7 +436,6 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
     [
       addNotice,
       blocks,
-      commentStatus,
       excerpt,
       featuredMediaId,
       featuredUrl,
@@ -1653,38 +1647,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                   )}
                 </div>
 
-                {/* 8. Diskusi */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => toggleAccordion('discussion')}
-                    className="w-full px-4 py-3 flex items-center justify-between font-medium text-[#1d2327] hover:bg-[#f6f7f7] cursor-pointer"
-                  >
-                    <span>Diskusi</span>
-                    {openAccordions.discussion ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
-                  </button>
-                  {openAccordions.discussion && (
-                    <div className="px-4 pb-4">
-                      <label className="inline-flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={commentStatus}
-                          onChange={(e) => {
-                            setCommentStatus(e.target.checked);
-                            setIsDirty(true);
-                          }}
-                        />
-                        <span>Izinkan komentar</span>
-                      </label>
-                    </div>
-                  )}
-                </div>
-
-                {/* 9. Atribut Halaman */}
+                {/* 8. Atribut Halaman */}
                 {postType === 'page' && (
                   <div>
                     <button

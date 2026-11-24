@@ -1,19 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, MessageSquare, Search, User } from 'lucide-react';
+import { ArrowLeft, Calendar, Search, User } from 'lucide-react';
 import { usePublicSite } from '../../layouts/PublicLayout';
 import { usePageSeo } from '../../hooks/usePageSeo';
 import { sanitizeHtml } from '../../lib/blocks';
 import { fetchTerms } from '../../lib/cmsData';
 import {
-  fetchApprovedCommentsForPost,
   fetchPublishedPostBySlug,
   fetchPublishedPosts,
   resolvePostFeaturedImage,
-  submitPublicComment,
 } from '../../lib/publicData';
 import { PostThumbnail } from '../../components/PostThumbnail';
-import type { CommentRecord, PostRecord, Term } from '../../types/cms';
+import type { PostRecord, Term } from '../../types/cms';
 
 function normalizeMediaRef(url: string): string {
   const raw = url.trim();
@@ -74,7 +72,6 @@ export function BlogPublicPage({
   const [categories, setCategories] = useState<Term[]>([]);
   const [tags, setTags] = useState<Term[]>([]);
   const [detail, setDetail] = useState<PostRecord | null>(null);
-  const [comments, setComments] = useState<CommentRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState('');
@@ -85,13 +82,6 @@ export function BlogPublicPage({
     filterMode === 'tag' && slug ? slug : 'all'
   );
   const [page, setPage] = useState(1);
-
-  // Comment form
-  const [cName, setCName] = useState('');
-  const [cEmail, setCEmail] = useState('');
-  const [cBody, setCBody] = useState('');
-  const [cSending, setCSending] = useState(false);
-  const [cNotice, setCNotice] = useState<string | null>(null);
 
   usePageSeo({
     title: isDetail && detail ? detail.title : 'Berita & Artikel Huria',
@@ -116,12 +106,8 @@ export function BlogPublicPage({
   useEffect(() => {
     setLoading(true);
     if (isDetail && slug) {
-      fetchPublishedPostBySlug(slug, 'post').then(async (post) => {
+      fetchPublishedPostBySlug(slug, 'post').then((post) => {
         setDetail(post);
-        if (post) {
-          const cmts = await fetchApprovedCommentsForPost(post.id);
-          setComments(cmts);
-        }
         setLoading(false);
       });
     } else {
@@ -169,29 +155,6 @@ export function BlogPublicPage({
   const primaryColor = options.theme_primary_color || '#0f294a';
   const accentColor = options.theme_accent_color || '#d97706';
   const sidebarWidgets = widgets.filter((w) => w.area === 'sidebar' && w.is_active);
-
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!detail || !cName.trim() || !cBody.trim()) return;
-    setCSending(true);
-    const { error } = await submitPublicComment({
-      post_id: detail.id,
-      author_name: cName,
-      author_email: cEmail,
-      content: cBody,
-    });
-    setCSending(false);
-    if (error) {
-      setCNotice(`Gagal mengirim komentar: ${error}`);
-    } else {
-      setCName('');
-      setCEmail('');
-      setCBody('');
-      setCNotice(
-        'Terima kasih! Komentar Anda telah dikirim dan sedang menunggu persetujuan moderator.'
-      );
-    }
-  };
 
   if (isDetail) {
     if (loading) {
@@ -298,97 +261,6 @@ export function BlogPublicPage({
             __html: sanitizeHtml(bodyHtml || '<p>Belum ada isi artikel.</p>'),
           }}
         />
-
-        {/* Komentar */}
-        <section className="pt-8 border-t border-[#e2e8f0] space-y-6">
-          <h2 className="font-display text-2xl font-bold text-[#0f172a] flex items-center gap-2">
-            <MessageSquare className="w-5 h-5" style={{ color: primaryColor }} />
-            <span>Komentar Jemaat ({comments.length})</span>
-          </h2>
-
-          {comments.length > 0 && (
-            <div className="space-y-4">
-              {comments.map((c) => (
-                <div key={c.id} className="surface-card p-4">
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <span className="font-semibold text-sm text-[#0f172a]">
-                      {c.author_name}
-                    </span>
-                    <span className="text-xs text-slate-500 font-mono-num">
-                      {new Intl.DateTimeFormat('id-ID', {
-                        dateStyle: 'medium',
-                      }).format(new Date(c.created_at))}
-                    </span>
-                  </div>
-                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-                    {c.content}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {detail.comment_status && options.default_comment_status !== 'closed' && (
-            <form
-              onSubmit={handleSubmitComment}
-              className="surface-card p-6 space-y-4"
-            >
-              <h3 className="font-display text-lg font-bold text-[#0f172a]">
-                Tinggalkan Komentar
-              </h3>
-              {cNotice && (
-                <div className="p-3 bg-amber-50 border border-amber-200 text-sm text-slate-800 rounded-lg">
-                  {cNotice}
-                </div>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Nama Lengkap *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={cName}
-                    onChange={(e) => setCName(e.target.value)}
-                    className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#0f294a]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Alamat Email
-                  </label>
-                  <input
-                    type="email"
-                    value={cEmail}
-                    onChange={(e) => setCEmail(e.target.value)}
-                    className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#0f294a]"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Komentar *
-                </label>
-                <textarea
-                  rows={4}
-                  required
-                  value={cBody}
-                  onChange={(e) => setCBody(e.target.value)}
-                  className="w-full p-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#0f294a]"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={cSending}
-                style={{ backgroundColor: primaryColor, borderColor: primaryColor }}
-                className="btn-navy px-5 py-2 text-sm rounded-lg cursor-pointer"
-              >
-                {cSending ? 'Mengirim...' : 'Kirim Komentar'}
-              </button>
-            </form>
-          )}
-        </section>
       </article>
     );
   }

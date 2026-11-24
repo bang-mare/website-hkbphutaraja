@@ -126,7 +126,6 @@ export function GalleryAdminPage({ createMode = false }: { createMode?: boolean 
       excerpt: excerpt.trim(),
       status,
       author_id: profile?.id || null,
-      comment_status: false,
       meta: {
         featured_url: coverUrl || photos[0]?.url || '',
         album_photos: photos,

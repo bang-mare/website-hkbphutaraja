@@ -18,7 +18,6 @@ export type Capability =
   | 'publish_posts'
   | 'manage_media'
   | 'manage_pages'
-  | 'manage_comments'
   | 'manage_warta'
   | 'manage_jadwal'
   | 'manage_jemaat'
@@ -38,7 +37,6 @@ const ROLE_CAPABILITIES: Record<UserRole, Capability[]> = {
     'publish_posts',
     'manage_media',
     'manage_pages',
-    'manage_comments',
     'manage_warta',
     'manage_jadwal',
     'manage_jemaat',
@@ -57,7 +55,6 @@ const ROLE_CAPABILITIES: Record<UserRole, Capability[]> = {
     'publish_posts',
     'manage_media',
     'manage_pages',
-    'manage_comments',
     'manage_warta',
     'manage_jadwal',
     'manage_jemaat',
@@ -73,7 +70,6 @@ const ROLE_CAPABILITIES: Record<UserRole, Capability[]> = {
     'publish_posts',
     'manage_media',
     'manage_pages',
-    'manage_comments',
     'manage_warta',
     'manage_jadwal',
     'manage_jemaat',
@@ -94,7 +90,6 @@ const ROLE_CAPABILITIES: Record<UserRole, Capability[]> = {
     'publish_posts',
     'manage_media',
     'manage_pages',
-    'manage_comments',
     'manage_warta',
     'manage_jadwal',
     'manage_galeri',
@@ -126,10 +121,7 @@ export function hasCapability(role: UserRole | undefined | null, cap: Capability
   return caps.includes(cap as Capability);
 }
 
-export function getAdminMenuForRole(
-  role: UserRole | undefined | null,
-  pendingCommentsCount = 0
-): AdminMenuEntry[] {
+export function getAdminMenuForRole(role: UserRole | undefined | null): AdminMenuEntry[] {
   const allMenus: AdminMenuEntry[] = [
     {
       id: 'dashboard',
@@ -172,19 +164,11 @@ export function getAdminMenuForRole(
       path: '/admin/pages',
       iconName: 'FileText',
       capability: 'manage_pages',
+      separatorAfter: true,
       submenus: [
         { label: 'Semua Halaman', path: '/admin/pages' },
         { label: 'Tambah Baru', path: '/admin/pages/new' },
       ],
-    },
-    {
-      id: 'comments',
-      label: 'Komentar',
-      path: '/admin/comments',
-      iconName: 'MessageSquare',
-      capability: 'manage_comments',
-      badgeCount: pendingCommentsCount,
-      separatorAfter: true,
     },
     {
       id: 'warta',
@@ -250,10 +234,11 @@ export function getAdminMenuForRole(
     {
       id: 'appearance',
       label: 'Tampilan',
-      path: '/admin/appearance/menus',
+      path: '/admin/appearance/homepage',
       iconName: 'Paintbrush',
       capability: 'manage_appearance',
       submenus: [
+        { label: 'Tata Letak Beranda', path: '/admin/appearance/homepage' },
         { label: 'Menu', path: '/admin/appearance/menus' },
         { label: 'Widget', path: '/admin/appearance/widgets' },
         { label: 'Sesuaikan Tema', path: '/admin/appearance/customize' },
@@ -281,7 +266,6 @@ export function getAdminMenuForRole(
         { label: 'Umum', path: '/admin/settings/general' },
         { label: 'Penulisan', path: '/admin/settings/writing' },
         { label: 'Membaca', path: '/admin/settings/reading' },
-        { label: 'Diskusi', path: '/admin/settings/discussion' },
         { label: 'Media', path: '/admin/settings/media' },
         { label: 'Permalink', path: '/admin/settings/permalink' },
       ],

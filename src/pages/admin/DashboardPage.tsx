@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   Pin,
   FileText,
-  MessageSquare,
   Newspaper,
   UsersRound,
   CalendarDays,
@@ -46,7 +45,6 @@ export function DashboardPage() {
     posts: 0,
     pages: 0,
     warta: 0,
-    comments: 0,
     jemaat: 0,
   });
   const [recentPosts, setRecentPosts] = useState<PostSummary[]>([]);
@@ -103,7 +101,6 @@ export function DashboardPage() {
           postsRes,
           pagesRes,
           wartaRes,
-          commentsRes,
           jemaatRes,
           recentRes,
           wijkRes,
@@ -123,10 +120,6 @@ export function DashboardPage() {
             .select('*', { count: 'exact', head: true })
             .eq('type', 'warta')
             .eq('status', 'publish'),
-          supabase!
-            .from('comments')
-            .select('*', { count: 'exact', head: true })
-            .neq('status', 'trash'),
           supabase!
             .from('jemaat')
             .select('*', { count: 'exact', head: true })
@@ -149,7 +142,6 @@ export function DashboardPage() {
           posts: postsRes.count ?? 0,
           pages: pagesRes.count ?? 0,
           warta: wartaRes.count ?? 0,
-          comments: commentsRes.count ?? 0,
           jemaat: jemaatRes.count ?? 0,
         });
 
@@ -366,6 +358,13 @@ export function DashboardPage() {
                   </Link>
                 </li>
               )}
+              {hasCapability(profile?.role, 'manage_appearance') && (
+                <li>
+                  <Link to="/admin/appearance/homepage" className="hover:underline">
+                    Atur Tata Letak Beranda Publik
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link to="/" className="hover:underline">
                   Lihat Situs Publik Huria
@@ -428,19 +427,10 @@ export function DashboardPage() {
                     {loadingStats ? '...' : counts.warta} Warta Jemaat
                   </span>
                 </Link>
-                <Link
-                  to="/admin/comments"
-                  className="flex items-center gap-2 text-[#2271b1] hover:underline"
-                >
-                  <MessageSquare className="w-4 h-4 text-[#8c8f94]" />
-                  <span className="tabular-nums">
-                    {loadingStats ? '...' : counts.comments} Komentar
-                  </span>
-                </Link>
                 {hasCapability(profile?.role, 'manage_jemaat') && (
                   <Link
                     to="/admin/jemaat"
-                    className="flex items-center gap-2 text-[#2271b1] hover:underline col-span-2"
+                    className="flex items-center gap-2 text-[#2271b1] hover:underline"
                   >
                     <UsersRound className="w-4 h-4 text-[#8c8f94]" />
                     <span className="tabular-nums">

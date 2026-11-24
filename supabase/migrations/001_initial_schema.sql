@@ -189,7 +189,6 @@ CREATE TABLE IF NOT EXISTS public.posts (
   featured_media_id UUID REFERENCES public.media(id) ON DELETE SET NULL,
   published_at TIMESTAMPTZ,
   scheduled_at TIMESTAMPTZ,
-  comment_status BOOLEAN NOT NULL DEFAULT true,
   parent_id UUID REFERENCES public.posts(id) ON DELETE SET NULL,
   menu_order INTEGER NOT NULL DEFAULT 0,
   meta JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -253,34 +252,7 @@ CREATE TABLE IF NOT EXISTS public.term_relationships (
 CREATE INDEX IF NOT EXISTS idx_term_relationships_term_id ON public.term_relationships(term_id);
 
 -- ==============================================================================
--- 9. TABEL COMMENTS
--- ==============================================================================
-CREATE TABLE IF NOT EXISTS public.comments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id UUID NOT NULL REFERENCES public.posts(id) ON DELETE CASCADE,
-  parent_id UUID REFERENCES public.comments(id) ON DELETE CASCADE,
-  author_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
-  author_name TEXT NOT NULL,
-  author_email TEXT NOT NULL DEFAULT '',
-  content TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (
-    status IN ('approved', 'pending', 'spam', 'trash')
-  ),
-  ip_address TEXT DEFAULT '',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_comments_post_status ON public.comments(post_id, status);
-CREATE INDEX IF NOT EXISTS idx_comments_status ON public.comments(status);
-
-DROP TRIGGER IF EXISTS trg_comments_updated_at ON public.comments;
-CREATE TRIGGER trg_comments_updated_at
-  BEFORE UPDATE ON public.comments
-  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
-
--- ==============================================================================
--- 10. TABEL MENUS, MENU ITEMS, WIDGETS, DAN OPTIONS (PENGATURAN)
+-- 9. TABEL MENUS, MENU ITEMS, WIDGETS, DAN OPTIONS (PENGATURAN)
 -- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.menus (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -511,7 +483,6 @@ ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.post_revisions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.terms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.term_relationships ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.menus ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.menu_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.widgets ENABLE ROW LEVEL SECURITY;
@@ -532,7 +503,6 @@ GRANT SELECT ON
   public.posts,
   public.terms,
   public.term_relationships,
-  public.comments,
   public.menus,
   public.menu_items,
   public.widgets,
@@ -540,7 +510,6 @@ GRANT SELECT ON
   public.ibadah_minggu,
   public.phd_lingkungan
 TO anon;
-GRANT INSERT ON public.comments TO anon;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
@@ -662,23 +631,6 @@ CREATE POLICY "term_rel_staff_write" ON public.term_relationships FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor', 'penulis', 'kontributor']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor', 'penulis', 'kontributor']));
 
--- COMMENTS: Publik baca komentar 'approved' & bisa kirim komentar baru (status 'pending')
-DROP POLICY IF EXISTS "comments_public_read_approved" ON public.comments;
-CREATE POLICY "comments_public_read_approved" ON public.comments FOR SELECT
-  USING (
-    status = 'approved'
-    OR public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor'])
-  );
-DROP POLICY IF EXISTS "comments_public_insert_pending" ON public.comments;
-CREATE POLICY "comments_public_insert_pending" ON public.comments FOR INSERT
-  WITH CHECK (status = 'pending');
-DROP POLICY IF EXISTS "comments_staff_manage" ON public.comments;
-CREATE POLICY "comments_staff_manage" ON public.comments FOR UPDATE
-  USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor']));
-DROP POLICY IF EXISTS "comments_staff_delete" ON public.comments;
-CREATE POLICY "comments_staff_delete" ON public.comments FOR DELETE
-  USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'editor']));
-
 -- MENUS, MENU ITEMS, WIDGETS: Publik baca; Admin/Editor kelola
 DROP POLICY IF EXISTS "menus_public_read" ON public.menus;
 CREATE POLICY "menus_public_read" ON public.menus FOR SELECT USING (true);
@@ -782,7 +734,6 @@ INSERT INTO public.options (option_name, option_value, autoload) VALUES
   ('time_format', '"H:i"'::jsonb, true),
   ('permalink_structure', '"/%postname%/"'::jsonb, true),
   ('posts_per_page', '10'::jsonb, true),
-  ('default_comment_status', '"open"'::jsonb, true),
   ('max_upload_size_mb', '10'::jsonb, true),
   ('allowed_upload_mimes', '["image/jpeg","image/png","image/webp","image/gif","application/pdf","video/mp4"]'::jsonb, true),
   ('theme_primary_color', '"#1E3A5F"'::jsonb, true),

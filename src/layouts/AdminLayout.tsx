@@ -5,7 +5,6 @@ import {
   Pin,
   Image as ImageIcon,
   FileText,
-  MessageSquare,
   Newspaper,
   CalendarDays,
   UsersRound,
@@ -30,7 +29,6 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { getAdminMenuForRole, hasCapability, ROLE_LABELS } from '../lib/roles';
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { HkbpLogo } from '../components/HkbpLogo';
 import type { AdminMenuEntry, UserRole } from '../types/cms';
 
@@ -39,7 +37,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Pin,
   Image: ImageIcon,
   FileText,
-  MessageSquare,
   Newspaper,
   CalendarDays,
   UsersRound,
@@ -83,7 +80,6 @@ export function AdminLayout() {
   // Screen Options & Help drawers
   const [openDrawer, setOpenDrawer] = useState<'screen' | 'help' | null>(null);
   const [activeHelpTabId, setActiveHelpTabId] = useState<string>('');
-  const [pendingCommentsCount, setPendingCommentsCount] = useState(0);
 
   const cancelCloseFlyout = () => {
     if (closeFlyoutTimerRef.current !== null) {
@@ -110,35 +106,12 @@ export function AdminLayout() {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (
-      !isSupabaseConfigured ||
-      !supabase ||
-      !hasCapability(profile?.role, 'manage_comments')
-    ) {
-      return;
-    }
-    let active = true;
-    supabase
-      .from('comments')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending')
-      .then(({ count }) => {
-        if (active && typeof count === 'number') {
-          setPendingCommentsCount(count);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, [location.pathname, profile?.role]);
-
-  useEffect(() => {
     if (helpTabs.length > 0 && !helpTabs.some((t) => t.id === activeHelpTabId)) {
       setActiveHelpTabId(helpTabs[0].id);
     }
   }, [helpTabs, activeHelpTabId]);
 
-  const menuEntries = getAdminMenuForRole(profile?.role, pendingCommentsCount);
+  const menuEntries = getAdminMenuForRole(profile?.role);
 
   const isMenuActive = (entry: AdminMenuEntry) => {
     if (entry.path === '/admin') {
@@ -272,18 +245,6 @@ export function AdminLayout() {
               </div>
             )}
           </div>
-
-          {/* Komentar Cepat */}
-          {hasCapability(profile?.role, 'manage_comments') && (
-            <Link
-              to="/admin/comments"
-              className="hidden sm:flex h-full px-2.5 items-center gap-1.5 hover:bg-[#2c3338] hover:text-[#72aee6] whitespace-nowrap"
-              title="Komentar Menunggu Moderasi"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span className="tabular-nums">{pendingCommentsCount}</span>
-            </Link>
-          )}
 
           {/* + Baru Dropdown */}
           {newMenuItems.length > 0 && (
@@ -482,13 +443,6 @@ export function AdminLayout() {
                         {!sidebarCollapsed && (
                           <span className="truncate flex-1">{entry.label}</span>
                         )}
-                        {!sidebarCollapsed &&
-                          typeof entry.badgeCount === 'number' &&
-                          entry.badgeCount > 0 && (
-                            <span className="ml-auto px-1.5 py-0.5 text-[10px] font-semibold bg-[#d63638] text-white rounded-full tabular-nums">
-                              {entry.badgeCount}
-                            </span>
-                          )}
                         {/* Panah segitiga khas WordPress di item aktif */}
                         {active && (
                           <span

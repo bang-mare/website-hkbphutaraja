@@ -1,7 +1,8 @@
 import { isSupabaseConfigured, supabase } from './supabase';
 import { getMediaProxyUrl } from './mediaClient';
 import type {
-  CommentRecord,
+  HomepageSectionConfig,
+  HomepageSectionId,
   IbadahMinggu,
   MenuItemRecord,
   MenuLocation,
@@ -16,6 +17,113 @@ import type {
   Wijk,
 } from '../types/cms';
 
+export const DEFAULT_HOMEPAGE_LAYOUT: HomepageSectionConfig[] = [
+  {
+    id: 'hero',
+    enabled: true,
+    variant: 'split',
+  },
+  {
+    id: 'quick_links',
+    enabled: true,
+    columns: 3,
+  },
+  {
+    id: 'announcements',
+    enabled: true,
+    title: 'Pengumuman',
+  },
+  {
+    id: 'schedule',
+    enabled: true,
+    subtitle: 'Jadwal Pelayanan Terdekat',
+    title: 'Ibadah Minggu & Kategorial',
+    columns: 3,
+    limit: 3,
+  },
+  {
+    id: 'warta',
+    enabled: true,
+    subtitle: 'Tingting Huria',
+    title: 'Warta Jemaat Terbaru',
+    columns: 3,
+    limit: 3,
+  },
+  {
+    id: 'news',
+    enabled: true,
+    subtitle: 'Publikasi & Renungan',
+    title: 'Berita & Artikel Huria',
+    columns: 4,
+    limit: 4,
+  },
+  {
+    id: 'wijk',
+    enabled: true,
+    subtitle: 'Persekutuan Jemaat',
+    title: 'Enam Lingkungan (Wijk) Pelayanan',
+    columns: 3,
+  },
+  {
+    id: 'contact',
+    enabled: true,
+    variant: 'banner',
+  },
+];
+
+export function normalizeHomepageLayout(
+  raw?: HomepageSectionConfig[] | null
+): HomepageSectionConfig[] {
+  const defaultMap = new Map<HomepageSectionId, HomepageSectionConfig>(
+    DEFAULT_HOMEPAGE_LAYOUT.map((item) => [item.id, item])
+  );
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return DEFAULT_HOMEPAGE_LAYOUT.map((item) => ({ ...item }));
+  }
+
+  const seen = new Set<HomepageSectionId>();
+  const result: HomepageSectionConfig[] = [];
+
+  for (const item of raw) {
+    if (!item || !defaultMap.has(item.id) || seen.has(item.id)) continue;
+    seen.add(item.id);
+    const base = defaultMap.get(item.id)!;
+    const validCols =
+      item.columns === 1 || item.columns === 2 || item.columns === 3 || item.columns === 4
+        ? item.columns
+        : base.columns;
+    const validLimit =
+      typeof item.limit === 'number' && Number.isFinite(item.limit)
+        ? Math.max(1, Math.min(12, Math.round(item.limit)))
+        : base.limit;
+    const validVariant =
+      item.variant === 'split' ||
+      item.variant === 'centered' ||
+      item.variant === 'banner' ||
+      item.variant === 'compact'
+        ? item.variant
+        : base.variant;
+
+    result.push({
+      id: item.id,
+      enabled: typeof item.enabled === 'boolean' ? item.enabled : base.enabled,
+      title: typeof item.title === 'string' ? item.title : base.title,
+      subtitle: typeof item.subtitle === 'string' ? item.subtitle : base.subtitle,
+      columns: validCols,
+      limit: validLimit,
+      variant: validVariant,
+    });
+  }
+
+  for (const base of DEFAULT_HOMEPAGE_LAYOUT) {
+    if (!seen.has(base.id)) {
+      result.push({ ...base });
+    }
+  }
+
+  return result;
+}
+
 export const DEFAULT_SITE_OPTIONS: SiteOptionsMap = {
   site_title: 'HKBP Ressort Hutaraja',
   site_tagline: 'Distrik VI Dairi — Huria Kristen Batak Protestan',
@@ -26,7 +134,6 @@ export const DEFAULT_SITE_OPTIONS: SiteOptionsMap = {
   time_format: 'H:i',
   permalink_structure: '/%postname%/',
   posts_per_page: 10,
-  default_comment_status: 'open',
   max_upload_size_mb: 10,
   allowed_upload_mimes: [
     'image/jpeg',
@@ -50,6 +157,7 @@ export const DEFAULT_SITE_OPTIONS: SiteOptionsMap = {
     reference: 'Kolose 2:7',
     text: 'Hendaklah kamu berakar di dalam Dia dan dibangun di atas Dia, hendaklah kamu bertambah teguh dalam iman yang telah diajarkan kepadamu, dan hendaklah hatimu melimpah dengan syukur.',
   },
+  homepage_layout: DEFAULT_HOMEPAGE_LAYOUT,
 };
 
 export const DEFAULT_WIJK: Wijk[] = [
@@ -493,34 +601,4 @@ export async function fetchPublicPhdLingkungan(): Promise<PhdLingkungan[]> {
     .select('*, wijk:wijk(id, name, sort_order)')
     .order('day_of_week', { ascending: true });
   return (data as PhdLingkungan[]) || [];
-}
-
-export async function fetchApprovedCommentsForPost(postId: string): Promise<CommentRecord[]> {
-  if (!isSupabaseConfigured || !supabase) return [];
-  const { data } = await supabase
-    .from('comments')
-    .select('*')
-    .eq('post_id', postId)
-    .eq('status', 'approved')
-    .order('created_at', { ascending: true });
-  return (data as CommentRecord[]) || [];
-}
-
-export async function submitPublicComment(input: {
-  post_id: string;
-  author_name: string;
-  author_email: string;
-  content: string;
-}): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured || !supabase) {
-    return { error: null };
-  }
-  const { error } = await supabase.from('comments').insert({
-    post_id: input.post_id,
-    author_name: input.author_name.trim(),
-    author_email: input.author_email.trim(),
-    content: input.content.trim(),
-    status: 'pending',
-  });
-  return { error: error ? error.message : null };
 }

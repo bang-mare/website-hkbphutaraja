@@ -27,13 +27,13 @@ import { ProfilePage } from './pages/admin/ProfilePage';
 import { PostsListPage } from './pages/admin/PostsListPage';
 import { PostEditorPage } from './pages/admin/PostEditorPage';
 import { TermsPage } from './pages/admin/TermsPage';
-import { CommentsPage } from './pages/admin/CommentsPage';
 import { MediaLibraryPage } from './pages/admin/MediaLibraryPage';
 import { ScheduleAdminPage } from './pages/admin/ScheduleAdminPage';
 import { CongregationPage } from './pages/admin/CongregationPage';
 import { GalleryAdminPage } from './pages/admin/GalleryAdminPage';
 import { AttendancePage } from './pages/admin/AttendancePage';
 import { FinancePage } from './pages/admin/FinancePage';
+import { HomepageLayoutPage } from './pages/admin/HomepageLayoutPage';
 import { MenusPage } from './pages/admin/MenusPage';
 import { WidgetsPage } from './pages/admin/WidgetsPage';
 import { CustomizeThemePage } from './pages/admin/CustomizeThemePage';
@@ -171,16 +171,6 @@ export default function App() {
                 }
               />
 
-              {/* Komentar */}
-              <Route
-                path="comments"
-                element={
-                  <ProtectedRoute requiredCapability="manage_comments">
-                    <CommentsPage />
-                  </ProtectedRoute>
-                }
-              />
-
               {/* Warta Jemaat */}
               <Route
                 path="warta"
@@ -307,6 +297,14 @@ export default function App() {
 
               {/* Tampilan */}
               <Route
+                path="appearance/homepage"
+                element={
+                  <ProtectedRoute requiredCapability="manage_appearance">
+                    <HomepageLayoutPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="appearance/menus"
                 element={
                   <ProtectedRoute requiredCapability="manage_appearance">
@@ -379,14 +377,6 @@ export default function App() {
                 element={
                   <ProtectedRoute requiredCapability="manage_settings">
                     <SettingsPage section="reading" />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="settings/discussion"
-                element={
-                  <ProtectedRoute requiredCapability="manage_settings">
-                    <SettingsPage section="discussion" />
                   </ProtectedRoute>
                 }
               />

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MessageSquare, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAdmin } from '../../contexts/AdminContext';
 import {
@@ -82,7 +82,6 @@ export function PostsListPage({ postType }: PostsListPageProps) {
     author: true,
     categories: postType !== 'page',
     tags: postType === 'post',
-    comments: postType !== 'page',
     date: true,
   });
 
@@ -99,7 +98,6 @@ export function PostsListPage({ postType }: PostsListPageProps) {
   const [qeSlug, setQeSlug] = useState('');
   const [qeDate, setQeDate] = useState('');
   const [qeStatus, setQeStatus] = useState<PostStatus>('draft');
-  const [qeComments, setQeComments] = useState(true);
   const [qeCatIds, setQeCatIds] = useState<string[]>([]);
   const [qeSaving, setQeSaving] = useState(false);
 
@@ -142,7 +140,6 @@ export function PostsListPage({ postType }: PostsListPageProps) {
                 ['author', 'Penulis'],
                 ...(postType !== 'page' ? [['categories', 'Kategori'] as const] : []),
                 ...(postType === 'post' ? [['tags', 'Tag'] as const] : []),
-                ...(postType !== 'page' ? [['comments', 'Komentar'] as const] : []),
                 ['date', 'Tanggal'],
               ] as Array<[keyof typeof visibleCols, string]>
             ).map(([colKey, label]) => (
@@ -386,7 +383,6 @@ export function PostsListPage({ postType }: PostsListPageProps) {
     const dt = post.published_at || post.created_at;
     setQeDate(dt.slice(0, 16));
     setQeStatus(post.status);
-    setQeComments(post.comment_status);
     setQeCatIds(
       (post.terms || []).filter((t) => t.taxonomy === 'category').map((t) => t.id)
     );
@@ -403,7 +399,6 @@ export function PostsListPage({ postType }: PostsListPageProps) {
         slug: slugify(qeSlug || qeTitle) || `item-${Date.now()}`,
         published_at: qeDate ? new Date(qeDate).toISOString() : null,
         status: qeStatus,
-        comment_status: qeComments,
       },
       postType !== 'page' ? qeCatIds : undefined
     );
@@ -435,7 +430,6 @@ export function PostsListPage({ postType }: PostsListPageProps) {
     (visibleCols.author ? 1 : 0) +
     (visibleCols.categories && postType !== 'page' ? 1 : 0) +
     (visibleCols.tags && postType === 'post' ? 1 : 0) +
-    (visibleCols.comments && postType !== 'page' ? 1 : 0) +
     (visibleCols.date ? 1 : 0);
 
   return (
@@ -735,11 +729,6 @@ export function PostsListPage({ postType }: PostsListPageProps) {
               {visibleCols.tags && postType === 'post' && (
                 <th className="p-2.5 font-medium">Tag</th>
               )}
-              {visibleCols.comments && postType !== 'page' && (
-                <th className="p-2.5 font-medium w-16 text-center" title="Komentar">
-                  <MessageSquare className="w-4 h-4 inline text-[#50575e]" />
-                </th>
-              )}
               {visibleCols.date && <th className="p-2.5 font-medium w-44">Tanggal</th>}
             </tr>
           </thead>
@@ -857,14 +846,6 @@ export function PostsListPage({ postType }: PostsListPageProps) {
                                   {canPublish && <option value="private">Pribadi</option>}
                                 </select>
                               </div>
-                              <label className="inline-flex items-center gap-1.5 cursor-pointer text-[12px]">
-                                <input
-                                  type="checkbox"
-                                  checked={qeComments}
-                                  onChange={(e) => setQeComments(e.target.checked)}
-                                />
-                                <span>Izinkan komentar</span>
-                              </label>
                             </div>
                           </div>
 
@@ -996,12 +977,6 @@ export function PostsListPage({ postType }: PostsListPageProps) {
                         {postTags.length > 0
                           ? postTags.map((t) => t.name).join(', ')
                           : '—'}
-                      </td>
-                    )}
-
-                    {visibleCols.comments && postType !== 'page' && (
-                      <td className="p-2.5 align-top text-center tabular-nums text-[#50575e]">
-                        {post.comment_count ?? 0}
                       </td>
                     )}
 

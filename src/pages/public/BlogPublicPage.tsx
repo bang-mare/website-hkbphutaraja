@@ -173,8 +173,6 @@ export function BlogPublicPage({
       );
     }
 
-    const cover = resolvePostFeaturedImage(detail);
-
     return (
       <article className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-8">
         <Link
@@ -224,17 +222,6 @@ export function BlogPublicPage({
             </div>
           )}
         </header>
-
-        {cover && (
-          <div className="rounded-xl overflow-hidden border border-[#e2e8f0] bg-gradient-to-br from-[#0f294a] to-[#1e3a8a]">
-            <img
-              src={cover}
-              alt={detail.title}
-              referrerPolicy="no-referrer"
-              className="w-full max-h-[440px] object-cover"
-            />
-          </div>
-        )}
 
         <div
           className="surface-card p-6 sm:p-8 space-y-4 text-base text-slate-800 leading-relaxed [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[#0f172a] [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-[#0f172a] [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:p-4 [&_blockquote]:bg-slate-50 [&_blockquote]:border [&_blockquote]:border-[#e2e8f0] [&_blockquote]:rounded-lg [&_blockquote]:italic [&_iframe]:w-full [&_iframe]:aspect-video [&_img]:rounded-lg [&_img]:mx-auto"

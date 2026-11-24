@@ -1,0 +1,6 @@
+{
+  "name": "HKBP Ressort Hutaraja",
+  "description": "Website Resmi Gereja HKBP Ressort Hutaraja (Distrik VI Dairi) dan Dashboard Admin CMS bergaya WordPress.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

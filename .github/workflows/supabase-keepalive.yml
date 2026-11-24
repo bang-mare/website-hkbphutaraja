@@ -1,0 +1,23 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Berjalan setiap 2 hari pada pukul 03:00 WIB (20:00 UTC) agar project Supabase gratis tidak pause
+    - cron: '0 20 */2 * *'
+  workflow_dispatch:
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST Endpoint
+        run: |
+          if [ -z "${{ secrets.VITE_SUPABASE_URL }}" ] || [ -z "${{ secrets.VITE_SUPABASE_ANON_KEY }}" ]; then
+            echo "Secret Supabase belum diatur di GitHub Repository Secrets."
+            exit 0
+          fi
+          curl --fail --silent --show-error \
+            -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/wijk?select=id&limit=1"
+          echo "Supabase keep-alive berhasil."

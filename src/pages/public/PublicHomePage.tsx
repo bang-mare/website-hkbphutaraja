@@ -567,9 +567,9 @@ export function PublicHomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {wijkList.map((wijk, index) => (
-              <div key={wijk.id} className="surface-card p-5 space-y-2">
+              <div key={wijk.id} className="surface-card p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs text-slate-500 font-mono-num">
                   <span>0{index + 1}. Lingkungan</span>
                   <span>Wijk {index + 1}/6</span>
@@ -589,9 +589,6 @@ export function PublicHomePage() {
                     }}
                   />
                 </div>
-                <p className="text-sm text-slate-600 leading-relaxed pt-1">
-                  {wijk.description}
-                </p>
               </div>
             ))}
           </div>

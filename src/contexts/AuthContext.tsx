@@ -11,7 +11,10 @@ interface AuthContextValue {
   loading: boolean;
   isSupabaseReady: boolean;
   isPreviewSession: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<{ error: string | null; profile?: Profile | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<void>;
@@ -45,6 +48,23 @@ function createPreviewProfile(role: UserRole): Profile {
   };
 }
 
+function translateAuthError(message: string): string {
+  const lower = message.toLowerCase();
+  if (lower.includes('invalid login credentials') || lower.includes('invalid login')) {
+    return 'Galat: Alamat email atau kata sandi tidak sesuai.';
+  }
+  if (lower.includes('email not confirmed')) {
+    return 'Galat: Email belum dikonfirmasi. Buka Supabase → Authentication → Users dan pastikan akun sudah terkonfirmasi (Auto Confirm User).';
+  }
+  if (lower.includes('too many requests')) {
+    return 'Galat: Terlalu banyak percobaan masuk. Tunggu beberapa saat lalu coba lagi.';
+  }
+  if (lower.includes('failed to fetch') || lower.includes('network')) {
+    return 'Galat: Gagal menghubungi server Supabase. Periksa koneksi internet dan URL Supabase Anda.';
+  }
+  return `Galat: ${message}`;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -52,38 +72,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState<boolean>(isSupabaseConfigured);
   const [isPreviewSession, setIsPreviewSession] = useState<boolean>(false);
 
-  const fetchProfile = useCallback(async (userId: string, fallbackEmail?: string) => {
-    if (!supabase) return;
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
+  const fetchProfile = useCallback(
+    async (
+      userId: string,
+      fallbackEmail?: string
+    ): Promise<{ profile: Profile | null; error: string | null }> => {
+      if (!supabase) {
+        return { profile: null, error: 'Koneksi Supabase belum dikonfigurasi.' };
+      }
 
-    if (error) {
-      console.error('Gagal memuat profil:', error.message);
-      return;
-    }
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
 
-    if (data) {
-      setProfile(data as Profile);
-    } else if (fallbackEmail) {
-      setProfile({
-        id: userId,
-        email: fallbackEmail,
-        full_name: fallbackEmail.split('@')[0],
-        display_name: fallbackEmail.split('@')[0],
-        role: 'jemaat',
-        avatar_url: '',
-        phone: '',
-        wijk_id: null,
-        bio: '',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-    }
-  }, []);
+        if (error) {
+          console.error('Gagal memuat profil:', error.message);
+          return {
+            profile: null,
+            error: `Login berhasil, tetapi gagal memuat tabel profiles (${error.message}). Pastikan migrasi SQL 001_initial_schema.sql sudah dijalankan di Supabase.`,
+          };
+        }
+
+        if (data) {
+          const loaded = data as Profile;
+          setProfile(loaded);
+          return { profile: loaded, error: null };
+        }
+
+        const email = fallbackEmail || '';
+        const defaultName = email ? email.split('@')[0] : 'Pengguna';
+        const fallback: Profile = {
+          id: userId,
+          email,
+          full_name: defaultName,
+          display_name: defaultName,
+          role: 'jemaat',
+          avatar_url: '',
+          phone: '',
+          wijk_id: null,
+          bio: '',
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setProfile(fallback);
+        return { profile: fallback, error: null };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Kesalahan tidak diketahui';
+        return {
+          profile: null,
+          error: `Gagal memeriksa profil pengguna: ${msg}`,
+        };
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (!supabase) {
@@ -93,21 +139,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     let active = true;
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      if (data.session?.user) {
-        await fetchProfile(data.session.user.id, data.session.user.email);
-      }
-      if (active) setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(async ({ data }) => {
+        if (!active) return;
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        if (data.session?.user) {
+          await fetchProfile(data.session.user.id, data.session.user.email);
+        }
+        if (active) setLoading(false);
+      })
+      .catch(() => {
+        if (active) setLoading(false);
+      });
 
+    // Jangan jalankan query database secara sinkron di dalam onAuthStateChange
+    // untuk menghindari lock contention pada @supabase/supabase-js v2.
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return;
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
+
       if (nextSession?.user) {
-        fetchProfile(nextSession.user.id, nextSession.user.email);
+        const uid = nextSession.user.id;
+        const uemail = nextSession.user.email;
+        window.setTimeout(() => {
+          if (active) {
+            void fetchProfile(uid, uemail);
+          }
+        }, 0);
       } else {
         setProfile(null);
       }
@@ -122,17 +183,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
-      return { error: 'Koneksi Supabase belum dikonfigurasi pada environment variable.' };
+      return {
+        error: 'Koneksi Supabase belum dikonfigurasi pada environment variable.',
+        profile: null,
+      };
     }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      if (error.message.toLowerCase().includes('invalid login')) {
-        return { error: 'Galat: Alamat email atau kata sandi tidak sesuai.' };
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { error: translateAuthError(error.message), profile: null };
       }
-      return { error: error.message };
+
+      if (!data.user) {
+        return { error: 'Galat: Data pengguna tidak diterima dari Supabase.', profile: null };
+      }
+
+      setIsPreviewSession(false);
+      setSession(data.session);
+      setUser(data.user);
+
+      const profileResult = await fetchProfile(data.user.id, data.user.email);
+      if (profileResult.error) {
+        return { error: profileResult.error, profile: null };
+      }
+
+      return { error: null, profile: profileResult.profile };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Gagal terhubung ke Supabase.';
+      return { error: translateAuthError(msg), profile: null };
     }
-    setIsPreviewSession(false);
-    return { error: null };
   };
 
   const signOut = async () => {
@@ -151,7 +235,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     const redirectTo = `${window.location.origin}/login`;
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-    return { error: error ? error.message : null };
+    return { error: error ? translateAuthError(error.message) : null };
   };
 
   const refreshProfile = async () => {

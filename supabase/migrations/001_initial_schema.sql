@@ -525,7 +525,7 @@ CREATE POLICY "profiles_update_own_safe" ON public.profiles FOR UPDATE
   USING (auth.uid() = id)
   WITH CHECK (
     auth.uid() = id
-    AND role = (SELECT role FROM public.profiles WHERE id = auth.uid())
+    AND role = public.current_user_role()
   );
 
 CREATE POLICY "profiles_admin_manage" ON public.profiles FOR ALL
@@ -759,3 +759,14 @@ FROM (
     ('footer_2', 'schedule', 'Jam Ibadah Minggu', '{"body":"Ibadah Pagi: 08.00 WIB\nIbadah Siang: 10.30 WIB\nSekolah Minggu: 08.00 WIB"}', 1)
 ) AS v(area, widget_type, title, config, sort_order)
 WHERE NOT EXISTS (SELECT 1 FROM public.widgets);
+
+-- Backfill profil jika user sudah dibuat di Authentication sebelum SQL migrasi dijalankan
+INSERT INTO public.profiles (id, email, full_name, display_name, role)
+SELECT
+  u.id,
+  u.email,
+  COALESCE(NULLIF(TRIM(u.raw_user_meta_data ->> 'full_name'), ''), SPLIT_PART(u.email, '@', 1)),
+  COALESCE(NULLIF(TRIM(u.raw_user_meta_data ->> 'full_name'), ''), SPLIT_PART(u.email, '@', 1)),
+  'jemaat'
+FROM auth.users u
+ON CONFLICT (id) DO NOTHING;

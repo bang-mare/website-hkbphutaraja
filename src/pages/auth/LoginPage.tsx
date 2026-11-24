@@ -11,6 +11,7 @@ export function LoginPage() {
     profile,
     isSupabaseReady,
     signIn,
+    signOut,
     resetPassword,
     enterPreviewSession,
   } = useAuth();
@@ -29,12 +30,9 @@ export function LoginPage() {
   const [previewRole, setPreviewRole] = useState<UserRole>('administrator');
 
   useEffect(() => {
-    if (profile) {
-      if (hasCapability(profile.role, 'access_admin')) {
-        navigate(fromPath.startsWith('/admin') ? fromPath : '/admin', { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
+    if (!profile) return;
+    if (hasCapability(profile.role, 'access_admin')) {
+      navigate(fromPath.startsWith('/admin') ? fromPath : '/admin', { replace: true });
     }
   }, [profile, navigate, fromPath]);
 
@@ -49,11 +47,29 @@ export function LoginPage() {
     }
 
     setSubmitting(true);
-    const { error } = await signIn(email.trim(), password);
-    setSubmitting(false);
+    try {
+      const { error, profile: signedProfile } = await signIn(email.trim(), password);
+      if (error) {
+        setErrorMsg(error);
+        return;
+      }
 
-    if (error) {
-      setErrorMsg(error);
+      if (signedProfile) {
+        if (hasCapability(signedProfile.role, 'access_admin')) {
+          navigate(fromPath.startsWith('/admin') ? fromPath : '/admin', {
+            replace: true,
+          });
+        } else {
+          setErrorMsg(
+            `Berhasil masuk sebagai ${signedProfile.email} (Peran: ${ROLE_LABELS[signedProfile.role]}), namun akun dengan peran Jemaat belum memiliki izin ke Dasbor Admin. Pastikan Anda sudah menjalankan SQL UPDATE public.profiles SET role = 'administrator' di Supabase SQL Editor.`
+          );
+        }
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan saat masuk.';
+      setErrorMsg(`Galat: ${msg}`);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -68,15 +84,17 @@ export function LoginPage() {
     }
 
     setSubmitting(true);
-    const { error } = await resetPassword(email.trim());
-    setSubmitting(false);
-
-    if (error) {
-      setErrorMsg(error);
-    } else {
-      setSuccessMsg(
-        'Tautan atur ulang kata sandi telah dikirim ke email Anda. Silakan periksa kotak masuk atau folder spam.'
-      );
+    try {
+      const { error } = await resetPassword(email.trim());
+      if (error) {
+        setErrorMsg(error);
+      } else {
+        setSuccessMsg(
+          'Tautan atur ulang kata sandi telah dikirim ke email Anda. Silakan periksa kotak masuk atau folder spam.'
+        );
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -108,7 +126,24 @@ export function LoginPage() {
             role="alert"
             className="mb-4 bg-white border border-[#c3c4c7] border-l-4 border-l-[#d63638] p-3 text-[13px] text-[#1d2327] shadow-[0_1px_1px_rgba(0,0,0,0.04)]"
           >
-            {errorMsg}
+            <p>{errorMsg}</p>
+            {profile && !hasCapability(profile.role, 'access_admin') && (
+              <div className="mt-2 pt-2 border-t border-[#f0f0f1] flex items-center gap-3">
+                <Link to="/" className="text-[#2271b1] underline">
+                  Ke Halaman Utama
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void signOut();
+                    setErrorMsg(null);
+                  }}
+                  className="text-[#d63638] underline cursor-pointer"
+                >
+                  Keluar Akun
+                </button>
+              </div>
+            )}
           </div>
         )}
 

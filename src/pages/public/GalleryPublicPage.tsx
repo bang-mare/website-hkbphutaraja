@@ -47,12 +47,13 @@ export function GalleryPublicPage() {
     }
   }, [slug]);
 
-  const primaryColor = options.theme_primary_color || '#1E3A5F';
+  const primaryColor = options.theme_primary_color || '#0f294a';
+  const accentColor = options.theme_accent_color || '#d97706';
 
   if (slug) {
     if (loading) {
       return (
-        <div className="max-w-5xl mx-auto px-4 py-12 text-sm text-stone-500">
+        <div className="max-w-5xl mx-auto px-4 py-12 text-sm text-slate-500">
           Memuat album galeri...
         </div>
       );
@@ -60,8 +61,14 @@ export function GalleryPublicPage() {
     if (!detail) {
       return (
         <div className="max-w-5xl mx-auto px-4 py-12 space-y-4">
-          <h1 className="font-display text-2xl font-semibold">Album tidak ditemukan</h1>
-          <Link to="/galeri" className="text-sm underline" style={{ color: primaryColor }}>
+          <h1 className="font-display text-2xl font-bold text-[#0f172a]">
+            Album tidak ditemukan
+          </h1>
+          <Link
+            to="/galeri"
+            className="text-sm font-semibold underline"
+            style={{ color: primaryColor }}
+          >
             &larr; Kembali ke Galeri
           </Link>
         </div>
@@ -75,7 +82,7 @@ export function GalleryPublicPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-8">
         <Link
           to="/galeri"
-          className="inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
           style={{ color: primaryColor }}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -83,17 +90,17 @@ export function GalleryPublicPage() {
         </Link>
 
         <header>
-          <h1 className="font-display text-3xl sm:text-4xl font-semibold text-[#1C1917] mb-2">
+          <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#0f172a] mb-2">
             {detail.title}
           </h1>
           {detail.excerpt && (
-            <p className="text-sm text-stone-600 max-w-2xl">{detail.excerpt}</p>
+            <p className="text-sm sm:text-base text-slate-600 max-w-2xl">{detail.excerpt}</p>
           )}
         </header>
 
         {photos.length > 0 && (
           <section className="space-y-3">
-            <h2 className="font-display text-xl font-semibold text-[#1C1917]">
+            <h2 className="font-display text-xl font-bold text-[#0f172a]">
               Dokumentasi Foto ({photos.length})
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -102,15 +109,18 @@ export function GalleryPublicPage() {
                   key={idx}
                   type="button"
                   onClick={() => setLightboxPhoto(photo)}
-                  className="bg-white border border-stone-200 rounded-md overflow-hidden text-left hover:border-stone-400 cursor-pointer"
+                  className="surface-card overflow-hidden text-left hover:border-[#d97706] transition-colors cursor-pointer group"
                 >
-                  <img
-                    src={photo.url}
-                    alt={photo.alt}
-                    className="w-full h-44 object-cover"
-                  />
+                  <div className="aspect-[4/3] bg-gradient-to-br from-[#0f294a] to-[#1e3a8a] overflow-hidden">
+                    <img
+                      src={photo.url}
+                      alt={photo.alt}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+                    />
+                  </div>
                   {photo.caption && (
-                    <p className="p-2 text-xs text-stone-600 line-clamp-2">
+                    <p className="p-2.5 text-xs text-slate-600 line-clamp-2">
                       {photo.caption}
                     </p>
                   )}
@@ -122,7 +132,7 @@ export function GalleryPublicPage() {
 
         {videos.length > 0 && (
           <section className="space-y-3">
-            <h2 className="font-display text-xl font-semibold text-[#1C1917]">
+            <h2 className="font-display text-xl font-bold text-[#0f172a]">
               Video Kegiatan
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -132,7 +142,7 @@ export function GalleryPublicPage() {
                 return (
                   <div
                     key={idx}
-                    className="aspect-video bg-black rounded-md overflow-hidden border border-stone-200"
+                    className="aspect-video bg-slate-900 rounded-xl overflow-hidden border border-[#e2e8f0]"
                   >
                     <iframe
                       src={`https://www.youtube.com/embed/${ytId}`}
@@ -150,20 +160,20 @@ export function GalleryPublicPage() {
         {lightboxPhoto && (
           <div
             onClick={() => setLightboxPhoto(null)}
-            className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-slate-950/85 flex items-center justify-center p-4"
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="max-w-4xl w-full bg-white rounded-md overflow-hidden"
+              className="max-w-4xl w-full bg-white rounded-xl overflow-hidden shadow-2xl"
             >
-              <div className="px-4 py-2.5 flex items-center justify-between border-b border-stone-200">
-                <span className="text-sm font-medium text-stone-800">
+              <div className="px-4 py-3 flex items-center justify-between border-b border-[#e2e8f0]">
+                <span className="text-sm font-semibold text-[#0f172a]">
                   {lightboxPhoto.caption || lightboxPhoto.alt}
                 </span>
                 <button
                   type="button"
                   onClick={() => setLightboxPhoto(null)}
-                  className="p-1 text-stone-600 hover:text-stone-900 cursor-pointer"
+                  className="p-1 text-slate-600 hover:text-[#0f172a] cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -171,7 +181,8 @@ export function GalleryPublicPage() {
               <img
                 src={lightboxPhoto.url}
                 alt={lightboxPhoto.alt}
-                className="w-full max-h-[75vh] object-contain bg-stone-950"
+                referrerPolicy="no-referrer"
+                className="w-full max-h-[75vh] object-contain bg-slate-950"
               />
             </div>
           </div>
@@ -181,75 +192,81 @@ export function GalleryPublicPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-8">
-      <header>
-        <p className="text-xs uppercase tracking-widest text-[#9A3412] font-semibold mb-2">
-          Dokumentasi Kegiatan
-        </p>
-        <h1 className="font-display text-3xl sm:text-4xl font-semibold text-[#1C1917] mb-2">
-          Galeri Foto &amp; Video Huria
-        </h1>
-        <p className="text-sm text-stone-600">
-          Kumpulan album dokumentasi ibadah, perayaan hari besar gerejawi, dan kegiatan enam lingkungan.
-        </p>
-      </header>
+    <div className="bg-[#f8fafc]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+        <header>
+          <p
+            className="text-xs uppercase tracking-[0.12em] font-semibold mb-2"
+            style={{ color: accentColor }}
+          >
+            Dokumentasi Kegiatan
+          </p>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#0f172a] mb-2">
+            Galeri Foto &amp; Video Huria
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600">
+            Kumpulan album dokumentasi ibadah, perayaan hari besar gerejawi, dan kegiatan enam lingkungan.
+          </p>
+        </header>
 
-      {loading ? (
-        <p className="text-sm text-stone-500">Memuat galeri...</p>
-      ) : albums.length === 0 ? (
-        <div className="p-8 bg-white border border-stone-200 rounded-md text-center text-sm text-stone-600">
-          Belum ada album galeri yang diterbitkan.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {albums.map((album) => {
-            const cover = resolvePostFeaturedImage(album);
-            const photos = (album.meta?.album_photos as AlbumPhoto[]) || [];
-            const videos = (album.meta?.album_videos as string[]) || [];
-            return (
-              <Link
-                key={album.id}
-                to={`/galeri/${album.slug}`}
-                className="bg-white border border-stone-200 rounded-md overflow-hidden hover:border-stone-400 transition-colors flex flex-col"
-              >
-                <div className="h-48 bg-stone-100 flex items-center justify-center overflow-hidden">
-                  {cover ? (
-                    <img
-                      src={cover}
-                      alt={album.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <Images className="w-10 h-10 text-stone-400" />
-                  )}
-                </div>
-                <div className="p-5 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h2 className="font-display text-xl font-semibold text-[#1C1917] mb-1.5">
-                      {album.title}
-                    </h2>
-                    {album.excerpt && (
-                      <p className="text-sm text-stone-600 line-clamp-2 mb-3">
-                        {album.excerpt}
-                      </p>
+        {loading ? (
+          <p className="text-sm text-slate-500">Memuat galeri...</p>
+        ) : albums.length === 0 ? (
+          <div className="surface-card p-8 text-center text-sm text-slate-600">
+            Belum ada album galeri yang diterbitkan.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {albums.map((album) => {
+              const cover = resolvePostFeaturedImage(album);
+              const photos = (album.meta?.album_photos as AlbumPhoto[]) || [];
+              const videos = (album.meta?.album_videos as string[]) || [];
+              return (
+                <Link
+                  key={album.id}
+                  to={`/galeri/${album.slug}`}
+                  className="surface-card overflow-hidden hover:border-[#d97706] transition-colors flex flex-col group"
+                >
+                  <div className="aspect-[4/3] bg-gradient-to-br from-[#0f294a] to-[#1e3a8a] flex items-center justify-center overflow-hidden">
+                    {cover ? (
+                      <img
+                        src={cover}
+                        alt={album.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+                      />
+                    ) : (
+                      <Images className="w-10 h-10 text-white/50" />
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-stone-500 tabular-nums pt-2 border-t border-stone-100">
-                    <span className="inline-flex items-center gap-1">
-                      <Images className="w-3.5 h-3.5" />
-                      {photos.length} foto
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Video className="w-3.5 h-3.5" />
-                      {videos.length} video
-                    </span>
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h2 className="font-display text-xl font-bold text-[#0f172a] group-hover:text-[#0f294a] mb-1.5">
+                        {album.title}
+                      </h2>
+                      {album.excerpt && (
+                        <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+                          {album.excerpt}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-slate-500 font-mono-num pt-3 border-t border-slate-100">
+                      <span className="inline-flex items-center gap-1">
+                        <Images className="w-3.5 h-3.5" style={{ color: primaryColor }} />
+                        {photos.length} foto
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Video className="w-3.5 h-3.5" style={{ color: accentColor }} />
+                        {videos.length} video
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

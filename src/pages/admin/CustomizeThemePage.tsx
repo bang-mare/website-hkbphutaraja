@@ -26,15 +26,16 @@ export function CustomizeThemePage() {
 
   useEffect(() => {
     fetchSiteOptions().then((opts) => {
-      setPrimaryColor(opts.theme_primary_color || '#1E3A5F');
-      setAccentColor(opts.theme_accent_color || '#9A3412');
+      setPrimaryColor(opts.theme_primary_color || '#0f294a');
+      setAccentColor(opts.theme_accent_color || '#d97706');
       setLogoUrl(opts.theme_logo_url || '');
       setHeroImageUrl(
         opts.theme_hero_image_url || '/src/assets/images/church_hero_sanctuary_1795501235668.jpg'
       );
-      setVerseRef(opts.daily_verse?.reference || 'Mazmur 119:105');
+      setVerseRef(opts.daily_verse?.reference || 'Kolose 2:7');
       setVerseText(
-        opts.daily_verse?.text || 'Firman-Mu itu pelita bagi kakiku dan terang bagi jalanku.'
+        opts.daily_verse?.text ||
+          'Hendaklah kamu berakar di dalam Dia dan dibangun di atas Dia, hendaklah kamu bertambah teguh dalam iman yang telah diajarkan kepadamu.'
       );
     });
   }, []);
@@ -184,40 +185,55 @@ export function CustomizeThemePage() {
         {/* Pratinjau Langsung */}
         <div className="lg:col-span-7 bg-white border border-[#c3c4c7] p-4 space-y-3">
           <p className="font-semibold text-[#1d2327]">Pratinjau Tampilan Publik</p>
-          <div className="border border-stone-200 rounded overflow-hidden bg-[#FBF9F5]">
-            <div
-              className="px-4 py-3 text-white flex items-center justify-between"
-              style={{ backgroundColor: primaryColor }}
-            >
-              <span className="font-display font-semibold">HKBP Ressort Hutaraja</span>
-              <span className="text-[11px] opacity-90">Beranda · Jadwal · Warta · Berita</span>
+          <div className="border border-slate-200 rounded-lg overflow-hidden bg-[#f8fafc]">
+            <div className="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
+              <span className="font-display font-bold text-sm" style={{ color: primaryColor }}>
+                HKBP Ressort Hutaraja
+              </span>
+              <span className="text-[11px] text-slate-600">Beranda · Jadwal · Warta · Berita</span>
             </div>
-            <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-              <div>
+            <div
+              className="p-5 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center text-white"
+              style={{
+                background: `linear-gradient(135deg, #0a1c34 0%, ${primaryColor} 58%, #1e3a8a 100%)`,
+              }}
+            >
+              <div className="sm:col-span-7">
                 <p
-                  className="text-[11px] font-semibold uppercase tracking-wider mb-1"
-                  style={{ color: accentColor }}
+                  className="text-[10px] font-semibold uppercase tracking-wider mb-1"
+                  style={{ color: '#fbbf24' }}
                 >
                   Distrik VI Dairi
                 </p>
-                <p className="font-display text-lg font-semibold text-stone-900 mb-2">
-                  Bertumbuh dalam Firman, Melayani dalam Kasih
+                <p className="font-display text-lg font-bold text-white mb-2">
+                  HKBP Ressort Hutaraja
                 </p>
-                <div className="p-3 bg-[#F4EFE6] border border-stone-200 rounded text-[12px]">
-                  <p className="font-semibold mb-0.5" style={{ color: primaryColor }}>
+                <div
+                  className="w-10 h-[2px] mb-2"
+                  style={{ backgroundColor: accentColor }}
+                />
+                <div className="p-3 bg-white/10 border border-white/20 rounded-lg text-[11px]">
+                  <p className="font-semibold mb-0.5 text-[#fbbf24]">
                     {verseRef}
                   </p>
-                  <p className="italic text-stone-700">&ldquo;{verseText}&rdquo;</p>
+                  <p className="italic text-white/85">&ldquo;{verseText}&rdquo;</p>
                 </div>
               </div>
-              <div className="h-40 rounded overflow-hidden border border-stone-200 bg-stone-100">
-                {heroImageUrl && (
-                  <img
-                    src={heroImageUrl}
-                    alt="Pratinjau Hero"
-                    className="w-full h-full object-cover"
-                  />
-                )}
+              <div className="sm:col-span-5 bg-white rounded-lg p-2.5 text-slate-900">
+                <div className="h-24 rounded overflow-hidden border border-slate-200 bg-slate-100 mb-2">
+                  {heroImageUrl && (
+                    <img
+                      src={heroImageUrl}
+                      alt="Pratinjau Hero"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+                  Ibadah Minggu Terdekat
+                </p>
+                <p className="text-xs font-bold text-slate-900">08.00 &amp; 10.30 WIB</p>
               </div>
             </div>
           </div>

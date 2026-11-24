@@ -2,20 +2,32 @@
 
 @layer base {
   :root {
-    --font-display: 'Fraunces', Georgia, serif;
+    --hkbp-navy: #0f294a;
+    --hkbp-navy-light: #1e3a8a;
+    --hkbp-gold: #d97706;
+    --hkbp-gold-soft: #f59e0b;
+    --hkbp-bg: #f8fafc;
+    --hkbp-border: #e2e8f0;
+    --font-display: 'Playfair Display', Georgia, serif;
     --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   }
 
   body {
     font-family: var(--font-sans);
-    color: #1c1917;
-    background-color: #fbf9f5;
+    color: #0f172a;
+    background-color: var(--hkbp-bg);
   }
 }
 
-.font-display {
+.font-display,
+.font-serif-hkbp {
   font-family: var(--font-display);
+}
+
+.font-mono-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .font-wp {
@@ -24,4 +36,69 @@
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+.hero-sacred {
+  background: linear-gradient(135deg, #0a1c34 0%, #0f294a 55%, #1e3a8a 100%);
+  color: #ffffff;
+}
+
+.surface-card {
+  background-color: #ffffff;
+  border: 1px solid var(--hkbp-border);
+  border-radius: 12px;
+}
+
+.quick-link-card {
+  background-color: #ffffff;
+  border: 1px solid var(--hkbp-border);
+  border-radius: 12px;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.quick-link-card:hover {
+  border-color: var(--hkbp-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 41, 74, 0.08);
+}
+
+.btn-navy {
+  background-color: var(--hkbp-navy);
+  color: #ffffff;
+  border: 1px solid var(--hkbp-navy);
+  font-weight: 600;
+  transition: background-color 0.16s ease, opacity 0.16s ease;
+}
+
+.btn-navy:hover {
+  background-color: var(--hkbp-navy-light);
+  border-color: var(--hkbp-navy-light);
+  color: #ffffff;
+}
+
+.btn-gold {
+  background-color: var(--hkbp-gold);
+  color: #ffffff;
+  border: 1px solid var(--hkbp-gold);
+  font-weight: 600;
+  transition: background-color 0.16s ease;
+}
+
+.btn-gold:hover {
+  background-color: #b45309;
+  border-color: #b45309;
+  color: #ffffff;
+}
+
+.progress-thin {
+  height: 8px;
+  border-radius: 999px;
+  background-color: #e2e8f0;
+  overflow: hidden;
+}
+
+.progress-thin-bar {
+  height: 100%;
+  background-color: var(--hkbp-navy);
+  border-radius: 999px;
 }

@@ -36,15 +36,15 @@ export const DEFAULT_SITE_OPTIONS: SiteOptionsMap = {
     'application/pdf',
     'video/mp4',
   ],
-  theme_primary_color: '#1E3A5F',
-  theme_accent_color: '#9A3412',
+  theme_primary_color: '#0f294a',
+  theme_accent_color: '#d97706',
   theme_logo_url: '',
   theme_hero_image_url: '/src/assets/images/church_hero_sanctuary_1795501235668.jpg',
-  church_address: 'Hutaraja, Distrik VI Dairi, Sumatera Utara',
-  church_phone: '(0627) 000-000',
+  church_address: 'Jl. Gereja Hutaraja No. 1, Kec. Siempat Nempu, Kab. Dairi, Sumatera Utara',
+  church_phone: '+62 813-6211-0400',
   daily_verse: {
-    reference: 'Mazmur 119:105',
-    text: 'Firman-Mu itu pelita bagi kakiku dan terang bagi jalanku.',
+    reference: 'Kolose 2:7',
+    text: 'Hendaklah kamu berakar di dalam Dia dan dibangun di atas Dia, hendaklah kamu bertambah teguh dalam iman yang telah diajarkan kepadamu, dan hendaklah hatimu melimpah dengan syukur.',
   },
 };
 

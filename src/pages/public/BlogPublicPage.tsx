@@ -120,7 +120,8 @@ export function BlogPublicPage({
   const totalPages = Math.max(1, Math.ceil(filteredPosts.length / perPage));
   const pagedPosts = filteredPosts.slice((page - 1) * perPage, page * perPage);
 
-  const primaryColor = options.theme_primary_color || '#1E3A5F';
+  const primaryColor = options.theme_primary_color || '#0f294a';
+  const accentColor = options.theme_accent_color || '#d97706';
   const sidebarWidgets = widgets.filter((w) => w.area === 'sidebar' && w.is_active);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
@@ -149,7 +150,7 @@ export function BlogPublicPage({
   if (isDetail) {
     if (loading) {
       return (
-        <div className="max-w-4xl mx-auto px-4 py-12 text-sm text-stone-500">
+        <div className="max-w-4xl mx-auto px-4 py-12 text-sm text-slate-500">
           Memuat artikel...
         </div>
       );
@@ -157,8 +158,14 @@ export function BlogPublicPage({
     if (!detail) {
       return (
         <div className="max-w-4xl mx-auto px-4 py-12 space-y-4">
-          <h1 className="font-display text-2xl font-semibold">Artikel tidak ditemukan</h1>
-          <Link to="/berita" className="text-sm underline" style={{ color: primaryColor }}>
+          <h1 className="font-display text-2xl font-bold text-[#0f172a]">
+            Artikel tidak ditemukan
+          </h1>
+          <Link
+            to="/berita"
+            className="text-sm font-semibold underline"
+            style={{ color: primaryColor }}
+          >
             &larr; Kembali ke Berita
           </Link>
         </div>
@@ -171,7 +178,7 @@ export function BlogPublicPage({
       <article className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-8">
         <Link
           to="/berita"
-          className="inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
           style={{ color: primaryColor }}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -179,27 +186,27 @@ export function BlogPublicPage({
         </Link>
 
         <header className="space-y-4">
-          <div className="flex flex-wrap items-center gap-4 text-xs text-stone-500 tabular-nums">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 font-mono-num">
             <span className="inline-flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" />
+              <Calendar className="w-3.5 h-3.5" style={{ color: accentColor }} />
               {new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(
                 new Date(detail.published_at || detail.created_at)
               )}
             </span>
             {detail.author?.display_name && (
-              <span className="inline-flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1.5 font-sans">
+                <User className="w-3.5 h-3.5" style={{ color: primaryColor }} />
                 {detail.author.display_name}
               </span>
             )}
           </div>
 
-          <h1 className="font-display text-3xl sm:text-4xl font-semibold text-[#1C1917] leading-tight">
+          <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#0f172a] leading-tight">
             {detail.title}
           </h1>
 
           {detail.terms && detail.terms.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
               {detail.terms.map((t) => (
                 <Link
                   key={t.id}
@@ -208,7 +215,7 @@ export function BlogPublicPage({
                       ? `/kategori/${t.slug}`
                       : `/tag/${t.slug}`
                   }
-                  className="underline text-stone-600 hover:text-[#1E3A5F]"
+                  className="underline text-slate-600 hover:text-[#0f294a]"
                 >
                   {t.taxonomy === 'post_tag' ? `#${t.name}` : t.name}
                 </Link>
@@ -218,47 +225,45 @@ export function BlogPublicPage({
         </header>
 
         {cover && (
-          <div className="rounded-md overflow-hidden border border-stone-200 bg-stone-100">
+          <div className="rounded-xl overflow-hidden border border-[#e2e8f0] bg-gradient-to-br from-[#0f294a] to-[#1e3a8a]">
             <img
               src={cover}
               alt={detail.title}
+              referrerPolicy="no-referrer"
               className="w-full max-h-[440px] object-cover"
             />
           </div>
         )}
 
         <div
-          className="bg-white border border-stone-200 rounded-md p-6 sm:p-8 space-y-4 text-base leading-relaxed [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:p-4 [&_blockquote]:bg-[#F4EFE6] [&_blockquote]:border [&_blockquote]:border-stone-200 [&_blockquote]:italic [&_iframe]:w-full [&_iframe]:aspect-video [&_img]:rounded [&_img]:mx-auto"
+          className="surface-card p-6 sm:p-8 space-y-4 text-base text-slate-800 leading-relaxed [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[#0f172a] [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-[#0f172a] [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:p-4 [&_blockquote]:bg-slate-50 [&_blockquote]:border [&_blockquote]:border-[#e2e8f0] [&_blockquote]:rounded-lg [&_blockquote]:italic [&_iframe]:w-full [&_iframe]:aspect-video [&_img]:rounded-lg [&_img]:mx-auto"
           dangerouslySetInnerHTML={{
             __html: sanitizeHtml(detail.content_html || '<p>Belum ada isi artikel.</p>'),
           }}
         />
 
         {/* Komentar */}
-        <section className="pt-8 border-t border-stone-200 space-y-6">
-          <h2 className="font-display text-2xl font-semibold text-[#1C1917] flex items-center gap-2">
-            <MessageSquare className="w-5 h-5" />
+        <section className="pt-8 border-t border-[#e2e8f0] space-y-6">
+          <h2 className="font-display text-2xl font-bold text-[#0f172a] flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" style={{ color: primaryColor }} />
             <span>Komentar Jemaat ({comments.length})</span>
           </h2>
 
           {comments.length > 0 && (
             <div className="space-y-4">
               {comments.map((c) => (
-                <div
-                  key={c.id}
-                  className="p-4 bg-white border border-stone-200 rounded-md"
-                >
+                <div key={c.id} className="surface-card p-4">
                   <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <span className="font-semibold text-sm text-[#1C1917]">
+                    <span className="font-semibold text-sm text-[#0f172a]">
                       {c.author_name}
                     </span>
-                    <span className="text-xs text-stone-500 tabular-nums">
+                    <span className="text-xs text-slate-500 font-mono-num">
                       {new Intl.DateTimeFormat('id-ID', {
                         dateStyle: 'medium',
                       }).format(new Date(c.created_at))}
                     </span>
                   </div>
-                  <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-line">
+                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">
                     {c.content}
                   </p>
                 </div>
@@ -269,19 +274,19 @@ export function BlogPublicPage({
           {detail.comment_status && options.default_comment_status !== 'closed' && (
             <form
               onSubmit={handleSubmitComment}
-              className="p-6 bg-white border border-stone-200 rounded-md space-y-4"
+              className="surface-card p-6 space-y-4"
             >
-              <h3 className="font-display text-lg font-semibold text-[#1C1917]">
+              <h3 className="font-display text-lg font-bold text-[#0f172a]">
                 Tinggalkan Komentar
               </h3>
               {cNotice && (
-                <div className="p-3 bg-[#F4EFE6] border border-stone-300 text-sm text-stone-800 rounded">
+                <div className="p-3 bg-amber-50 border border-amber-200 text-sm text-slate-800 rounded-lg">
                   {cNotice}
                 </div>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Nama Lengkap *
                   </label>
                   <input
@@ -289,23 +294,23 @@ export function BlogPublicPage({
                     required
                     value={cName}
                     onChange={(e) => setCName(e.target.value)}
-                    className="w-full h-9 px-3 border border-stone-300 rounded text-sm"
+                    className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#0f294a]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Alamat Email
                   </label>
                   <input
                     type="email"
                     value={cEmail}
                     onChange={(e) => setCEmail(e.target.value)}
-                    className="w-full h-9 px-3 border border-stone-300 rounded text-sm"
+                    className="w-full h-9 px-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#0f294a]"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-stone-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Komentar *
                 </label>
                 <textarea
@@ -313,14 +318,14 @@ export function BlogPublicPage({
                   required
                   value={cBody}
                   onChange={(e) => setCBody(e.target.value)}
-                  className="w-full p-3 border border-stone-300 rounded text-sm"
+                  className="w-full p-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#0f294a]"
                 />
               </div>
               <button
                 type="submit"
                 disabled={cSending}
-                style={{ backgroundColor: primaryColor }}
-                className="px-5 py-2 text-sm font-medium text-white rounded-md hover:opacity-95 cursor-pointer"
+                style={{ backgroundColor: primaryColor, borderColor: primaryColor }}
+                className="btn-navy px-5 py-2 text-sm rounded-lg cursor-pointer"
               >
                 {cSending ? 'Mengirim...' : 'Kirim Komentar'}
               </button>
@@ -332,208 +337,216 @@ export function BlogPublicPage({
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-      <header className="mb-8">
-        <p className="text-xs uppercase tracking-widest text-[#9A3412] font-semibold mb-2">
-          Kabar Pelayanan &amp; Renungan
-        </p>
-        <h1 className="font-display text-3xl sm:text-4xl font-semibold text-[#1C1917] mb-2">
-          Berita &amp; Artikel Huria
-        </h1>
-      </header>
+    <div className="bg-[#f8fafc]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+        <header className="mb-8">
+          <p
+            className="text-xs uppercase tracking-[0.12em] font-semibold mb-2"
+            style={{ color: accentColor }}
+          >
+            Kabar Pelayanan &amp; Renungan
+          </p>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#0f172a] mb-2">
+            Berita &amp; Artikel Huria
+          </h1>
+        </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div className="lg:col-span-8 space-y-6">
-          {/* Bar Pencarian */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[220px]">
-              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                placeholder="Cari berita, renungan, atau pengumuman..."
-                className="w-full h-10 pl-9 pr-3 bg-white border border-stone-300 rounded-md text-sm"
-              />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-8 space-y-6">
+            {/* Bar Pencarian */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative flex-1 min-w-[220px]">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  placeholder="Cari berita, renungan, atau pengumuman..."
+                  className="w-full h-10 pl-9 pr-3 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#0f294a]"
+                />
+              </div>
+              {(selectedCategory !== 'all' || selectedTag !== 'all') && (
+                <Link
+                  to="/berita"
+                  onClick={() => {
+                    setSelectedCategory('all');
+                    setSelectedTag('all');
+                  }}
+                  className="text-xs font-semibold underline text-slate-600 hover:text-[#0f294a]"
+                >
+                  Reset filter
+                </Link>
+              )}
             </div>
-            {(selectedCategory !== 'all' || selectedTag !== 'all') && (
-              <Link
-                to="/berita"
-                onClick={() => {
-                  setSelectedCategory('all');
-                  setSelectedTag('all');
-                }}
-                className="text-xs underline text-stone-600"
-              >
-                Reset filter
-              </Link>
+
+            {loading ? (
+              <p className="text-sm text-slate-500">Memuat berita...</p>
+            ) : pagedPosts.length === 0 ? (
+              <div className="surface-card p-8 text-center text-sm text-slate-600">
+                Belum ada artikel yang cocok dengan filter Anda.
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {pagedPosts.map((post) => {
+                  const thumb = resolvePostFeaturedImage(post);
+                  return (
+                    <article
+                      key={post.id}
+                      className="surface-card overflow-hidden grid grid-cols-1 sm:grid-cols-12"
+                    >
+                      {thumb && (
+                        <Link
+                          to={`/berita/${post.slug}`}
+                          className="sm:col-span-4 bg-gradient-to-br from-[#0f294a] to-[#1e3a8a] min-h-[160px] overflow-hidden"
+                        >
+                          <img
+                            src={thumb}
+                            alt={post.title}
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300"
+                          />
+                        </Link>
+                      )}
+                      <div
+                        className={`p-5 flex flex-col justify-between ${
+                          thumb ? 'sm:col-span-8' : 'sm:col-span-12'
+                        }`}
+                      >
+                        <div>
+                          <p className="text-xs text-slate-500 mb-1.5 font-mono-num">
+                            {new Intl.DateTimeFormat('id-ID', {
+                              dateStyle: 'long',
+                            }).format(new Date(post.published_at || post.created_at))}
+                          </p>
+                          <Link
+                            to={`/berita/${post.slug}`}
+                            className="font-display text-xl font-bold text-[#0f172a] hover:text-[#0f294a] hover:underline block mb-2"
+                          >
+                            {post.title}
+                          </Link>
+                          <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+                            {post.excerpt}
+                          </p>
+                        </div>
+                        <Link
+                          to={`/berita/${post.slug}`}
+                          className="text-xs font-semibold hover:underline"
+                          style={{ color: primaryColor }}
+                        >
+                          Baca selengkapnya &rarr;
+                        </Link>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Paginasi */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 border-t border-[#e2e8f0] text-sm">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                  className="px-3.5 py-1.5 border border-slate-300 bg-white hover:bg-slate-50 rounded-lg font-medium disabled:opacity-40 cursor-pointer"
+                >
+                  &larr; Sebelumnya
+                </button>
+                <span className="text-slate-600 font-mono-num text-xs">
+                  Halaman {page} dari {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="px-3.5 py-1.5 border border-slate-300 bg-white hover:bg-slate-50 rounded-lg font-medium disabled:opacity-40 cursor-pointer"
+                >
+                  Berikutnya &rarr;
+                </button>
+              </div>
             )}
           </div>
 
-          {loading ? (
-            <p className="text-sm text-stone-500">Memuat berita...</p>
-          ) : pagedPosts.length === 0 ? (
-            <div className="p-8 bg-white border border-stone-200 rounded-md text-center text-sm text-stone-600">
-              Belum ada artikel yang cocok dengan filter Anda.
-            </div>
-          ) : (
-            <div className="space-y-5">
-              {pagedPosts.map((post) => {
-                const thumb = resolvePostFeaturedImage(post);
-                return (
-                  <article
-                    key={post.id}
-                    className="bg-white border border-stone-200 rounded-md overflow-hidden grid grid-cols-1 sm:grid-cols-12"
+          {/* Sidebar Kategori, Tag & Widget */}
+          <aside className="lg:col-span-4 space-y-6">
+            <div className="surface-card p-5">
+              <h2 className="font-display text-lg font-bold text-[#0f172a] mb-3">
+                Kategori
+              </h2>
+              <ul className="space-y-1.5 text-sm">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory('all');
+                      setPage(1);
+                    }}
+                    className={`hover:underline cursor-pointer ${
+                      selectedCategory === 'all'
+                        ? 'font-semibold text-[#0f294a]'
+                        : 'text-slate-700'
+                    }`}
                   >
-                    {thumb && (
-                      <Link
-                        to={`/berita/${post.slug}`}
-                        className="sm:col-span-4 bg-stone-100 min-h-[160px]"
-                      >
-                        <img
-                          src={thumb}
-                          alt={post.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </Link>
-                    )}
-                    <div
-                      className={`p-5 flex flex-col justify-between ${
-                        thumb ? 'sm:col-span-8' : 'sm:col-span-12'
+                    Semua Kategori
+                  </button>
+                </li>
+                {categories.map((cat) => (
+                  <li key={cat.id} className="flex items-center justify-between">
+                    <Link
+                      to={`/kategori/${cat.slug}`}
+                      className={`hover:underline ${
+                        selectedCategory === cat.slug
+                          ? 'font-semibold text-[#0f294a]'
+                          : 'text-slate-700'
                       }`}
                     >
-                      <div>
-                        <p className="text-xs text-stone-500 mb-1 tabular-nums">
-                          {new Intl.DateTimeFormat('id-ID', {
-                            dateStyle: 'long',
-                          }).format(new Date(post.published_at || post.created_at))}
-                        </p>
-                        <Link
-                          to={`/berita/${post.slug}`}
-                          className="font-display text-xl font-semibold text-[#1C1917] hover:underline block mb-2"
-                        >
-                          {post.title}
-                        </Link>
-                        <p className="text-sm text-stone-600 line-clamp-2 mb-3">
-                          {post.excerpt}
-                        </p>
-                      </div>
-                      <Link
-                        to={`/berita/${post.slug}`}
-                        className="text-xs font-semibold hover:underline"
-                        style={{ color: primaryColor }}
-                      >
-                        Baca selengkapnya &rarr;
-                      </Link>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Paginasi */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t border-stone-200 text-sm">
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="px-3 py-1.5 border border-stone-300 bg-white rounded disabled:opacity-40 cursor-pointer"
-              >
-                &larr; Sebelumnya
-              </button>
-              <span className="text-stone-600 tabular-nums">
-                Halaman {page} dari {totalPages}
-              </span>
-              <button
-                type="button"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1.5 border border-stone-300 bg-white rounded disabled:opacity-40 cursor-pointer"
-              >
-                Berikutnya &rarr;
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Sidebar Kategori, Tag & Widget */}
-        <aside className="lg:col-span-4 space-y-6">
-          <div className="p-5 bg-white border border-stone-200 rounded-md">
-            <h2 className="font-display text-lg font-semibold text-[#1C1917] mb-3">
-              Kategori
-            </h2>
-            <ul className="space-y-1.5 text-sm">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory('all');
-                    setPage(1);
-                  }}
-                  className={`hover:underline cursor-pointer ${
-                    selectedCategory === 'all' ? 'font-semibold text-[#1E3A5F]' : 'text-stone-700'
-                  }`}
-                >
-                  Semua Kategori
-                </button>
-              </li>
-              {categories.map((cat) => (
-                <li key={cat.id} className="flex items-center justify-between">
-                  <Link
-                    to={`/kategori/${cat.slug}`}
-                    className={`hover:underline ${
-                      selectedCategory === cat.slug
-                        ? 'font-semibold text-[#1E3A5F]'
-                        : 'text-stone-700'
-                    }`}
-                  >
-                    {cat.name}
-                  </Link>
-                  <span className="text-xs text-stone-400 tabular-nums">{cat.count}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {tags.length > 0 && (
-            <div className="p-5 bg-white border border-stone-200 rounded-md">
-              <h2 className="font-display text-lg font-semibold text-[#1C1917] mb-3">
-                Topik / Tag
-              </h2>
-              <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
-                {tags.map((tag) => (
-                  <Link
-                    key={tag.id}
-                    to={`/tag/${tag.slug}`}
-                    className={`hover:underline ${
-                      selectedTag === tag.slug
-                        ? 'font-semibold text-[#1E3A5F]'
-                        : 'text-stone-600'
-                    }`}
-                  >
-                    #{tag.name}
-                  </Link>
+                      {cat.name}
+                    </Link>
+                    <span className="text-xs text-slate-400 font-mono-num">{cat.count}</span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
-          )}
 
-          {sidebarWidgets.map((w) => (
-            <div key={w.id} className="p-5 bg-white border border-stone-200 rounded-md">
-              <h2 className="font-display text-lg font-semibold text-[#1C1917] mb-2">
-                {w.title}
-              </h2>
-              <p className="text-sm text-stone-600 whitespace-pre-line">
-                {String(w.config?.body || '')}
-              </p>
-            </div>
-          ))}
-        </aside>
+            {tags.length > 0 && (
+              <div className="surface-card p-5">
+                <h2 className="font-display text-lg font-bold text-[#0f172a] mb-3">
+                  Topik / Tag
+                </h2>
+                <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
+                  {tags.map((tag) => (
+                    <Link
+                      key={tag.id}
+                      to={`/tag/${tag.slug}`}
+                      className={`hover:underline ${
+                        selectedTag === tag.slug
+                          ? 'font-semibold text-[#0f294a]'
+                          : 'text-slate-600'
+                      }`}
+                    >
+                      #{tag.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {sidebarWidgets.map((w) => (
+              <div key={w.id} className="surface-card p-5">
+                <h2 className="font-display text-lg font-bold text-[#0f172a] mb-2">
+                  {w.title}
+                </h2>
+                <p className="text-sm text-slate-600 whitespace-pre-line">
+                  {String(w.config?.body || '')}
+                </p>
+              </div>
+            ))}
+          </aside>
+        </div>
       </div>
     </div>
   );

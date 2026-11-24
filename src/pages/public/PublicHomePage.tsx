@@ -512,7 +512,7 @@ export function PublicHomePage() {
                         src={thumb}
                         alt={post.title}
                         categoryLabel={categoryName}
-                        className="aspect-[16/10]"
+                        className="aspect-[16/9]"
                       />
                     </Link>
                     <div className="p-5 flex-1 flex flex-col">

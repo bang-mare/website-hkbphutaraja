@@ -24,6 +24,7 @@ interface MediaPickerModalProps {
   multiple?: boolean;
   accept?: 'all' | 'image' | 'pdf';
   title?: string;
+  preserveAspect?: boolean;
 }
 
 export function MediaPickerModal({
@@ -33,6 +34,7 @@ export function MediaPickerModal({
   multiple = false,
   accept = 'all',
   title = 'Pilih Media',
+  preserveAspect = false,
 }: MediaPickerModalProps) {
   const [tab, setTab] = useState<'library' | 'upload'>('library');
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -52,7 +54,12 @@ export function MediaPickerModal({
   // Upload state
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [keepOriginalSize, setKeepOriginalSize] = useState(preserveAspect);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setKeepOriginalSize(preserveAspect);
+  }, [preserveAspect, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -124,7 +131,9 @@ export function MediaPickerModal({
 
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
-      const { media, error } = await uploadMediaFile(file);
+      const { media, error } = await uploadMediaFile(file, {
+        preserveAspect: keepOriginalSize,
+      });
       if (error) {
         setErrorMsg(error);
       } else if (media) {
@@ -284,6 +293,22 @@ export function MediaPickerModal({
               >
                 {uploading ? 'Mengunggah ke Google Drive...' : 'Pilih Berkas dari Komputer'}
               </button>
+              <p className="text-[11px] text-[#50575e] mt-3">
+                {keepOriginalSize
+                  ? 'Mode ukuran asli aktif (disarankan untuk logo atau ikon).'
+                  : 'Semua foto berita & galeri otomatis di-resize ke ukuran seragam 1200×675 px (16:9).'}
+              </p>
+              {accept !== 'pdf' && (
+                <label className="inline-flex items-center gap-1.5 mt-2 text-[12px] text-[#50575e] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={keepOriginalSize}
+                    onChange={(e) => setKeepOriginalSize(e.target.checked)}
+                    className="rounded-[2px]"
+                  />
+                  <span>Pertahankan rasio asli (khusus Logo)</span>
+                </label>
+              )}
             </div>
           </div>
         ) : (

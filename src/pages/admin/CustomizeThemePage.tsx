@@ -390,6 +390,7 @@ export function CustomizeThemePage() {
         open={Boolean(pickerTarget)}
         onClose={() => setPickerTarget(null)}
         accept="image"
+        preserveAspect={pickerTarget === 'logo' || pickerTarget === 'login_logo'}
         title={
           pickerTarget === 'logo'
             ? 'Pilih Logo Situs'

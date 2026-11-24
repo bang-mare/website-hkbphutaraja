@@ -36,6 +36,7 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
   const [showUploader, setShowUploader] = useState(defaultOpenUpload);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [keepOriginalSize, setKeepOriginalSize] = useState(false);
 
   // Filter & Selection
   const [mimeFilter, setMimeFilter] = useState<'all' | 'image' | 'pdf' | 'video'>('all');
@@ -135,7 +136,9 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
     let successCount = 0;
 
     for (let i = 0; i < files.length; i++) {
-      const { media, error } = await uploadMediaFile(files[i]);
+      const { media, error } = await uploadMediaFile(files[i], {
+        preserveAspect: keepOriginalSize,
+      });
       if (error) {
         addNotice({ type: 'error', message: `Gagal mengunggah ${files[i].name}: ${error}` });
       } else if (media) {
@@ -279,7 +282,10 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
               Letakkan berkas di mana saja di kotak ini untuk mengunggah
             </p>
             <p className="text-[12px] text-[#50575e] mb-4">
-              Mendukung JPG, PNG, WebP, GIF, PDF (Warta Jemaat), dan MP4. Thumbnail otomatis dihasilkan pada ukuran 150, 300, 768, dan 1024 piksel.
+              Mendukung JPG, PNG, WebP, GIF, PDF (Warta Jemaat), dan MP4.{' '}
+              {keepOriginalSize
+                ? 'Ukuran asli dipertahankan (khusus Logo).'
+                : 'Semua foto otomatis di-resize seragam menjadi 1200×675 px (16:9).'}
             </p>
             <input
               ref={fileInputRef}
@@ -289,14 +295,25 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
               onChange={(e) => void handleUploadFiles(e.target.files)}
               className="hidden"
             />
-            <button
-              type="button"
-              disabled={uploading}
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-1.5 bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white text-[13px] font-medium rounded-[3px] cursor-pointer"
-            >
-              {uploading ? 'Mengunggah...' : 'Pilih Berkas'}
-            </button>
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-1.5 bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white text-[13px] font-medium rounded-[3px] cursor-pointer"
+              >
+                {uploading ? 'Mengunggah...' : 'Pilih Berkas'}
+              </button>
+              <label className="inline-flex items-center gap-1.5 text-[12px] text-[#50575e] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={keepOriginalSize}
+                  onChange={(e) => setKeepOriginalSize(e.target.checked)}
+                  className="rounded-[2px]"
+                />
+                <span>Pertahankan rasio asli (khusus Logo/Ikon)</span>
+              </label>
+            </div>
           </div>
         </div>
       )}

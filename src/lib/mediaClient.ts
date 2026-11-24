@@ -68,23 +68,103 @@ export async function fetchMediaLibrary(): Promise<{
   return { items: (data as MediaItem[]) || [], error: null };
 }
 
+export const STANDARD_IMAGE_WIDTH = 1200;
+export const STANDARD_IMAGE_HEIGHT = 675;
+
+export async function resizeImageToStandard(
+  file: File,
+  targetWidth = STANDARD_IMAGE_WIDTH,
+  targetHeight = STANDARD_IMAGE_HEIGHT
+): Promise<File> {
+  if (
+    !file.type.startsWith('image/') ||
+    file.type === 'image/gif' ||
+    file.type === 'image/svg+xml'
+  ) {
+    return file;
+  }
+
+  return new Promise((resolve) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          URL.revokeObjectURL(objectUrl);
+          resolve(file);
+          return;
+        }
+
+        // Center-crop cover agar ukuran selalu seragam (1200x675) tanpa distorsi
+        const scale = Math.max(targetWidth / img.width, targetHeight / img.height);
+        const drawWidth = img.width * scale;
+        const drawHeight = img.height * scale;
+        const offsetX = (targetWidth - drawWidth) / 2;
+        const offsetY = (targetHeight - drawHeight) / 2;
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+        const outMime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(objectUrl);
+            if (!blob) {
+              resolve(file);
+              return;
+            }
+            const ext = outMime === 'image/png' ? '.png' : '.jpg';
+            const baseName = file.name.replace(/\.[^.]+$/, '');
+            resolve(new File([blob], `${baseName}${ext}`, { type: outMime }));
+          },
+          outMime,
+          0.9
+        );
+      } catch {
+        URL.revokeObjectURL(objectUrl);
+        resolve(file);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(file);
+    };
+    img.src = objectUrl;
+  });
+}
+
 export async function uploadMediaFile(
   file: File,
-  meta?: { alt?: string; caption?: string; deskripsi?: string }
+  meta?: { alt?: string; caption?: string; deskripsi?: string; preserveAspect?: boolean }
 ): Promise<{ media: MediaItem | null; error: string | null }> {
+  const shouldStandardize =
+    !meta?.preserveAspect &&
+    file.type.startsWith('image/') &&
+    file.type !== 'image/gif' &&
+    file.type !== 'image/svg+xml';
+
+  const processedFile = shouldStandardize
+    ? await resizeImageToStandard(file, STANDARD_IMAGE_WIDTH, STANDARD_IMAGE_HEIGHT)
+    : file;
+
   if (!isSupabaseConfigured || !supabase) {
     const newItem: MediaItem = {
       id: `preview-media-${Date.now()}`,
       drive_file_id: `preview-drive-${Date.now()}`,
       drive_folder_id: '',
-      nama: file.name,
-      mime: file.type || 'application/octet-stream',
-      ukuran: file.size,
-      alt: meta?.alt || file.name.replace(/\.[^.]+$/, ''),
+      nama: processedFile.name,
+      mime: processedFile.type || 'application/octet-stream',
+      ukuran: processedFile.size,
+      alt: meta?.alt || processedFile.name.replace(/\.[^.]+$/, ''),
       caption: meta?.caption || '',
       deskripsi: meta?.deskripsi || '',
-      width: null,
-      height: null,
+      width: shouldStandardize ? STANDARD_IMAGE_WIDTH : null,
+      height: shouldStandardize ? STANDARD_IMAGE_HEIGHT : null,
       thumbnails: {},
       year_month: new Date().toISOString().slice(0, 7).replace('-', '/'),
       uploaded_by: 'preview-administrator',
@@ -102,10 +182,11 @@ export async function uploadMediaFile(
   }
 
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('file', processedFile);
   if (meta?.alt) formData.append('alt', meta.alt);
   if (meta?.caption) formData.append('caption', meta.caption);
   if (meta?.deskripsi) formData.append('deskripsi', meta.deskripsi);
+  if (shouldStandardize) formData.append('resize_mode', 'cover_16_9');
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,

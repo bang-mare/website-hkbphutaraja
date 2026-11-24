@@ -15,6 +15,51 @@ import {
 import { PostThumbnail } from '../../components/PostThumbnail';
 import type { CommentRecord, PostRecord, Term } from '../../types/cms';
 
+function normalizeMediaRef(url: string): string {
+  const raw = url.trim();
+  if (!raw) return '';
+  try {
+    const parsed = new URL(raw, 'https://placeholder.local');
+    return parsed.pathname.replace(/\/+$/, '');
+  } catch {
+    return raw.split('?')[0].trim();
+  }
+}
+
+function stripHeroImageFromHtml(
+  html: string,
+  heroUrl: string
+): { bodyHtml: string; heroCaption: string } {
+  if (!html || !heroUrl || typeof DOMParser === 'undefined') {
+    return { bodyHtml: html, heroCaption: '' };
+  }
+  const targetRef = normalizeMediaRef(heroUrl);
+  if (!targetRef) return { bodyHtml: html, heroCaption: '' };
+
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  let heroCaption = '';
+  const imgs = Array.from(doc.body.querySelectorAll('img'));
+
+  for (const img of imgs) {
+    const src = img.getAttribute('src') || '';
+    if (normalizeMediaRef(src) !== targetRef) continue;
+
+    const figure = img.closest('figure');
+    if (figure && figure.querySelectorAll('img').length === 1) {
+      const cap = figure.querySelector('figcaption')?.textContent?.trim() || '';
+      if (cap && !heroCaption) heroCaption = cap;
+      figure.remove();
+    } else {
+      img.remove();
+    }
+  }
+
+  return {
+    bodyHtml: doc.body.innerHTML.trim(),
+    heroCaption,
+  };
+}
+
 export function BlogPublicPage({
   filterMode,
 }: {
@@ -173,8 +218,14 @@ export function BlogPublicPage({
       );
     }
 
+    const cover = resolvePostFeaturedImage(detail);
+    const { bodyHtml, heroCaption } = stripHeroImageFromHtml(
+      detail.content_html || '',
+      cover
+    );
+
     return (
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+      <article className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-6">
         <Link
           to="/berita"
           className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
@@ -223,10 +274,28 @@ export function BlogPublicPage({
           )}
         </header>
 
+        {cover && (
+          <figure className="space-y-2">
+            <div className="w-full aspect-[16/9] rounded-xl overflow-hidden border border-[#e2e8f0] bg-slate-100">
+              <img
+                src={cover}
+                alt={detail.title}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {heroCaption && (
+              <figcaption className="text-xs text-slate-500 italic">
+                {heroCaption}
+              </figcaption>
+            )}
+          </figure>
+        )}
+
         <div
-          className="surface-card p-6 sm:p-8 space-y-4 text-base text-slate-800 leading-relaxed [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[#0f172a] [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-[#0f172a] [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:p-4 [&_blockquote]:bg-slate-50 [&_blockquote]:border [&_blockquote]:border-[#e2e8f0] [&_blockquote]:rounded-lg [&_blockquote]:italic [&_iframe]:w-full [&_iframe]:aspect-video [&_img]:rounded-lg [&_img]:mx-auto"
+          className="surface-card p-6 sm:p-8 space-y-4 text-base text-slate-800 leading-relaxed [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[#0f172a] [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-[#0f172a] [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:p-4 [&_blockquote]:bg-slate-50 [&_blockquote]:border [&_blockquote]:border-[#e2e8f0] [&_blockquote]:rounded-lg [&_blockquote]:italic [&_iframe]:w-full [&_iframe]:aspect-video [&_img]:w-full [&_img]:aspect-[16/9] [&_img]:object-cover [&_img]:rounded-lg [&_img]:mx-auto"
           dangerouslySetInnerHTML={{
-            __html: sanitizeHtml(detail.content_html || '<p>Belum ada isi artikel.</p>'),
+            __html: sanitizeHtml(bodyHtml || '<p>Belum ada isi artikel.</p>'),
           }}
         />
 
@@ -388,13 +457,13 @@ export function BlogPublicPage({
                     >
                       <Link
                         to={`/berita/${post.slug}`}
-                        className="sm:col-span-4 block"
+                        className="sm:col-span-4 block self-stretch"
                       >
                         <PostThumbnail
                           src={thumb}
                           alt={post.title}
                           categoryLabel={categoryName}
-                          className="h-full min-h-[170px] aspect-[16/10] sm:aspect-auto"
+                          className="w-full aspect-[16/9]"
                         />
                       </Link>
                       <div className="p-5 flex flex-col justify-between sm:col-span-8">

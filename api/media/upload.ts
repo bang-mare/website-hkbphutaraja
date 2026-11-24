@@ -40,6 +40,7 @@ interface ParsedUpload {
   alt: string;
   caption: string;
   deskripsi: string;
+  resizeMode: string;
 }
 
 function parseMultipart(req: VercelRequest, maxBytes: number): Promise<ParsedUpload> {
@@ -89,6 +90,7 @@ function parseMultipart(req: VercelRequest, maxBytes: number): Promise<ParsedUpl
         alt: fields.alt || '',
         caption: fields.caption || '',
         deskripsi: fields.deskripsi || '',
+        resizeMode: fields.resize_mode || '',
       });
     });
 
@@ -230,17 +232,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       );
     }
 
+    let uploadBuffer = parsed.buffer;
+    const isRasterImage =
+      parsed.mimeType.startsWith('image/') &&
+      parsed.mimeType !== 'image/gif' &&
+      parsed.mimeType !== 'image/svg+xml';
+
+    if (isRasterImage && parsed.resizeMode === 'cover_16_9') {
+      const pipeline = sharp(parsed.buffer)
+        .rotate()
+        .resize(1200, 675, { fit: 'cover', position: 'centre' });
+      uploadBuffer =
+        parsed.mimeType === 'image/png'
+          ? await pipeline.png({ compressionLevel: 8 }).toBuffer()
+          : parsed.mimeType === 'image/webp'
+            ? await pipeline.webp({ quality: 88 }).toBuffer()
+            : await pipeline.jpeg({ quality: 88, mozjpeg: true }).toBuffer();
+    }
+
     const safeName = parsed.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     const uniquePrefix = Date.now();
     const driveOriginalName = `${uniquePrefix}-${safeName}`;
 
-    // Upload file asli ke Drive
+    // Upload file ke Drive (sudah terstandarisasi 1200x675 jika mode foto standar)
     const driveFileId = await uploadBufferToDrive(
       activeDriveClient.drive,
       folderId,
       driveOriginalName,
       parsed.mimeType,
-      parsed.buffer
+      uploadBuffer
     );
 
     if (usedUserOAuth && !hasServerReadAccess) {
@@ -257,17 +277,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const thumbnails: Record<string, string> = {};
 
     // Hasilkan thumbnail 150, 300, 768, 1024 untuk gambar raster (selain GIF animasi)
-    if (
-      parsed.mimeType.startsWith('image/') &&
-      parsed.mimeType !== 'image/gif'
-    ) {
-      const metadata = await sharp(parsed.buffer).metadata();
+    if (isRasterImage) {
+      const metadata = await sharp(uploadBuffer).metadata();
       width = metadata.width ?? null;
       height = metadata.height ?? null;
 
       for (const thumbW of THUMB_WIDTHS) {
         if (width && width <= thumbW) continue;
-        const resizedBuffer = await sharp(parsed.buffer)
+        const resizedBuffer = await sharp(uploadBuffer)
           .rotate()
           .resize({ width: thumbW, withoutEnlargement: true })
           .webp({ quality: 82 })
@@ -300,7 +317,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         drive_folder_id: folderId,
         nama: parsed.filename,
         mime: parsed.mimeType,
-        ukuran: parsed.buffer.length,
+        ukuran: uploadBuffer.length,
         alt: parsed.alt || parsed.filename.replace(/\.[^.]+$/, ''),
         caption: parsed.caption,
         deskripsi: parsed.deskripsi,

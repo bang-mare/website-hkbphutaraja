@@ -1,0 +1,52 @@
+name: Supabase Weekly Backup
+
+on:
+  schedule:
+    # Berjalan setiap Minggu pukul 02:00 UTC (09:00 WIB)
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+jobs:
+  backup-database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Siapkan direktori backup
+        run: mkdir -p backups
+
+      - name: Backup PostgreSQL via pg_dump (jika SUPABASE_DB_URL tersedia)
+        if: ${{ secrets.SUPABASE_DB_URL != '' }}
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          TIMESTAMP=$(date +"%Y-%m-%d_%H%M")
+          pg_dump "${{ secrets.SUPABASE_DB_URL }}" --no-owner --no-acl -f "backups/hkbp_hutaraja_${TIMESTAMP}.sql"
+          gzip "backups/hkbp_hutaraja_${TIMESTAMP}.sql"
+
+      - name: Backup JSON via Supabase REST API (cadangan bila SUPABASE_DB_URL kosong)
+        if: ${{ secrets.SUPABASE_DB_URL == '' && secrets.VITE_SUPABASE_URL != '' && secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
+        run: |
+          TIMESTAMP=$(date +"%Y-%m-%d_%H%M")
+          OUT_DIR="backups/json_${TIMESTAMP}"
+          mkdir -p "$OUT_DIR"
+          TABLES="wijk options menus menu_items widgets terms posts post_terms comments media jemaat ibadah_minggu phd_lingkungan kehadiran keuangan profiles"
+          for tbl in $TABLES; do
+            curl --silent --show-error \
+              -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/${tbl}?select=*" \
+              -o "${OUT_DIR}/${tbl}.json"
+          done
+          tar -czf "backups/hkbp_hutaraja_json_${TIMESTAMP}.tar.gz" -C backups "json_${TIMESTAMP}"
+          rm -rf "$OUT_DIR"
+
+      - name: Lewati jika secret belum diisi
+        if: ${{ secrets.SUPABASE_DB_URL == '' && (secrets.VITE_SUPABASE_URL == '' || secrets.SUPABASE_SERVICE_ROLE_KEY == '') }}
+        run: |
+          echo "Secret backup Supabase belum dikonfigurasi di GitHub Repository Secrets."
+          echo "Tambahkan SUPABASE_DB_URL atau VITE_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY." > backups/README.txt
+
+      - name: Simpan Artefak Backup (Retensi 30 hari)
+        uses: actions/upload-artifact@v4
+        with:
+          name: hkbp-hutaraja-supabase-backup
+          path: backups/
+          retention-days: 30

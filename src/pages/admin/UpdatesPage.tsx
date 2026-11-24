@@ -18,22 +18,22 @@ export function UpdatesPage() {
     {
       stage: 'Tahap 3',
       title: 'Integrasi Google Drive (Service Account) & Pustaka Media',
-      done: false,
+      done: true,
     },
     {
       stage: 'Tahap 4',
       title: 'Website Publik Penuh, Menu Builder, Widget & Pengaturan',
-      done: false,
+      done: true,
     },
     {
       stage: 'Tahap 5',
       title: 'Modul Gereja (Jemaat, Jadwal Ibadah, PHD, Kehadiran, Keuangan) & Peran',
-      done: false,
+      done: true,
     },
     {
       stage: 'Tahap 6',
-      title: 'Panduan Deploy GitHub → Vercel, Setup Supabase & Google Drive',
-      done: false,
+      title: 'Panduan Deploy GitHub → Vercel, Setup Supabase & Google Drive + Backup Otomatis',
+      done: true,
     },
   ];
 
@@ -60,9 +60,13 @@ export function UpdatesPage() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-[#787c82]" />
+            <CheckCircle2 className="w-4 h-4 text-[#00a32a]" />
             <span>
-              <strong>Google Drive API Proxy:</strong> Dijadwalkan aktif penuh pada Tahap 3.
+              <strong>Google Drive API Proxy:</strong> Aktif di endpoint{' '}
+              <code>/api/media/upload</code>, <code>/api/media/[id]</code>, dan{' '}
+              <code>/api/media/delete</code> (memerlukan secret server{' '}
+              <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> &amp;{' '}
+              <code>GOOGLE_DRIVE_ROOT_FOLDER_ID</code>).
             </span>
           </div>
         </div>
@@ -70,7 +74,7 @@ export function UpdatesPage() {
 
       <div className="bg-white border border-[#c3c4c7] p-5 shadow-[0_1px_1px_rgba(0,0,0,0.04)] text-[13px]">
         <h2 className="text-[16px] font-semibold text-[#1d2327] mb-3">
-          Tahapan Pengembangan HKBP Ressort Hutaraja CMS
+          Status Modul HKBP Ressort Hutaraja CMS
         </h2>
         <ul className="divide-y divide-[#f0f0f1]">
           {stages.map((s) => (
@@ -84,7 +88,7 @@ export function UpdatesPage() {
                   s.done ? 'text-[#00a32a]' : 'text-[#50575e]'
                 }`}
               >
-                {s.done ? 'Selesai' : 'Menunggu'}
+                {s.done ? 'Aktif' : 'Menunggu'}
               </span>
             </li>
           ))}

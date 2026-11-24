@@ -322,7 +322,7 @@ export function DashboardPage() {
         )}
       </div>
 
-      {/* Welcome Panel ringkas khas Tahap 1 */}
+      {/* Welcome Panel ringkas khas WordPress */}
       <div className="bg-white border border-[#c3c4c7] shadow-[0_1px_1px_rgba(0,0,0,0.04)] p-5 mb-5">
         <h2 className="text-[20px] font-normal text-[#1d2327] mb-1">
           Selamat datang di CMS HKBP Ressort Hutaraja!
@@ -374,7 +374,7 @@ export function DashboardPage() {
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold text-[#1d2327] mb-2">Status Sistem (Tahap 1)</h3>
+            <h3 className="font-semibold text-[#1d2327] mb-2">Status Sistem</h3>
             <ul className="space-y-1 text-[#50575e]">
               <li>
                 Basis Data:{' '}
@@ -649,8 +649,8 @@ export function DashboardPage() {
                       Belum ada data ulang tahun jemaat untuk minggu ini. Data jemaat dapat diimpor melalui menu{' '}
                       <Link to="/admin/jemaat/import" className="text-[#2271b1] hover:underline">
                         Jemaat &rarr; Import XLSX
-                      </Link>{' '}
-                      pada Tahap 5.
+                      </Link>
+                      .
                     </p>
                   </div>
                 ) : (

@@ -48,9 +48,12 @@ import {
   savePost,
 } from '../../lib/cmsData';
 import { hasCapability } from '../../lib/roles';
+import { MediaPickerModal } from '../../components/admin/MediaPickerModal';
+import { getMediaProxyUrl } from '../../lib/mediaClient';
 import type {
   BlockType,
   GutenbergBlock,
+  MediaItem,
   PostRecord,
   PostRevision,
   PostStatus,
@@ -103,10 +106,18 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
   const [scheduledAt, setScheduledAt] = useState('');
   const [commentStatus, setCommentStatus] = useState(postType !== 'page');
   const [featuredUrl, setFeaturedUrl] = useState('');
+  const [featuredMediaId, setFeaturedMediaId] = useState<string | null>(null);
   const [parentId, setParentId] = useState<string>('');
   const [menuOrder, setMenuOrder] = useState<number>(0);
   const [wartaDate, setWartaDate] = useState<string>('');
   const [wartaPdfUrl, setWartaPdfUrl] = useState<string>('');
+  const [mediaPickerTarget, setMediaPickerTarget] = useState<
+    | null
+    | { kind: 'featured' }
+    | { kind: 'warta_pdf' }
+    | { kind: 'block_image'; blockId: string }
+    | { kind: 'block_gallery'; blockId: string }
+  >(null);
 
   // Categories & Tags
   const [categories, setCategories] = useState<Term[]>([]);
@@ -195,7 +206,11 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
         setCommentStatus(post.comment_status);
         setParentId(post.parent_id || '');
         setMenuOrder(post.menu_order || 0);
-        setFeaturedUrl((post.meta?.featured_url as string) || '');
+        setFeaturedMediaId(post.featured_media_id || null);
+        setFeaturedUrl(
+          (post.meta?.featured_url as string) ||
+            (post.featured_media_id ? getMediaProxyUrl(post.featured_media_id, { width: 1024 }) : '')
+        );
         setWartaDate((post.meta?.warta_date as string) || '');
         setWartaPdfUrl((post.meta?.warta_pdf_url as string) || '');
 
@@ -221,6 +236,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
         setStatus('draft');
         setScheduledAt('');
         setCommentStatus(postType !== 'page');
+        setFeaturedMediaId(null);
         setFeaturedUrl('');
         setWartaDate('');
         setWartaPdfUrl('');
@@ -355,6 +371,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
         excerpt: finalExcerpt,
         status: targetStatus,
         author_id: profile?.id || null,
+        featured_media_id: featuredMediaId,
         scheduled_at:
           targetStatus === 'future' && scheduledAt
             ? new Date(scheduledAt).toISOString()
@@ -426,6 +443,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
       blocks,
       commentStatus,
       excerpt,
+      featuredMediaId,
       featuredUrl,
       menuOrder,
       metaInfo.label,
@@ -875,12 +893,26 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
 
                     {block.type === 'image' && (
                       <div className="border border-[#dcdcde] bg-[#f6f7f7] p-3 rounded-[2px] space-y-2 text-[13px]">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setMediaPickerTarget({ kind: 'block_image', blockId: block.id })
+                            }
+                            className="px-2.5 py-1 bg-[#2271b1] hover:bg-[#135e96] text-white text-[12px] rounded-[2px] cursor-pointer"
+                          >
+                            Pilih dari Pustaka Media
+                          </button>
+                          <span className="text-[11px] text-[#50575e]">
+                            atau tempel URL gambar di bawah
+                          </span>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <input
                             type="url"
                             value={block.url || ''}
                             onChange={(e) => updateBlock(block.id, { url: e.target.value })}
-                            placeholder="URL Gambar (atau pilih dari Pustaka Media di Tahap 3)"
+                            placeholder="URL Gambar (/api/media/... atau https://...)"
                             className="h-8 px-2.5 bg-white border border-[#8c8f94] rounded-[2px]"
                           />
                           <input
@@ -911,24 +943,35 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
 
                     {block.type === 'gallery' && (
                       <div className="border border-[#dcdcde] bg-[#f6f7f7] p-3 rounded-[2px] space-y-2.5 text-[13px]">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-medium text-[#1d2327]">
                             Galeri Foto ({(block.gallery || []).length} foto)
                           </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateBlock(block.id, {
-                                gallery: [
-                                  ...(block.gallery || []),
-                                  { url: '', alt: '', caption: '' },
-                                ],
-                              })
-                            }
-                            className="px-2 py-1 text-[12px] bg-white border border-[#2271b1] text-[#2271b1] rounded-[2px] cursor-pointer"
-                          >
-                            + Tambah Foto
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setMediaPickerTarget({ kind: 'block_gallery', blockId: block.id })
+                              }
+                              className="px-2 py-1 text-[12px] bg-[#2271b1] text-white rounded-[2px] cursor-pointer"
+                            >
+                              Pilih dari Pustaka Media
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateBlock(block.id, {
+                                  gallery: [
+                                    ...(block.gallery || []),
+                                    { url: '', alt: '', caption: '' },
+                                  ],
+                                })
+                              }
+                              className="px-2 py-1 text-[12px] bg-white border border-[#2271b1] text-[#2271b1] rounded-[2px] cursor-pointer"
+                            >
+                              + URL Manual
+                            </button>
+                          </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {(block.gallery || []).map((item, gIdx) => (
@@ -1496,8 +1539,15 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                         </div>
                         <div>
                           <label className="block text-[12px] text-[#50575e] mb-1">
-                            URL File PDF Warta (Google Drive pada Tahap 3)
+                            File PDF Warta Jemaat
                           </label>
+                          <button
+                            type="button"
+                            onClick={() => setMediaPickerTarget({ kind: 'warta_pdf' })}
+                            className="w-full mb-1.5 py-1.5 bg-[#f6f7f7] hover:bg-[#f0f6fc] border border-[#2271b1] text-[#2271b1] text-[12px] rounded-[2px] cursor-pointer"
+                          >
+                            Unggah / Pilih PDF dari Google Drive
+                          </button>
                           <input
                             type="url"
                             value={wartaPdfUrl}
@@ -1505,7 +1555,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                               setWartaPdfUrl(e.target.value);
                               setIsDirty(true);
                             }}
-                            placeholder="https://..."
+                            placeholder="/api/media/... atau https://..."
                             className="w-full h-7 px-2 border border-[#8c8f94] rounded-[2px]"
                           />
                         </div>
@@ -1530,27 +1580,45 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                   </button>
                   {openAccordions.featured && (
                     <div className="px-4 pb-4 space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => setMediaPickerTarget({ kind: 'featured' })}
+                        className="w-full py-2 border border-dashed border-[#8c8f94] bg-[#f6f7f7] hover:border-[#2271b1] hover:text-[#2271b1] text-[12px] rounded-[2px] cursor-pointer"
+                      >
+                        Tetapkan Gambar Unggulan
+                      </button>
                       <input
                         type="url"
                         value={featuredUrl}
                         onChange={(e) => {
                           setFeaturedUrl(e.target.value);
+                          setFeaturedMediaId(null);
                           setIsDirty(true);
                         }}
                         placeholder="URL gambar unggulan..."
                         className="w-full h-7 px-2 border border-[#8c8f94] rounded-[2px]"
                       />
                       {isSafeHttpOrRelativeUrl(featuredUrl) && (
-                        <img
-                          src={isSafeHttpOrRelativeUrl(featuredUrl)}
-                          alt="Gambar Unggulan"
-                          referrerPolicy="no-referrer"
-                          className="w-full h-32 object-cover border border-[#dcdcde]"
-                        />
+                        <div className="space-y-1">
+                          <img
+                            src={isSafeHttpOrRelativeUrl(featuredUrl)}
+                            alt="Gambar Unggulan"
+                            referrerPolicy="no-referrer"
+                            className="w-full h-32 object-cover border border-[#dcdcde]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFeaturedUrl('');
+                              setFeaturedMediaId(null);
+                              setIsDirty(true);
+                            }}
+                            className="text-[11px] text-[#d63638] hover:underline cursor-pointer"
+                          >
+                            Hapus gambar unggulan
+                          </button>
+                        </div>
                       )}
-                      <p className="text-[11px] text-[#50575e]">
-                        Pemilih langsung dari Pustaka Media Google Drive aktif di Tahap 3.
-                      </p>
                     </div>
                   )}
                 </div>
@@ -1950,6 +2018,57 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
           </div>
         </div>
       )}
+      {/* Modal Pemilih Media Google Drive */}
+      <MediaPickerModal
+        open={Boolean(mediaPickerTarget)}
+        onClose={() => setMediaPickerTarget(null)}
+        multiple={mediaPickerTarget?.kind === 'block_gallery'}
+        accept={
+          mediaPickerTarget?.kind === 'warta_pdf'
+            ? 'pdf'
+            : mediaPickerTarget
+              ? 'image'
+              : 'all'
+        }
+        title={
+          mediaPickerTarget?.kind === 'warta_pdf'
+            ? 'Pilih File PDF Warta Jemaat'
+            : mediaPickerTarget?.kind === 'block_gallery'
+              ? 'Pilih Foto untuk Galeri'
+              : 'Pilih Gambar dari Pustaka Media'
+        }
+        onSelect={(selectedItems: MediaItem[]) => {
+          if (!mediaPickerTarget || selectedItems.length === 0) return;
+          const first = selectedItems[0];
+          if (mediaPickerTarget.kind === 'featured') {
+            setFeaturedMediaId(first.id);
+            setFeaturedUrl(getMediaProxyUrl(first.id, { width: 1024 }));
+            setIsDirty(true);
+          } else if (mediaPickerTarget.kind === 'warta_pdf') {
+            setWartaPdfUrl(getMediaProxyUrl(first.id, { download: true }));
+            setIsDirty(true);
+          } else if (mediaPickerTarget.kind === 'block_image') {
+            updateBlock(mediaPickerTarget.blockId, {
+              mediaId: first.id,
+              url: getMediaProxyUrl(first.id, { width: 1024 }),
+              alt: first.alt || first.nama,
+              caption: first.caption || '',
+            });
+          } else if (mediaPickerTarget.kind === 'block_gallery') {
+            const targetBlock = blocks.find((b) => b.id === mediaPickerTarget.blockId);
+            const existing = (targetBlock?.gallery || []).filter((g) => g.url.trim() !== '');
+            const added = selectedItems.map((m) => ({
+              url: getMediaProxyUrl(m.id, { width: 768 }),
+              alt: m.alt || m.nama,
+              caption: m.caption || '',
+            }));
+            updateBlock(mediaPickerTarget.blockId, {
+              gallery: [...existing, ...added],
+            });
+          }
+          setMediaPickerTarget(null);
+        }}
+      />
     </div>
   );
 }

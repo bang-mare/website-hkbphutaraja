@@ -7,8 +7,20 @@ import { AuthProvider } from './contexts/AuthContext';
 import { AdminProvider } from './contexts/AdminContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AdminLayout } from './layouts/AdminLayout';
-import { PublicHomePage } from './pages/public/PublicHomePage';
+import { PublicLayout } from './layouts/PublicLayout';
 import { LoginPage } from './pages/auth/LoginPage';
+
+// Public Pages
+import { PublicHomePage } from './pages/public/PublicHomePage';
+import { AboutPage } from './pages/public/AboutPage';
+import { SchedulePublicPage } from './pages/public/SchedulePublicPage';
+import { WartaPublicPage } from './pages/public/WartaPublicPage';
+import { BlogPublicPage } from './pages/public/BlogPublicPage';
+import { GalleryPublicPage } from './pages/public/GalleryPublicPage';
+import { ContactPublicPage } from './pages/public/ContactPublicPage';
+import { StaticPagePublic } from './pages/public/StaticPagePublic';
+
+// Admin Pages
 import { DashboardPage } from './pages/admin/DashboardPage';
 import { UpdatesPage } from './pages/admin/UpdatesPage';
 import { ProfilePage } from './pages/admin/ProfilePage';
@@ -16,7 +28,17 @@ import { PostsListPage } from './pages/admin/PostsListPage';
 import { PostEditorPage } from './pages/admin/PostEditorPage';
 import { TermsPage } from './pages/admin/TermsPage';
 import { CommentsPage } from './pages/admin/CommentsPage';
-import { ModulePlaceholderPage } from './pages/admin/ModulePlaceholderPage';
+import { MediaLibraryPage } from './pages/admin/MediaLibraryPage';
+import { ScheduleAdminPage } from './pages/admin/ScheduleAdminPage';
+import { CongregationPage } from './pages/admin/CongregationPage';
+import { GalleryAdminPage } from './pages/admin/GalleryAdminPage';
+import { AttendancePage } from './pages/admin/AttendancePage';
+import { FinancePage } from './pages/admin/FinancePage';
+import { MenusPage } from './pages/admin/MenusPage';
+import { WidgetsPage } from './pages/admin/WidgetsPage';
+import { CustomizeThemePage } from './pages/admin/CustomizeThemePage';
+import { UsersAdminPage } from './pages/admin/UsersAdminPage';
+import { SettingsPage } from './pages/admin/SettingsPage';
 
 export default function App() {
   return (
@@ -24,12 +46,32 @@ export default function App() {
       <AuthProvider>
         <AdminProvider>
           <Routes>
-            {/* Rute Publik */}
-            <Route path="/" element={<PublicHomePage />} />
+            {/* Rute Autentikasi & Alias WordPress */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/wp-login.php" element={<Navigate to="/login" replace />} />
             <Route path="/wp-admin" element={<Navigate to="/admin" replace />} />
             <Route path="/wp-admin/*" element={<Navigate to="/admin" replace />} />
+
+            {/* Rute Website Publik (Front-end Jemaat) */}
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<PublicHomePage />} />
+              <Route path="/tentang-kami" element={<AboutPage />} />
+              <Route path="/jadwal-ibadah" element={<SchedulePublicPage />} />
+              <Route path="/warta" element={<WartaPublicPage />} />
+              <Route path="/warta/:slug" element={<WartaPublicPage />} />
+              <Route path="/berita" element={<BlogPublicPage />} />
+              <Route path="/berita/:slug" element={<BlogPublicPage />} />
+              <Route
+                path="/kategori/:slug"
+                element={<BlogPublicPage filterMode="category" />}
+              />
+              <Route path="/tag/:slug" element={<BlogPublicPage filterMode="tag" />} />
+              <Route path="/galeri" element={<GalleryPublicPage />} />
+              <Route path="/galeri/:slug" element={<GalleryPublicPage />} />
+              <Route path="/kontak" element={<ContactPublicPage />} />
+              {/* Halaman Statis Dinamis (Page) */}
+              <Route path="/:slug" element={<StaticPagePublic />} />
+            </Route>
 
             {/* Rute Dashboard Admin (Clone wp-admin) */}
             <Route
@@ -43,7 +85,7 @@ export default function App() {
               <Route index element={<DashboardPage />} />
               <Route path="updates" element={<UpdatesPage />} />
 
-              {/* Pos (Tahap 2) */}
+              {/* Pos */}
               <Route
                 path="posts"
                 element={
@@ -85,17 +127,12 @@ export default function App() {
                 }
               />
 
-              {/* Media (Tahap 3) */}
+              {/* Media (Google Drive API Proxy) */}
               <Route
                 path="media"
                 element={
                   <ProtectedRoute requiredCapability="manage_media">
-                    <ModulePlaceholderPage
-                      title="Pustaka Media"
-                      addNewLabel="Tambah Media Baru"
-                      stage="Tahap 3"
-                      description="Pustaka media tampilan grid & daftar yang terhubung ke Google Drive melalui proxy /api/media/[id] dengan generasi thumbnail otomatis."
-                    />
+                    <MediaLibraryPage />
                   </ProtectedRoute>
                 }
               />
@@ -103,16 +140,12 @@ export default function App() {
                 path="media/new"
                 element={
                   <ProtectedRoute requiredCapability="manage_media">
-                    <ModulePlaceholderPage
-                      title="Unggah Media Baru"
-                      stage="Tahap 3"
-                      description="Pengunggah berkas drag-and-drop ke Google Drive (folder uploads/YYYY/MM) dengan optimasi gambar dan validasi ukuran."
-                    />
+                    <MediaLibraryPage defaultOpenUpload />
                   </ProtectedRoute>
                 }
               />
 
-              {/* Halaman (Tahap 2) */}
+              {/* Halaman Statis */}
               <Route
                 path="pages"
                 element={
@@ -138,7 +171,7 @@ export default function App() {
                 }
               />
 
-              {/* Komentar (Tahap 2) */}
+              {/* Komentar */}
               <Route
                 path="comments"
                 element={
@@ -148,7 +181,7 @@ export default function App() {
                 }
               />
 
-              {/* Warta Jemaat (Tahap 2) */}
+              {/* Warta Jemaat */}
               <Route
                 path="warta"
                 element={
@@ -174,17 +207,12 @@ export default function App() {
                 }
               />
 
-              {/* Jadwal Ibadah (Tahap 5) */}
+              {/* Jadwal Ibadah */}
               <Route
                 path="jadwal"
                 element={
                   <ProtectedRoute requiredCapability="manage_jadwal">
-                    <ModulePlaceholderPage
-                      title="Jadwal Ibadah Minggu"
-                      addNewLabel="Tambah Jadwal"
-                      stage="Tahap 5"
-                      description="Pengelolaan jadwal kebaktian Minggu beserta petugas ibadah (Pengkhotbah, Liturgis, Organis, Pemandu Lagu)."
-                    />
+                    <ScheduleAdminPage mode="minggu" />
                   </ProtectedRoute>
                 }
               />
@@ -192,27 +220,17 @@ export default function App() {
                 path="jadwal/phd"
                 element={
                   <ProtectedRoute requiredCapability="manage_jadwal">
-                    <ModulePlaceholderPage
-                      title="PHD Lingkungan (Wijk)"
-                      addNewLabel="Atur Tuan Rumah"
-                      stage="Tahap 5"
-                      description="Jadwal PHD rutin untuk 6 Wijk (Letare, Exaudi, Judika, Galatia, Efesus, Jeremia) dengan pembaruan tuan rumah mingguan."
-                    />
+                    <ScheduleAdminPage mode="phd" />
                   </ProtectedRoute>
                 }
               />
 
-              {/* Jemaat (Tahap 5) */}
+              {/* Jemaat */}
               <Route
                 path="jemaat"
                 element={
                   <ProtectedRoute requiredCapability="manage_jemaat">
-                    <ModulePlaceholderPage
-                      title="Data Jemaat"
-                      addNewLabel="Tambah Jemaat"
-                      stage="Tahap 5"
-                      description="Basis data jemaat berdasarkan 6 Lingkungan (Wijk), status keanggotaan, baptis, dan sidi."
-                    />
+                    <CongregationPage tab="list" />
                   </ProtectedRoute>
                 }
               />
@@ -220,11 +238,7 @@ export default function App() {
                 path="jemaat/import"
                 element={
                   <ProtectedRoute requiredCapability="manage_jemaat">
-                    <ModulePlaceholderPage
-                      title="Import Data Jemaat (XLSX)"
-                      stage="Tahap 5"
-                      description="Impor massal data keluarga dan anggota jemaat dari lembar kerja Excel (.xlsx)."
-                    />
+                    <CongregationPage tab="import" />
                   </ProtectedRoute>
                 }
               />
@@ -232,11 +246,7 @@ export default function App() {
                 path="jemaat/ulang-tahun"
                 element={
                   <ProtectedRoute requiredCapability="manage_jemaat">
-                    <ModulePlaceholderPage
-                      title="Ulang Tahun Jemaat"
-                      stage="Tahap 5"
-                      description="Daftar anggota jemaat yang berulang tahun per minggu dan per bulan untuk didoakan dalam warta."
-                    />
+                    <CongregationPage tab="birthdays" />
                   </ProtectedRoute>
                 }
               />
@@ -244,26 +254,17 @@ export default function App() {
                 path="jemaat/pernikahan"
                 element={
                   <ProtectedRoute requiredCapability="manage_jemaat">
-                    <ModulePlaceholderPage
-                      title="Ulang Tahun Pernikahan"
-                      stage="Tahap 5"
-                      description="Daftar keluarga jemaat yang memperingati ulang tahun pernikahan."
-                    />
+                    <CongregationPage tab="anniversaries" />
                   </ProtectedRoute>
                 }
               />
 
-              {/* Galeri (Tahap 4) */}
+              {/* Galeri */}
               <Route
                 path="galeri"
                 element={
                   <ProtectedRoute requiredCapability="manage_galeri">
-                    <ModulePlaceholderPage
-                      title="Album Galeri"
-                      addNewLabel="Tambah Album"
-                      stage="Tahap 4"
-                      description="Kelola album foto dan dokumentasi video kegiatan gereja."
-                    />
+                    <GalleryAdminPage />
                   </ProtectedRoute>
                 }
               />
@@ -271,26 +272,25 @@ export default function App() {
                 path="galeri/new"
                 element={
                   <ProtectedRoute requiredCapability="manage_galeri">
-                    <ModulePlaceholderPage
-                      title="Tambah Album Galeri"
-                      stage="Tahap 4"
-                      description="Buat album dokumentasi baru dari Pustaka Media Google Drive."
-                    />
+                    <GalleryAdminPage createMode />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="galeri/:id"
+                element={
+                  <ProtectedRoute requiredCapability="manage_galeri">
+                    <GalleryAdminPage />
                   </ProtectedRoute>
                 }
               />
 
-              {/* Kehadiran Ibadah (Tahap 5) */}
+              {/* Kehadiran Ibadah */}
               <Route
                 path="kehadiran"
                 element={
                   <ProtectedRoute requiredCapability="manage_kehadiran">
-                    <ModulePlaceholderPage
-                      title="Kehadiran Ibadah"
-                      addNewLabel="Catat Kehadiran"
-                      stage="Tahap 5"
-                      description="Rekap jumlah kehadiran jemaat pada ibadah Minggu, Sekolah Minggu, dan PHD Lingkungan."
-                    />
+                    <AttendancePage />
                   </ProtectedRoute>
                 }
               />
@@ -300,26 +300,17 @@ export default function App() {
                 path="keuangan"
                 element={
                   <ProtectedRoute requiredCapability="manage_keuangan">
-                    <ModulePlaceholderPage
-                      title="Keuangan Huria"
-                      addNewLabel="Catat Transaksi"
-                      stage="Tahap 5"
-                      description="Pembukuan persembahan dan pengeluaran huria dengan kalkulasi otomatis pembagian 55% Pusat dan 45% Huria (pengecualian untuk pos sosial, beasiswa, dan pembangunan fisik lokal). Hanya dapat diakses oleh Administrator dan Pendeta."
-                    />
+                    <FinancePage />
                   </ProtectedRoute>
                 }
               />
 
-              {/* Tampilan (Tahap 4) */}
+              {/* Tampilan */}
               <Route
                 path="appearance/menus"
                 element={
                   <ProtectedRoute requiredCapability="manage_appearance">
-                    <ModulePlaceholderPage
-                      title="Menu Navigasi"
-                      stage="Tahap 4"
-                      description="Penyusun menu drag-and-drop bertingkat untuk lokasi Header dan Footer."
-                    />
+                    <MenusPage />
                   </ProtectedRoute>
                 }
               />
@@ -327,11 +318,7 @@ export default function App() {
                 path="appearance/widgets"
                 element={
                   <ProtectedRoute requiredCapability="manage_appearance">
-                    <ModulePlaceholderPage
-                      title="Widget"
-                      stage="Tahap 4"
-                      description="Atur widget pada area Footer 1, Footer 2, dan Sidebar publik."
-                    />
+                    <WidgetsPage />
                   </ProtectedRoute>
                 }
               />
@@ -339,11 +326,7 @@ export default function App() {
                 path="appearance/customize"
                 element={
                   <ProtectedRoute requiredCapability="manage_appearance">
-                    <ModulePlaceholderPage
-                      title="Sesuaikan Tema"
-                      stage="Tahap 4"
-                      description="Kustomisasi warna utama, logo gereja, dan banner header website publik."
-                    />
+                    <CustomizeThemePage />
                   </ProtectedRoute>
                 }
               />
@@ -353,12 +336,7 @@ export default function App() {
                 path="users"
                 element={
                   <ProtectedRoute requiredCapability="manage_users">
-                    <ModulePlaceholderPage
-                      title="Semua Pengguna"
-                      addNewLabel="Tambah Pengguna"
-                      stage="Tahap 5"
-                      description="Kelola akun pelayan dan pengelola situs beserta perannya (Administrator, Pendeta, Sekretaris, Bendahara, Editor, Penulis, Kontributor, Jemaat)."
-                    />
+                    <UsersAdminPage />
                   </ProtectedRoute>
                 }
               />
@@ -366,11 +344,7 @@ export default function App() {
                 path="users/new"
                 element={
                   <ProtectedRoute requiredCapability="manage_users">
-                    <ModulePlaceholderPage
-                      title="Tambah Pengguna Baru"
-                      stage="Tahap 5"
-                      description="Tambahkan akun pengelola atau pelayan gereja baru."
-                    />
+                    <UsersAdminPage createMode />
                   </ProtectedRoute>
                 }
               />
@@ -383,16 +357,12 @@ export default function App() {
                 }
               />
 
-              {/* Pengaturan (Tahap 4) */}
+              {/* Pengaturan */}
               <Route
                 path="settings/general"
                 element={
                   <ProtectedRoute requiredCapability="manage_settings">
-                    <ModulePlaceholderPage
-                      title="Pengaturan Umum"
-                      stage="Tahap 4"
-                      description="Judul situs, slogan, URL, email admin, zona waktu (Asia/Jakarta), serta format tanggal & waktu."
-                    />
+                    <SettingsPage section="general" />
                   </ProtectedRoute>
                 }
               />
@@ -400,11 +370,7 @@ export default function App() {
                 path="settings/writing"
                 element={
                   <ProtectedRoute requiredCapability="manage_settings">
-                    <ModulePlaceholderPage
-                      title="Pengaturan Penulisan"
-                      stage="Tahap 4"
-                      description="Kategori bawaan dan format penulisan pos."
-                    />
+                    <SettingsPage section="writing" />
                   </ProtectedRoute>
                 }
               />
@@ -412,11 +378,7 @@ export default function App() {
                 path="settings/reading"
                 element={
                   <ProtectedRoute requiredCapability="manage_settings">
-                    <ModulePlaceholderPage
-                      title="Pengaturan Membaca"
-                      stage="Tahap 4"
-                      description="Jumlah pos per halaman dan tampilan beranda situs."
-                    />
+                    <SettingsPage section="reading" />
                   </ProtectedRoute>
                 }
               />
@@ -424,11 +386,7 @@ export default function App() {
                 path="settings/discussion"
                 element={
                   <ProtectedRoute requiredCapability="manage_settings">
-                    <ModulePlaceholderPage
-                      title="Pengaturan Diskusi"
-                      stage="Tahap 4"
-                      description="Aturan moderasi komentar dan persetujuan admin sebelum tampil."
-                    />
+                    <SettingsPage section="discussion" />
                   </ProtectedRoute>
                 }
               />
@@ -436,11 +394,7 @@ export default function App() {
                 path="settings/media"
                 element={
                   <ProtectedRoute requiredCapability="manage_settings">
-                    <ModulePlaceholderPage
-                      title="Pengaturan Media"
-                      stage="Tahap 3 &amp; Tahap 4"
-                      description="Ukuran maksimal berkas unggahan dan dimensi thumbnail otomatis (150, 300, 768, 1024)."
-                    />
+                    <SettingsPage section="media" />
                   </ProtectedRoute>
                 }
               />
@@ -448,11 +402,7 @@ export default function App() {
                 path="settings/permalink"
                 element={
                   <ProtectedRoute requiredCapability="manage_settings">
-                    <ModulePlaceholderPage
-                      title="Pengaturan Permalink"
-                      stage="Tahap 4"
-                      description="Pilih struktur tautan permanen (Polos, Hari dan nama, Nama pos)."
-                    />
+                    <SettingsPage section="permalink" />
                   </ProtectedRoute>
                 }
               />

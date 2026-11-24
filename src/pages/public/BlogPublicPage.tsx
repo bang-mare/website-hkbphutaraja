@@ -1,0 +1,540 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft, Calendar, MessageSquare, Search, User } from 'lucide-react';
+import { usePublicSite } from '../../layouts/PublicLayout';
+import { usePageSeo } from '../../hooks/usePageSeo';
+import { sanitizeHtml } from '../../lib/blocks';
+import { fetchTerms } from '../../lib/cmsData';
+import {
+  fetchApprovedCommentsForPost,
+  fetchPublishedPostBySlug,
+  fetchPublishedPosts,
+  resolvePostFeaturedImage,
+  submitPublicComment,
+} from '../../lib/publicData';
+import type { CommentRecord, PostRecord, Term } from '../../types/cms';
+
+export function BlogPublicPage({
+  filterMode,
+}: {
+  filterMode?: 'category' | 'tag';
+}) {
+  const { slug } = useParams<{ slug?: string }>();
+  const { options, widgets } = usePublicSite();
+
+  const isDetail = Boolean(slug && !filterMode);
+
+  const [posts, setPosts] = useState<PostRecord[]>([]);
+  const [categories, setCategories] = useState<Term[]>([]);
+  const [tags, setTags] = useState<Term[]>([]);
+  const [detail, setDetail] = useState<PostRecord | null>(null);
+  const [comments, setComments] = useState<CommentRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    filterMode === 'category' && slug ? slug : 'all'
+  );
+  const [selectedTag, setSelectedTag] = useState<string>(
+    filterMode === 'tag' && slug ? slug : 'all'
+  );
+  const [page, setPage] = useState(1);
+
+  // Comment form
+  const [cName, setCName] = useState('');
+  const [cEmail, setCEmail] = useState('');
+  const [cBody, setCBody] = useState('');
+  const [cSending, setCSending] = useState(false);
+  const [cNotice, setCNotice] = useState<string | null>(null);
+
+  usePageSeo({
+    title: isDetail && detail ? detail.title : 'Berita & Artikel Huria',
+    description:
+      isDetail && detail
+        ? detail.excerpt
+        : `Kumpulan berita pelayanan, renungan, dan pengumuman ${options.site_title}.`,
+    siteTitle: options.site_title,
+  });
+
+  useEffect(() => {
+    if (filterMode === 'category') {
+      setSelectedCategory(slug || 'all');
+      setSelectedTag('all');
+    } else if (filterMode === 'tag') {
+      setSelectedTag(slug || 'all');
+      setSelectedCategory('all');
+    }
+    setPage(1);
+  }, [filterMode, slug]);
+
+  useEffect(() => {
+    setLoading(true);
+    if (isDetail && slug) {
+      fetchPublishedPostBySlug(slug, 'post').then(async (post) => {
+        setDetail(post);
+        if (post) {
+          const cmts = await fetchApprovedCommentsForPost(post.id);
+          setComments(cmts);
+        }
+        setLoading(false);
+      });
+    } else {
+      Promise.all([
+        fetchPublishedPosts('post', 100),
+        fetchTerms('category'),
+        fetchTerms('post_tag'),
+      ]).then(([list, cats, tagList]) => {
+        setPosts(list);
+        setCategories(cats);
+        setTags(tagList);
+        setLoading(false);
+      });
+    }
+  }, [isDetail, slug]);
+
+  const filteredPosts = useMemo(() => {
+    return posts.filter((p) => {
+      if (
+        selectedCategory !== 'all' &&
+        !p.terms?.some((t) => t.taxonomy === 'category' && t.slug === selectedCategory)
+      ) {
+        return false;
+      }
+      if (
+        selectedTag !== 'all' &&
+        !p.terms?.some((t) => t.taxonomy === 'post_tag' && t.slug === selectedTag)
+      ) {
+        return false;
+      }
+      if (search.trim()) {
+        const q = search.trim().toLowerCase();
+        return (
+          p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [posts, selectedCategory, selectedTag, search]);
+
+  const perPage = options.posts_per_page || 10;
+  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / perPage));
+  const pagedPosts = filteredPosts.slice((page - 1) * perPage, page * perPage);
+
+  const primaryColor = options.theme_primary_color || '#1E3A5F';
+  const sidebarWidgets = widgets.filter((w) => w.area === 'sidebar' && w.is_active);
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!detail || !cName.trim() || !cBody.trim()) return;
+    setCSending(true);
+    const { error } = await submitPublicComment({
+      post_id: detail.id,
+      author_name: cName,
+      author_email: cEmail,
+      content: cBody,
+    });
+    setCSending(false);
+    if (error) {
+      setCNotice(`Gagal mengirim komentar: ${error}`);
+    } else {
+      setCName('');
+      setCEmail('');
+      setCBody('');
+      setCNotice(
+        'Terima kasih! Komentar Anda telah dikirim dan sedang menunggu persetujuan moderator.'
+      );
+    }
+  };
+
+  if (isDetail) {
+    if (loading) {
+      return (
+        <div className="max-w-4xl mx-auto px-4 py-12 text-sm text-stone-500">
+          Memuat artikel...
+        </div>
+      );
+    }
+    if (!detail) {
+      return (
+        <div className="max-w-4xl mx-auto px-4 py-12 space-y-4">
+          <h1 className="font-display text-2xl font-semibold">Artikel tidak ditemukan</h1>
+          <Link to="/berita" className="text-sm underline" style={{ color: primaryColor }}>
+            &larr; Kembali ke Berita
+          </Link>
+        </div>
+      );
+    }
+
+    const cover = resolvePostFeaturedImage(detail);
+
+    return (
+      <article className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+        <Link
+          to="/berita"
+          className="inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
+          style={{ color: primaryColor }}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Semua Berita &amp; Artikel</span>
+        </Link>
+
+        <header className="space-y-4">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-stone-500 tabular-nums">
+            <span className="inline-flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" />
+              {new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(
+                new Date(detail.published_at || detail.created_at)
+              )}
+            </span>
+            {detail.author?.display_name && (
+              <span className="inline-flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5" />
+                {detail.author.display_name}
+              </span>
+            )}
+          </div>
+
+          <h1 className="font-display text-3xl sm:text-4xl font-semibold text-[#1C1917] leading-tight">
+            {detail.title}
+          </h1>
+
+          {detail.terms && detail.terms.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              {detail.terms.map((t) => (
+                <Link
+                  key={t.id}
+                  to={
+                    t.taxonomy === 'category'
+                      ? `/kategori/${t.slug}`
+                      : `/tag/${t.slug}`
+                  }
+                  className="underline text-stone-600 hover:text-[#1E3A5F]"
+                >
+                  {t.taxonomy === 'post_tag' ? `#${t.name}` : t.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </header>
+
+        {cover && (
+          <div className="rounded-md overflow-hidden border border-stone-200 bg-stone-100">
+            <img
+              src={cover}
+              alt={detail.title}
+              className="w-full max-h-[440px] object-cover"
+            />
+          </div>
+        )}
+
+        <div
+          className="bg-white border border-stone-200 rounded-md p-6 sm:p-8 space-y-4 text-base leading-relaxed [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:p-4 [&_blockquote]:bg-[#F4EFE6] [&_blockquote]:border [&_blockquote]:border-stone-200 [&_blockquote]:italic [&_iframe]:w-full [&_iframe]:aspect-video [&_img]:rounded [&_img]:mx-auto"
+          dangerouslySetInnerHTML={{
+            __html: sanitizeHtml(detail.content_html || '<p>Belum ada isi artikel.</p>'),
+          }}
+        />
+
+        {/* Komentar */}
+        <section className="pt-8 border-t border-stone-200 space-y-6">
+          <h2 className="font-display text-2xl font-semibold text-[#1C1917] flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            <span>Komentar Jemaat ({comments.length})</span>
+          </h2>
+
+          {comments.length > 0 && (
+            <div className="space-y-4">
+              {comments.map((c) => (
+                <div
+                  key={c.id}
+                  className="p-4 bg-white border border-stone-200 rounded-md"
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="font-semibold text-sm text-[#1C1917]">
+                      {c.author_name}
+                    </span>
+                    <span className="text-xs text-stone-500 tabular-nums">
+                      {new Intl.DateTimeFormat('id-ID', {
+                        dateStyle: 'medium',
+                      }).format(new Date(c.created_at))}
+                    </span>
+                  </div>
+                  <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-line">
+                    {c.content}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {detail.comment_status && options.default_comment_status !== 'closed' && (
+            <form
+              onSubmit={handleSubmitComment}
+              className="p-6 bg-white border border-stone-200 rounded-md space-y-4"
+            >
+              <h3 className="font-display text-lg font-semibold text-[#1C1917]">
+                Tinggalkan Komentar
+              </h3>
+              {cNotice && (
+                <div className="p-3 bg-[#F4EFE6] border border-stone-300 text-sm text-stone-800 rounded">
+                  {cNotice}
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-stone-700 mb-1">
+                    Nama Lengkap *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={cName}
+                    onChange={(e) => setCName(e.target.value)}
+                    className="w-full h-9 px-3 border border-stone-300 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-stone-700 mb-1">
+                    Alamat Email
+                  </label>
+                  <input
+                    type="email"
+                    value={cEmail}
+                    onChange={(e) => setCEmail(e.target.value)}
+                    className="w-full h-9 px-3 border border-stone-300 rounded text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-stone-700 mb-1">
+                  Komentar *
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={cBody}
+                  onChange={(e) => setCBody(e.target.value)}
+                  className="w-full p-3 border border-stone-300 rounded text-sm"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={cSending}
+                style={{ backgroundColor: primaryColor }}
+                className="px-5 py-2 text-sm font-medium text-white rounded-md hover:opacity-95 cursor-pointer"
+              >
+                {cSending ? 'Mengirim...' : 'Kirim Komentar'}
+              </button>
+            </form>
+          )}
+        </section>
+      </article>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+      <header className="mb-8">
+        <p className="text-xs uppercase tracking-widest text-[#9A3412] font-semibold mb-2">
+          Kabar Pelayanan &amp; Renungan
+        </p>
+        <h1 className="font-display text-3xl sm:text-4xl font-semibold text-[#1C1917] mb-2">
+          Berita &amp; Artikel Huria
+        </h1>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="lg:col-span-8 space-y-6">
+          {/* Bar Pencarian */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Cari berita, renungan, atau pengumuman..."
+                className="w-full h-10 pl-9 pr-3 bg-white border border-stone-300 rounded-md text-sm"
+              />
+            </div>
+            {(selectedCategory !== 'all' || selectedTag !== 'all') && (
+              <Link
+                to="/berita"
+                onClick={() => {
+                  setSelectedCategory('all');
+                  setSelectedTag('all');
+                }}
+                className="text-xs underline text-stone-600"
+              >
+                Reset filter
+              </Link>
+            )}
+          </div>
+
+          {loading ? (
+            <p className="text-sm text-stone-500">Memuat berita...</p>
+          ) : pagedPosts.length === 0 ? (
+            <div className="p-8 bg-white border border-stone-200 rounded-md text-center text-sm text-stone-600">
+              Belum ada artikel yang cocok dengan filter Anda.
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {pagedPosts.map((post) => {
+                const thumb = resolvePostFeaturedImage(post);
+                return (
+                  <article
+                    key={post.id}
+                    className="bg-white border border-stone-200 rounded-md overflow-hidden grid grid-cols-1 sm:grid-cols-12"
+                  >
+                    {thumb && (
+                      <Link
+                        to={`/berita/${post.slug}`}
+                        className="sm:col-span-4 bg-stone-100 min-h-[160px]"
+                      >
+                        <img
+                          src={thumb}
+                          alt={post.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </Link>
+                    )}
+                    <div
+                      className={`p-5 flex flex-col justify-between ${
+                        thumb ? 'sm:col-span-8' : 'sm:col-span-12'
+                      }`}
+                    >
+                      <div>
+                        <p className="text-xs text-stone-500 mb-1 tabular-nums">
+                          {new Intl.DateTimeFormat('id-ID', {
+                            dateStyle: 'long',
+                          }).format(new Date(post.published_at || post.created_at))}
+                        </p>
+                        <Link
+                          to={`/berita/${post.slug}`}
+                          className="font-display text-xl font-semibold text-[#1C1917] hover:underline block mb-2"
+                        >
+                          {post.title}
+                        </Link>
+                        <p className="text-sm text-stone-600 line-clamp-2 mb-3">
+                          {post.excerpt}
+                        </p>
+                      </div>
+                      <Link
+                        to={`/berita/${post.slug}`}
+                        className="text-xs font-semibold hover:underline"
+                        style={{ color: primaryColor }}
+                      >
+                        Baca selengkapnya &rarr;
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Paginasi */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 border-t border-stone-200 text-sm">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="px-3 py-1.5 border border-stone-300 bg-white rounded disabled:opacity-40 cursor-pointer"
+              >
+                &larr; Sebelumnya
+              </button>
+              <span className="text-stone-600 tabular-nums">
+                Halaman {page} dari {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-3 py-1.5 border border-stone-300 bg-white rounded disabled:opacity-40 cursor-pointer"
+              >
+                Berikutnya &rarr;
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar Kategori, Tag & Widget */}
+        <aside className="lg:col-span-4 space-y-6">
+          <div className="p-5 bg-white border border-stone-200 rounded-md">
+            <h2 className="font-display text-lg font-semibold text-[#1C1917] mb-3">
+              Kategori
+            </h2>
+            <ul className="space-y-1.5 text-sm">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory('all');
+                    setPage(1);
+                  }}
+                  className={`hover:underline cursor-pointer ${
+                    selectedCategory === 'all' ? 'font-semibold text-[#1E3A5F]' : 'text-stone-700'
+                  }`}
+                >
+                  Semua Kategori
+                </button>
+              </li>
+              {categories.map((cat) => (
+                <li key={cat.id} className="flex items-center justify-between">
+                  <Link
+                    to={`/kategori/${cat.slug}`}
+                    className={`hover:underline ${
+                      selectedCategory === cat.slug
+                        ? 'font-semibold text-[#1E3A5F]'
+                        : 'text-stone-700'
+                    }`}
+                  >
+                    {cat.name}
+                  </Link>
+                  <span className="text-xs text-stone-400 tabular-nums">{cat.count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {tags.length > 0 && (
+            <div className="p-5 bg-white border border-stone-200 rounded-md">
+              <h2 className="font-display text-lg font-semibold text-[#1C1917] mb-3">
+                Topik / Tag
+              </h2>
+              <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
+                {tags.map((tag) => (
+                  <Link
+                    key={tag.id}
+                    to={`/tag/${tag.slug}`}
+                    className={`hover:underline ${
+                      selectedTag === tag.slug
+                        ? 'font-semibold text-[#1E3A5F]'
+                        : 'text-stone-600'
+                    }`}
+                  >
+                    #{tag.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {sidebarWidgets.map((w) => (
+            <div key={w.id} className="p-5 bg-white border border-stone-200 rounded-md">
+              <h2 className="font-display text-lg font-semibold text-[#1C1917] mb-2">
+                {w.title}
+              </h2>
+              <p className="text-sm text-stone-600 whitespace-pre-line">
+                {String(w.config?.body || '')}
+              </p>
+            </div>
+          ))}
+        </aside>
+      </div>
+    </div>
+  );
+}

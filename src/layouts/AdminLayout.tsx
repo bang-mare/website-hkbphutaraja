@@ -30,6 +30,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { getAdminMenuForRole, hasCapability, ROLE_LABELS } from '../lib/roles';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { HkbpLogo } from '../components/HkbpLogo';
 import type { AdminMenuEntry, UserRole } from '../types/cms';
 
@@ -76,6 +77,7 @@ export function AdminLayout() {
   // Screen Options & Help drawers
   const [openDrawer, setOpenDrawer] = useState<'screen' | 'help' | null>(null);
   const [activeHelpTabId, setActiveHelpTabId] = useState<string>('');
+  const [pendingCommentsCount, setPendingCommentsCount] = useState(0);
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -83,12 +85,35 @@ export function AdminLayout() {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (
+      !isSupabaseConfigured ||
+      !supabase ||
+      !hasCapability(profile?.role, 'manage_comments')
+    ) {
+      return;
+    }
+    let active = true;
+    supabase
+      .from('comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+      .then(({ count }) => {
+        if (active && typeof count === 'number') {
+          setPendingCommentsCount(count);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [location.pathname, profile?.role]);
+
+  useEffect(() => {
     if (helpTabs.length > 0 && !helpTabs.some((t) => t.id === activeHelpTabId)) {
       setActiveHelpTabId(helpTabs[0].id);
     }
   }, [helpTabs, activeHelpTabId]);
 
-  const menuEntries = getAdminMenuForRole(profile?.role, 0);
+  const menuEntries = getAdminMenuForRole(profile?.role, pendingCommentsCount);
 
   const isMenuActive = (entry: AdminMenuEntry) => {
     if (entry.path === '/admin') {
@@ -231,7 +256,7 @@ export function AdminLayout() {
               title="Komentar Menunggu Moderasi"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span className="tabular-nums">0</span>
+              <span className="tabular-nums">{pendingCommentsCount}</span>
             </Link>
           )}
 
@@ -702,7 +727,7 @@ export function AdminLayout() {
               </span>
               .
             </p>
-            <p className="tabular-nums">Versi 1.0 (Tahap 1)</p>
+            <p className="tabular-nums">Versi 1.0 — HKBP Ressort Hutaraja</p>
           </footer>
         </div>
       </div>

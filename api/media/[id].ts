@@ -1,5 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getGoogleDriveClient, getSupabaseAdmin } from '../_lib/serverClients.js';
+import {
+  getGoogleDriveClient,
+  getGoogleDriveOAuthRefreshClient,
+  getSupabaseAdmin,
+} from '../_lib/serverClients.js';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -14,10 +18,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const supabaseAdmin = getSupabaseAdmin();
-  const driveClient = getGoogleDriveClient();
-  if (!supabaseAdmin || !driveClient) {
-    return res.status(500).json({ error: 'Layanan media belum dikonfigurasi.' });
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Layanan database belum dikonfigurasi.' });
   }
+
+  const driveClient =
+    getGoogleDriveOAuthRefreshClient() || getGoogleDriveClient();
 
   try {
     const { data: media, error } = await supabaseAdmin
@@ -56,12 +62,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    const driveRes = await driveClient.drive.files.get(
-      { fileId: targetFileId, alt: 'media', supportsAllDrives: true },
-      { responseType: 'arraybuffer' }
-    );
+    let buffer: Buffer;
+    if (driveClient) {
+      const driveRes = await driveClient.drive.files.get(
+        { fileId: targetFileId, alt: 'media', supportsAllDrives: true },
+        { responseType: 'arraybuffer' }
+      );
+      buffer = Buffer.from(driveRes.data as ArrayBuffer);
+    } else {
+      const publicRes = await fetch(
+        `https://drive.google.com/uc?export=download&id=${encodeURIComponent(targetFileId)}`
+      );
+      if (!publicRes.ok) {
+        return res.status(502).json({ error: 'Layanan pembaca Google Drive belum dikonfigurasi.' });
+      }
+      buffer = Buffer.from(await publicRes.arrayBuffer());
+    }
 
-    const buffer = Buffer.from(driveRes.data as ArrayBuffer);
     const safeFilename = encodeURIComponent(String(media.nama || 'berkas'));
 
     res.setHeader('Content-Type', targetMime);

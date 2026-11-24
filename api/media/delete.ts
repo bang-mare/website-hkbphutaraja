@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import {
   getGoogleDriveClient,
+  getGoogleDriveClientFromAccessToken,
+  getGoogleDriveOAuthRefreshClient,
   getSupabaseAdmin,
   verifyBearerStaff,
 } from '../_lib/serverClients.js';
@@ -21,11 +23,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(authCheck.status).json({ error: authCheck.error });
   }
 
+  const rawGoogleToken = req.headers['x-google-access-token'];
+  const googleTokenHeader = Array.isArray(rawGoogleToken)
+    ? rawGoogleToken[0]
+    : rawGoogleToken;
+
   const supabaseAdmin = getSupabaseAdmin();
-  const driveClient = getGoogleDriveClient();
-  if (!supabaseAdmin || !driveClient) {
-    return res.status(500).json({ error: 'Layanan media belum dikonfigurasi.' });
+  const userOAuthClient = googleTokenHeader
+    ? getGoogleDriveClientFromAccessToken(googleTokenHeader)
+    : null;
+  const serverRefreshClient = getGoogleDriveOAuthRefreshClient();
+  const serviceAccountClient = getGoogleDriveClient();
+
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: 'Layanan database belum dikonfigurasi.' });
   }
+
+  const driveClients = [
+    userOAuthClient,
+    serverRefreshClient,
+    serviceAccountClient,
+  ].filter(Boolean);
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
@@ -67,14 +85,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       for (const fId of fileIdsToTrash) {
-        try {
-          await driveClient.drive.files.update({
-            fileId: fId,
-            requestBody: { trashed: true },
-            supportsAllDrives: true,
-          });
-        } catch (driveErr) {
-          console.warn(`Gagal memindahkan file Drive ${fId} ke sampah:`, driveErr);
+        for (const client of driveClients) {
+          if (!client) continue;
+          try {
+            await client.drive.files.update({
+              fileId: fId,
+              requestBody: { trashed: true },
+              supportsAllDrives: true,
+            });
+            break;
+          } catch (driveErr) {
+            console.warn(`Percobaan memindahkan file Drive ${fId} ke sampah gagal:`, driveErr);
+          }
         }
       }
     }

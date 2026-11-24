@@ -11,6 +11,19 @@ export function getSupabaseAdmin(): SupabaseClient | null {
   });
 }
 
+export function getGoogleDriveServiceAccountEmail(): string | null {
+  const rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim() || '';
+  if (!rawJson) return null;
+  try {
+    const credentials = JSON.parse(rawJson);
+    return typeof credentials.client_email === 'string'
+      ? credentials.client_email
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export function getGoogleDriveClient(): {
   drive: drive_v3.Drive;
   rootFolderId: string;
@@ -30,6 +43,122 @@ export function getGoogleDriveClient(): {
   } catch (err) {
     console.error('Gagal mem-parsing GOOGLE_SERVICE_ACCOUNT_JSON:', err);
     return null;
+  }
+}
+
+export function getGoogleDriveOAuthRefreshClient(): {
+  drive: drive_v3.Drive;
+  rootFolderId: string;
+} | null {
+  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID?.trim() || '';
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim() || '';
+  const refreshToken = process.env.GOOGLE_OAUTH_REFRESH_TOKEN?.trim() || '';
+  const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim() || '';
+
+  if (!clientId || !clientSecret || !refreshToken) return null;
+
+  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+  const drive = google.drive({ version: 'v3', auth: oauth2Client });
+  return { drive, rootFolderId };
+}
+
+export function getGoogleDriveClientFromAccessToken(
+  accessToken: string
+): {
+  drive: drive_v3.Drive;
+  rootFolderId: string;
+} | null {
+  const cleaned = accessToken.trim();
+  if (!cleaned || cleaned.length > 4096 || /[\r\n]/.test(cleaned)) {
+    return null;
+  }
+  const oauth2Client = new google.auth.OAuth2();
+  oauth2Client.setCredentials({ access_token: cleaned });
+  const drive = google.drive({ version: 'v3', auth: oauth2Client });
+  const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim() || '';
+  return { drive, rootFolderId };
+}
+
+export async function resolveOrCreateRootFolder(
+  drive: drive_v3.Drive,
+  preferredRootId: string
+): Promise<string> {
+  if (preferredRootId) {
+    try {
+      const check = await drive.files.get({
+        fileId: preferredRootId,
+        fields: 'id, trashed',
+        supportsAllDrives: true,
+      });
+      if (check.data.id && !check.data.trashed) {
+        return check.data.id;
+      }
+    } catch {
+      // Fallback ke pembuatan / pencarian folder HKBP-Hutaraja-Media di Drive user
+    }
+  }
+
+  const folderName = 'HKBP-Hutaraja-Media';
+  const listRes = await drive.files.list({
+    q: `'root' in parents and name = '${folderName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+    fields: 'files(id, name)',
+    spaces: 'drive',
+  });
+
+  if (listRes.data.files && listRes.data.files.length > 0 && listRes.data.files[0].id) {
+    return listRes.data.files[0].id;
+  }
+
+  const createRes = await drive.files.create({
+    requestBody: {
+      name: folderName,
+      mimeType: 'application/vnd.google-apps.folder',
+    },
+    fields: 'id',
+  });
+
+  if (!createRes.data.id) {
+    throw new Error('Gagal membuat folder HKBP-Hutaraja-Media di Google Drive.');
+  }
+  return createRes.data.id;
+}
+
+export async function ensureDriveReadPermission(
+  drive: drive_v3.Drive,
+  fileOrFolderId: string,
+  serviceAccountEmail: string | null,
+  allowAnyoneFallback: boolean
+): Promise<void> {
+  if (serviceAccountEmail) {
+    try {
+      await drive.permissions.create({
+        fileId: fileOrFolderId,
+        requestBody: {
+          type: 'user',
+          role: 'reader',
+          emailAddress: serviceAccountEmail,
+        },
+        sendNotificationEmail: false,
+        supportsAllDrives: true,
+      });
+      return;
+    } catch {
+      // Permission mungkin sudah diwarisi dari folder induk
+    }
+  } else if (allowAnyoneFallback) {
+    try {
+      await drive.permissions.create({
+        fileId: fileOrFolderId,
+        requestBody: {
+          type: 'anyone',
+          role: 'reader',
+        },
+        supportsAllDrives: true,
+      });
+    } catch {
+      // Abaikan jika gagal mengatur izin publik
+    }
   }
 }
 

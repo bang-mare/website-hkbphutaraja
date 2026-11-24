@@ -2,11 +2,17 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Busboy from 'busboy';
 import { Readable } from 'stream';
 import sharp from 'sharp';
+import type { drive_v3 } from 'googleapis';
 import {
   checkUploadRateLimit,
   ensureDriveFolderPath,
+  ensureDriveReadPermission,
   getGoogleDriveClient,
+  getGoogleDriveClientFromAccessToken,
+  getGoogleDriveOAuthRefreshClient,
+  getGoogleDriveServiceAccountEmail,
   getSupabaseAdmin,
+  resolveOrCreateRootFolder,
   verifyBearerStaff,
 } from '../_lib/serverClients.js';
 
@@ -91,11 +97,7 @@ function parseMultipart(req: VercelRequest, maxBytes: number): Promise<ParsedUpl
 }
 
 async function uploadBufferToDrive(
-  drive: ReturnType<typeof getGoogleDriveClient> extends infer T
-    ? T extends { drive: infer D }
-      ? D
-      : never
-    : never,
+  drive: drive_v3.Drive,
   folderId: string,
   name: string,
   mimeType: string,
@@ -142,14 +144,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const driveClient = getGoogleDriveClient();
   const supabaseAdmin = getSupabaseAdmin();
-  if (!driveClient || !supabaseAdmin) {
+  if (!supabaseAdmin) {
     return res.status(500).json({
-      error:
-        'Konfigurasi Google Drive Service Account (GOOGLE_SERVICE_ACCOUNT_JSON / GOOGLE_DRIVE_ROOT_FOLDER_ID) belum lengkap di server.',
+      error: 'Konfigurasi server Supabase (VITE_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY) belum lengkap.',
     });
   }
+
+  const rawGoogleToken = req.headers['x-google-access-token'];
+  const googleTokenHeader = Array.isArray(rawGoogleToken)
+    ? rawGoogleToken[0]
+    : rawGoogleToken;
+
+  const userOAuthClient = googleTokenHeader
+    ? getGoogleDriveClientFromAccessToken(googleTokenHeader)
+    : null;
+  const serverRefreshClient = getGoogleDriveOAuthRefreshClient();
+  const serviceAccountClient = getGoogleDriveClient();
+
+  const activeDriveClient =
+    userOAuthClient || serverRefreshClient || serviceAccountClient;
+
+  if (!activeDriveClient) {
+    return res.status(401).json({
+      code: 'GOOGLE_REAUTH_REQUIRED',
+      error:
+        'Akun Google Drive belum terhubung. Klik tombol "Sign in with Google" di area unggah terlebih dahulu.',
+    });
+  }
+
+  const usedUserOAuth = Boolean(userOAuthClient);
+  const serviceAccountEmail = getGoogleDriveServiceAccountEmail();
+  const hasServerReadAccess = Boolean(serviceAccountClient || serverRefreshClient);
 
   try {
     // Ambil pengaturan ukuran & tipe file dari tabel options
@@ -183,11 +209,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const yearMonth = `${year}/${month}`;
 
+    const resolvedRootId = await resolveOrCreateRootFolder(
+      activeDriveClient.drive,
+      activeDriveClient.rootFolderId
+    );
+
     const folderId = await ensureDriveFolderPath(
-      driveClient.drive,
-      driveClient.rootFolderId,
+      activeDriveClient.drive,
+      resolvedRootId,
       ['uploads', year, month]
     );
+
+    // Pastikan server proxy (/api/media/[id]) dapat membaca berkas yang diunggah via OAuth user
+    if (usedUserOAuth) {
+      await ensureDriveReadPermission(
+        activeDriveClient.drive,
+        folderId,
+        serviceAccountEmail,
+        !hasServerReadAccess
+      );
+    }
 
     const safeName = parsed.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     const uniquePrefix = Date.now();
@@ -195,12 +236,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Upload file asli ke Drive
     const driveFileId = await uploadBufferToDrive(
-      driveClient.drive,
+      activeDriveClient.drive,
       folderId,
       driveOriginalName,
       parsed.mimeType,
       parsed.buffer
     );
+
+    if (usedUserOAuth && !hasServerReadAccess) {
+      await ensureDriveReadPermission(
+        activeDriveClient.drive,
+        driveFileId,
+        null,
+        true
+      );
+    }
 
     let width: number | null = null;
     let height: number | null = null;
@@ -224,12 +274,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .toBuffer();
 
         const thumbDriveId = await uploadBufferToDrive(
-          driveClient.drive,
+          activeDriveClient.drive,
           folderId,
           `${uniquePrefix}-w${thumbW}-${safeName}.webp`,
           'image/webp',
           resizedBuffer
         );
+        if (usedUserOAuth && !hasServerReadAccess) {
+          await ensureDriveReadPermission(
+            activeDriveClient.drive,
+            thumbDriveId,
+            null,
+            true
+          );
+        }
         thumbnails[String(thumbW)] = thumbDriveId;
       }
     }
@@ -261,7 +319,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ media: inserted });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Gagal mengunggah berkas.';
-    return res.status(400).json({ error: msg });
+    const rawMsg = err instanceof Error ? err.message : 'Gagal mengunggah berkas.';
+    const status = (err as { status?: number; code?: number })?.status ||
+      (err as { code?: number })?.code;
+
+    if (
+      usedUserOAuth &&
+      (status === 401 ||
+        /invalid credentials|unauthenticated|invalid_token/i.test(rawMsg))
+    ) {
+      return res.status(401).json({
+        code: 'GOOGLE_REAUTH_REQUIRED',
+        error:
+          'Sesi Google Drive Anda telah berakhir. Silakan klik "Sign in with Google" ulang untuk menghubungkan kembali.',
+      });
+    }
+
+    if (/Service Accounts do not have storage quota/i.test(rawMsg)) {
+      return res.status(400).json({
+        error:
+          'Service Account tidak memiliki kuota penyimpanan di Google Drive pribadi. Silakan klik tombol "Sign in with Google" di atas kotak unggah agar berkas memakai kuota Google Drive Anda.',
+      });
+    }
+
+    return res.status(400).json({ error: rawMsg });
   }
 }

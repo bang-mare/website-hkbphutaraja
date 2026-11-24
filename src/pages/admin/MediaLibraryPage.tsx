@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAdmin } from '../../contexts/AdminContext';
+import { GoogleDriveConnectCard } from '../../components/admin/GoogleDriveConnectCard';
 import {
   deleteMediaItems,
   fetchMediaLibrary,
@@ -50,6 +51,8 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
   const [editDeskripsi, setEditDeskripsi] = useState('');
   const [savingMeta, setSavingMeta] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [pendingDeleteIds, setPendingDeleteIds] = useState<string[] | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -177,9 +180,18 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
     addNotice({ type: 'success', message: 'Metadata lampiran diperbarui.' });
   };
 
-  const handleDelete = async (ids: string[]) => {
+  const requestDelete = (ids: string[]) => {
     if (ids.length === 0) return;
+    setPendingDeleteIds(ids);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteIds || pendingDeleteIds.length === 0) return;
+    const ids = pendingDeleteIds;
+    setDeleting(true);
     const { error } = await deleteMediaItems(ids);
+    setDeleting(false);
+    setPendingDeleteIds(null);
     if (error) {
       addNotice({ type: 'error', message: error });
       return;
@@ -220,6 +232,14 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
         >
           Tambah Berkas Media Baru
         </button>
+      </div>
+
+      {/* Status Koneksi Google Drive */}
+      <div className="mb-4">
+        <GoogleDriveConnectCard
+          compact
+          onError={(msg) => addNotice({ type: 'error', message: msg })}
+        />
       </div>
 
       {/* Dropzone Uploader ala WordPress */}
@@ -334,7 +354,7 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
           {selectedIds.length > 0 && (
             <button
               type="button"
-              onClick={() => void handleDelete(selectedIds)}
+              onClick={() => requestDelete(selectedIds)}
               className="inline-flex items-center gap-1 h-8 px-2.5 border border-[#d63638] text-[#d63638] hover:bg-[#fcf0f1] rounded-[3px] cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -495,7 +515,7 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
                           <span>|</span>
                           <button
                             type="button"
-                            onClick={() => void handleDelete([item.id])}
+                            onClick={() => requestDelete([item.id])}
                             className="text-[#d63638] hover:underline cursor-pointer"
                           >
                             Hapus Permanen
@@ -652,7 +672,7 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
                 <div className="pt-3 border-t border-[#f0f0f1] flex items-center justify-between gap-2">
                   <button
                     type="button"
-                    onClick={() => void handleDelete([detailItem.id])}
+                    onClick={() => requestDelete([detailItem.id])}
                     className="text-[#d63638] hover:underline text-[12px] cursor-pointer"
                   >
                     Hapus permanen
@@ -666,6 +686,47 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Penghapusan Google Drive */}
+      {pendingDeleteIds && pendingDeleteIds.length > 0 && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md border border-[#c3c4c7] shadow-2xl p-5 space-y-4">
+            <h2 className="text-[16px] font-semibold text-[#1d2327]">
+              Konfirmasi Hapus {pendingDeleteIds.length} Berkas Media
+            </h2>
+            <p className="text-[13px] text-[#50575e] leading-relaxed">
+              Berkas berikut akan dipindahkan ke tempat sampah <strong>Google Drive</strong> dan dihapus dari pustaka media website:
+            </p>
+            <ul className="max-h-32 overflow-y-auto bg-[#f6f7f7] border border-[#dcdcde] p-2.5 text-[12px] text-[#1d2327] space-y-1">
+              {items
+                .filter((i) => pendingDeleteIds.includes(i.id))
+                .map((i) => (
+                  <li key={i.id} className="truncate">
+                    &bull; {i.nama}
+                  </li>
+                ))}
+            </ul>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#f0f0f1]">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setPendingDeleteIds(null)}
+                className="px-3.5 py-1.5 border border-[#c3c4c7] bg-[#f6f7f7] hover:bg-[#f0f0f1] text-[#1d2327] text-[13px] rounded-[3px] cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => void confirmDelete()}
+                className="px-3.5 py-1.5 bg-[#d63638] hover:bg-[#b32d2e] disabled:opacity-60 text-white text-[13px] font-medium rounded-[3px] cursor-pointer"
+              >
+                {deleting ? 'Menghapus...' : 'Ya, Hapus Permanen'}
+              </button>
             </div>
           </div>
         </div>

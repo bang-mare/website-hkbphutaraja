@@ -7,6 +7,7 @@ import {
   UploadCloud,
   X,
 } from 'lucide-react';
+import { GoogleDriveConnectCard } from './GoogleDriveConnectCard';
 import {
   fetchMediaLibrary,
   formatBytes,
@@ -233,7 +234,10 @@ export function MediaPickerModal({
 
         {/* Content */}
         {tab === 'upload' ? (
-          <div className="flex-1 p-6 flex items-center justify-center bg-white">
+          <div className="flex-1 p-6 flex flex-col items-center justify-center gap-4 bg-white overflow-y-auto">
+            <div className="w-full max-w-2xl">
+              <GoogleDriveConnectCard compact onError={(msg) => setErrorMsg(msg)} />
+            </div>
             <div
               onDragOver={(e) => {
                 e.preventDefault();

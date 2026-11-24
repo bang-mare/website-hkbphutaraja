@@ -1,4 +1,8 @@
 import { isSupabaseConfigured, supabase } from './supabase';
+import {
+  disconnectGoogleDrive,
+  getGoogleDriveAccessToken,
+} from './googleDriveAuth';
 import type { MediaItem } from '../types/cms';
 
 // Simpanan sementara untuk mode pratinjau lokal (tanpa koneksi Supabase)
@@ -103,16 +107,25 @@ export async function uploadMediaFile(
   if (meta?.caption) formData.append('caption', meta.caption);
   if (meta?.deskripsi) formData.append('deskripsi', meta.deskripsi);
 
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${accessToken}`,
+  };
+  const googleToken = getGoogleDriveAccessToken();
+  if (googleToken) {
+    headers['X-Google-Access-Token'] = googleToken;
+  }
+
   const response = await fetch('/api/media/upload', {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers,
     body: formData,
   });
 
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (payload.code === 'GOOGLE_REAUTH_REQUIRED') {
+      await disconnectGoogleDrive().catch(() => undefined);
+    }
     return {
       media: null,
       error: payload.error || `Gagal mengunggah berkas (HTTP ${response.status}).`,
@@ -160,17 +173,26 @@ export async function deleteMediaItems(ids: string[]): Promise<{ error: string |
     return { error: 'Sesi login tidak ditemukan.' };
   }
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${accessToken}`,
+  };
+  const googleToken = getGoogleDriveAccessToken();
+  if (googleToken) {
+    headers['X-Google-Access-Token'] = googleToken;
+  }
+
   const response = await fetch('/api/media/delete', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
+    headers,
     body: JSON.stringify({ ids }),
   });
 
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (payload.code === 'GOOGLE_REAUTH_REQUIRED') {
+      await disconnectGoogleDrive().catch(() => undefined);
+    }
     return { error: payload.error || 'Gagal menghapus media.' };
   }
 

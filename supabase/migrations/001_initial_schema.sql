@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS public.wijk (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+DROP TRIGGER IF EXISTS trg_wijk_updated_at ON public.wijk;
 CREATE TRIGGER trg_wijk_updated_at
   BEFORE UPDATE ON public.wijk
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -71,6 +72,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 CREATE INDEX IF NOT EXISTS idx_profiles_wijk_id ON public.profiles(wijk_id);
 
+DROP TRIGGER IF EXISTS trg_profiles_updated_at ON public.profiles;
 CREATE TRIGGER trg_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -164,6 +166,7 @@ CREATE INDEX IF NOT EXISTS idx_media_mime ON public.media(mime);
 CREATE INDEX IF NOT EXISTS idx_media_year_month ON public.media(year_month);
 CREATE INDEX IF NOT EXISTS idx_media_uploaded_by ON public.media(uploaded_by);
 
+DROP TRIGGER IF EXISTS trg_media_updated_at ON public.media;
 CREATE TRIGGER trg_media_updated_at
   BEFORE UPDATE ON public.media
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -199,6 +202,7 @@ CREATE INDEX IF NOT EXISTS idx_posts_published_at ON public.posts(published_at D
 CREATE INDEX IF NOT EXISTS idx_posts_author_id ON public.posts(author_id);
 CREATE INDEX IF NOT EXISTS idx_posts_parent_id ON public.posts(parent_id);
 
+DROP TRIGGER IF EXISTS trg_posts_updated_at ON public.posts;
 CREATE TRIGGER trg_posts_updated_at
   BEFORE UPDATE ON public.posts
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -235,6 +239,7 @@ CREATE TABLE IF NOT EXISTS public.terms (
 
 CREATE INDEX IF NOT EXISTS idx_terms_taxonomy ON public.terms(taxonomy);
 
+DROP TRIGGER IF EXISTS trg_terms_updated_at ON public.terms;
 CREATE TRIGGER trg_terms_updated_at
   BEFORE UPDATE ON public.terms
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -269,6 +274,7 @@ CREATE TABLE IF NOT EXISTS public.comments (
 CREATE INDEX IF NOT EXISTS idx_comments_post_status ON public.comments(post_id, status);
 CREATE INDEX IF NOT EXISTS idx_comments_status ON public.comments(status);
 
+DROP TRIGGER IF EXISTS trg_comments_updated_at ON public.comments;
 CREATE TRIGGER trg_comments_updated_at
   BEFORE UPDATE ON public.comments
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -285,6 +291,7 @@ CREATE TABLE IF NOT EXISTS public.menus (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+DROP TRIGGER IF EXISTS trg_menus_updated_at ON public.menus;
 CREATE TRIGGER trg_menus_updated_at
   BEFORE UPDATE ON public.menus
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -307,6 +314,7 @@ CREATE TABLE IF NOT EXISTS public.menu_items (
 
 CREATE INDEX IF NOT EXISTS idx_menu_items_menu_order ON public.menu_items(menu_id, sort_order);
 
+DROP TRIGGER IF EXISTS trg_menu_items_updated_at ON public.menu_items;
 CREATE TRIGGER trg_menu_items_updated_at
   BEFORE UPDATE ON public.menu_items
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -325,6 +333,7 @@ CREATE TABLE IF NOT EXISTS public.widgets (
 
 CREATE INDEX IF NOT EXISTS idx_widgets_area_order ON public.widgets(area, sort_order);
 
+DROP TRIGGER IF EXISTS trg_widgets_updated_at ON public.widgets;
 CREATE TRIGGER trg_widgets_updated_at
   BEFORE UPDATE ON public.widgets
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -336,6 +345,7 @@ CREATE TABLE IF NOT EXISTS public.options (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+DROP TRIGGER IF EXISTS trg_options_updated_at ON public.options;
 CREATE TRIGGER trg_options_updated_at
   BEFORE UPDATE ON public.options
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -371,6 +381,7 @@ CREATE INDEX IF NOT EXISTS idx_jemaat_wijk_id ON public.jemaat(wijk_id);
 CREATE INDEX IF NOT EXISTS idx_jemaat_birth_date ON public.jemaat(birth_date);
 CREATE INDEX IF NOT EXISTS idx_jemaat_marriage_date ON public.jemaat(marriage_date);
 
+DROP TRIGGER IF EXISTS trg_jemaat_updated_at ON public.jemaat;
 CREATE TRIGGER trg_jemaat_updated_at
   BEFORE UPDATE ON public.jemaat
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -394,6 +405,7 @@ CREATE TABLE IF NOT EXISTS public.ibadah_minggu (
 
 CREATE INDEX IF NOT EXISTS idx_ibadah_minggu_date ON public.ibadah_minggu(service_date DESC);
 
+DROP TRIGGER IF EXISTS trg_ibadah_minggu_updated_at ON public.ibadah_minggu;
 CREATE TRIGGER trg_ibadah_minggu_updated_at
   BEFORE UPDATE ON public.ibadah_minggu
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -415,6 +427,7 @@ CREATE TABLE IF NOT EXISTS public.phd_lingkungan (
 
 CREATE INDEX IF NOT EXISTS idx_phd_wijk_id ON public.phd_lingkungan(wijk_id);
 
+DROP TRIGGER IF EXISTS trg_phd_lingkungan_updated_at ON public.phd_lingkungan;
 CREATE TRIGGER trg_phd_lingkungan_updated_at
   BEFORE UPDATE ON public.phd_lingkungan
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -440,6 +453,7 @@ CREATE TABLE IF NOT EXISTS public.kehadiran (
 
 CREATE INDEX IF NOT EXISTS idx_kehadiran_date ON public.kehadiran(service_date DESC);
 
+DROP TRIGGER IF EXISTS trg_kehadiran_updated_at ON public.kehadiran;
 CREATE TRIGGER trg_kehadiran_updated_at
   BEFORE UPDATE ON public.kehadiran
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -465,6 +479,7 @@ CREATE TABLE IF NOT EXISTS public.keuangan (
 CREATE INDEX IF NOT EXISTS idx_keuangan_date ON public.keuangan(transaction_date DESC);
 CREATE INDEX IF NOT EXISTS idx_keuangan_type ON public.keuangan(type);
 
+DROP TRIGGER IF EXISTS trg_keuangan_updated_at ON public.keuangan;
 CREATE TRIGGER trg_keuangan_updated_at
   BEFORE UPDATE ON public.keuangan
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -508,19 +523,23 @@ ALTER TABLE public.keuangan ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_log ENABLE ROW LEVEL SECURITY;
 
 -- WIJK: Publik bisa baca; Admin/Pendeta/Sekretaris bisa kelola
+DROP POLICY IF EXISTS "wijk_public_read" ON public.wijk;
 CREATE POLICY "wijk_public_read" ON public.wijk FOR SELECT USING (true);
+DROP POLICY IF EXISTS "wijk_staff_write" ON public.wijk;
 CREATE POLICY "wijk_staff_write" ON public.wijk FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris']));
 
 -- PROFILES: Baca profil sendiri atau Admin/Pendeta/Sekretaris baca semua;
 -- Update profil sendiri (tanpa bisa ubah role sendiri), Admin bisa ubah semua.
+DROP POLICY IF EXISTS "profiles_read_own_or_admin" ON public.profiles;
 CREATE POLICY "profiles_read_own_or_admin" ON public.profiles FOR SELECT
   USING (
     auth.uid() = id
     OR public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris'])
   );
 
+DROP POLICY IF EXISTS "profiles_update_own_safe" ON public.profiles;
 CREATE POLICY "profiles_update_own_safe" ON public.profiles FOR UPDATE
   USING (auth.uid() = id)
   WITH CHECK (
@@ -528,19 +547,24 @@ CREATE POLICY "profiles_update_own_safe" ON public.profiles FOR UPDATE
     AND role = public.current_user_role()
   );
 
+DROP POLICY IF EXISTS "profiles_admin_manage" ON public.profiles;
 CREATE POLICY "profiles_admin_manage" ON public.profiles FOR ALL
   USING (public.has_any_role(ARRAY['administrator']))
   WITH CHECK (public.has_any_role(ARRAY['administrator']));
 
 -- MEDIA: Publik baca metadata media; Staf konten bisa kelola
+DROP POLICY IF EXISTS "media_public_read" ON public.media;
 CREATE POLICY "media_public_read" ON public.media FOR SELECT USING (true);
+DROP POLICY IF EXISTS "media_staff_insert" ON public.media;
 CREATE POLICY "media_staff_insert" ON public.media FOR INSERT
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor', 'penulis']));
+DROP POLICY IF EXISTS "media_staff_update" ON public.media;
 CREATE POLICY "media_staff_update" ON public.media FOR UPDATE
   USING (
     public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor'])
     OR uploaded_by = auth.uid()
   );
+DROP POLICY IF EXISTS "media_staff_delete" ON public.media;
 CREATE POLICY "media_staff_delete" ON public.media FOR DELETE
   USING (
     public.has_any_role(ARRAY['administrator', 'pendeta', 'editor'])
@@ -549,6 +573,7 @@ CREATE POLICY "media_staff_delete" ON public.media FOR DELETE
 
 -- POSTS: Publik HANYA baca status 'publish';
 -- Penulis/Kontributor kelola milik sendiri; Editor/Sekretaris/Pendeta/Admin kelola semua
+DROP POLICY IF EXISTS "posts_public_read_published" ON public.posts;
 CREATE POLICY "posts_public_read_published" ON public.posts FOR SELECT
   USING (
     status = 'publish'
@@ -556,6 +581,7 @@ CREATE POLICY "posts_public_read_published" ON public.posts FOR SELECT
     OR public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor'])
   );
 
+DROP POLICY IF EXISTS "posts_author_insert" ON public.posts;
 CREATE POLICY "posts_author_insert" ON public.posts FOR INSERT
   WITH CHECK (
     public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor', 'penulis', 'kontributor'])
@@ -565,6 +591,7 @@ CREATE POLICY "posts_author_insert" ON public.posts FOR INSERT
     )
   );
 
+DROP POLICY IF EXISTS "posts_staff_update" ON public.posts;
 CREATE POLICY "posts_staff_update" ON public.posts FOR UPDATE
   USING (
     public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor'])
@@ -578,6 +605,7 @@ CREATE POLICY "posts_staff_update" ON public.posts FOR UPDATE
     OR status IN ('draft', 'pending', 'trash')
   );
 
+DROP POLICY IF EXISTS "posts_staff_delete" ON public.posts;
 CREATE POLICY "posts_staff_delete" ON public.posts FOR DELETE
   USING (
     public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor'])
@@ -585,91 +613,120 @@ CREATE POLICY "posts_staff_delete" ON public.posts FOR DELETE
   );
 
 -- POST REVISIONS
+DROP POLICY IF EXISTS "revisions_staff_read" ON public.post_revisions;
 CREATE POLICY "revisions_staff_read" ON public.post_revisions FOR SELECT
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor', 'penulis']));
+DROP POLICY IF EXISTS "revisions_staff_insert" ON public.post_revisions;
 CREATE POLICY "revisions_staff_insert" ON public.post_revisions FOR INSERT
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor', 'penulis', 'kontributor']));
 
 -- TERMS & TERM RELATIONSHIPS
+DROP POLICY IF EXISTS "terms_public_read" ON public.terms;
 CREATE POLICY "terms_public_read" ON public.terms FOR SELECT USING (true);
+DROP POLICY IF EXISTS "terms_staff_write" ON public.terms;
 CREATE POLICY "terms_staff_write" ON public.terms FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor', 'penulis']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor', 'penulis']));
 
+DROP POLICY IF EXISTS "term_rel_public_read" ON public.term_relationships;
 CREATE POLICY "term_rel_public_read" ON public.term_relationships FOR SELECT USING (true);
+DROP POLICY IF EXISTS "term_rel_staff_write" ON public.term_relationships;
 CREATE POLICY "term_rel_staff_write" ON public.term_relationships FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor', 'penulis', 'kontributor']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor', 'penulis', 'kontributor']));
 
 -- COMMENTS: Publik baca komentar 'approved' & bisa kirim komentar baru (status 'pending')
+DROP POLICY IF EXISTS "comments_public_read_approved" ON public.comments;
 CREATE POLICY "comments_public_read_approved" ON public.comments FOR SELECT
   USING (
     status = 'approved'
     OR public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor'])
   );
+DROP POLICY IF EXISTS "comments_public_insert_pending" ON public.comments;
 CREATE POLICY "comments_public_insert_pending" ON public.comments FOR INSERT
   WITH CHECK (status = 'pending');
+DROP POLICY IF EXISTS "comments_staff_manage" ON public.comments;
 CREATE POLICY "comments_staff_manage" ON public.comments FOR UPDATE
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor']));
+DROP POLICY IF EXISTS "comments_staff_delete" ON public.comments;
 CREATE POLICY "comments_staff_delete" ON public.comments FOR DELETE
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'editor']));
 
 -- MENUS, MENU ITEMS, WIDGETS: Publik baca; Admin/Editor kelola
+DROP POLICY IF EXISTS "menus_public_read" ON public.menus;
 CREATE POLICY "menus_public_read" ON public.menus FOR SELECT USING (true);
+DROP POLICY IF EXISTS "menus_admin_write" ON public.menus;
 CREATE POLICY "menus_admin_write" ON public.menus FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'editor']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'editor']));
 
+DROP POLICY IF EXISTS "menu_items_public_read" ON public.menu_items;
 CREATE POLICY "menu_items_public_read" ON public.menu_items FOR SELECT USING (true);
+DROP POLICY IF EXISTS "menu_items_admin_write" ON public.menu_items;
 CREATE POLICY "menu_items_admin_write" ON public.menu_items FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'editor']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'editor']));
 
+DROP POLICY IF EXISTS "widgets_public_read" ON public.widgets;
 CREATE POLICY "widgets_public_read" ON public.widgets FOR SELECT USING (true);
+DROP POLICY IF EXISTS "widgets_admin_write" ON public.widgets;
 CREATE POLICY "widgets_admin_write" ON public.widgets FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'editor']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'editor']));
 
 -- OPTIONS: Publik baca yang autoload=true; Hanya Administrator kelola semua
+DROP POLICY IF EXISTS "options_public_read" ON public.options;
 CREATE POLICY "options_public_read" ON public.options FOR SELECT
   USING (autoload = true OR public.has_any_role(ARRAY['administrator', 'pendeta']));
+DROP POLICY IF EXISTS "options_admin_write" ON public.options;
 CREATE POLICY "options_admin_write" ON public.options FOR ALL
   USING (public.has_any_role(ARRAY['administrator']))
   WITH CHECK (public.has_any_role(ARRAY['administrator']));
 
 -- JEMAAT: Sensitif (PII) - hanya staf gereja yang berhak
+DROP POLICY IF EXISTS "jemaat_staff_read" ON public.jemaat;
 CREATE POLICY "jemaat_staff_read" ON public.jemaat FOR SELECT
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris']));
+DROP POLICY IF EXISTS "jemaat_staff_write" ON public.jemaat;
 CREATE POLICY "jemaat_staff_write" ON public.jemaat FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris']));
 
 -- IBADAH MINGGU & PHD LINGKUNGAN: Publik baca jadwal; Staf gereja kelola
+DROP POLICY IF EXISTS "ibadah_public_read" ON public.ibadah_minggu;
 CREATE POLICY "ibadah_public_read" ON public.ibadah_minggu FOR SELECT USING (true);
+DROP POLICY IF EXISTS "ibadah_staff_write" ON public.ibadah_minggu;
 CREATE POLICY "ibadah_staff_write" ON public.ibadah_minggu FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor']));
 
+DROP POLICY IF EXISTS "phd_public_read" ON public.phd_lingkungan;
 CREATE POLICY "phd_public_read" ON public.phd_lingkungan FOR SELECT USING (true);
+DROP POLICY IF EXISTS "phd_staff_write" ON public.phd_lingkungan;
 CREATE POLICY "phd_staff_write" ON public.phd_lingkungan FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor']));
 
 -- KEHADIRAN IBADAH: Staf gereja
+DROP POLICY IF EXISTS "kehadiran_staff_read" ON public.kehadiran;
 CREATE POLICY "kehadiran_staff_read" ON public.kehadiran FOR SELECT
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'bendahara']));
+DROP POLICY IF EXISTS "kehadiran_staff_write" ON public.kehadiran;
 CREATE POLICY "kehadiran_staff_write" ON public.kehadiran FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris']));
 
 -- KEUANGAN: STRICT - HANYA Administrator dan Pendeta!
+DROP POLICY IF EXISTS "keuangan_admin_pendeta_only" ON public.keuangan;
 CREATE POLICY "keuangan_admin_pendeta_only" ON public.keuangan FOR ALL
   USING (public.has_any_role(ARRAY['administrator', 'pendeta']))
   WITH CHECK (public.has_any_role(ARRAY['administrator', 'pendeta']));
 
 -- ACTIVITY LOG: Staf bisa baca & tambah log
+DROP POLICY IF EXISTS "activity_log_staff_read" ON public.activity_log;
 CREATE POLICY "activity_log_staff_read" ON public.activity_log FOR SELECT
   USING (public.has_any_role(ARRAY['administrator', 'pendeta', 'sekretaris', 'editor']));
+DROP POLICY IF EXISTS "activity_log_auth_insert" ON public.activity_log;
 CREATE POLICY "activity_log_auth_insert" ON public.activity_log FOR INSERT
   WITH CHECK (auth.uid() IS NOT NULL);
 

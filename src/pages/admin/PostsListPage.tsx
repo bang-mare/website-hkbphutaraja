@@ -502,21 +502,21 @@ export function PostsListPage({ postType }: PostsListPageProps) {
             setSearchQuery(searchInput);
             setCurrentPage(1);
           }}
-          className="flex items-center gap-1.5"
+          className="flex flex-wrap items-center gap-1.5 w-full md:w-auto"
         >
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-initial min-w-0">
             <input
               type="search"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder={`Cari ${meta.singular}...`}
-              className="h-7 pl-2.5 pr-7 text-[13px] bg-white border border-[#8c8f94] rounded-[3px] text-[#1d2327] focus:border-[#2271b1] focus:outline-none"
+              className="w-full sm:w-48 h-8 md:h-7 pl-2.5 pr-7 text-[13px] bg-white border border-[#8c8f94] rounded-[3px] text-[#1d2327] focus:border-[#2271b1] focus:outline-none"
             />
             <Search className="w-3.5 h-3.5 text-[#787c82] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
           <button
             type="submit"
-            className="h-7 px-2.5 text-[13px] bg-[#f6f7f7] hover:bg-[#f0f0f1] border border-[#2271b1] text-[#2271b1] rounded-[3px] cursor-pointer whitespace-nowrap"
+            className="h-8 md:h-7 px-2.5 text-[13px] bg-[#f6f7f7] hover:bg-[#f0f0f1] border border-[#2271b1] text-[#2271b1] rounded-[3px] cursor-pointer whitespace-nowrap"
           >
             Cari {meta.singular}
           </button>
@@ -900,8 +900,8 @@ export function PostsListPage({ postType }: PostsListPageProps) {
                         )}
                       </div>
 
-                      {/* Hover Row Actions ala WordPress */}
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12px] opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
+                      {/* Hover Row Actions ala WordPress (selalu tampil di layar sentuh) */}
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12px] opacity-100 [@media(hover:hover)]:lg:opacity-0 [@media(hover:hover)]:lg:group-hover:opacity-100 [@media(hover:hover)]:lg:group-focus-within:opacity-100 transition-opacity">
                         {post.status !== 'trash' ? (
                           <>
                             <button
@@ -998,14 +998,14 @@ export function PostsListPage({ postType }: PostsListPageProps) {
 
       {/* Modal Pratinjau Cepat */}
       {previewPost && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white border border-[#c3c4c7] max-w-3xl w-full max-h-[85vh] flex flex-col shadow-xl">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#c3c4c7] bg-[#f6f7f7]">
-              <div>
-                <p className="text-[12px] text-[#50575e]">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-white border border-[#c3c4c7] max-w-3xl w-full max-h-[90dvh] flex flex-col shadow-xl">
+            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#c3c4c7] bg-[#f6f7f7]">
+              <div className="min-w-0">
+                <p className="text-[12px] text-[#50575e] truncate">
                   Pratinjau {meta.singular} · /{previewPost.slug}
                 </p>
-                <h2 className="text-[16px] font-semibold text-[#1d2327]">
+                <h2 className="text-[16px] font-semibold text-[#1d2327] truncate">
                   {previewPost.title || '(Tanpa Judul)'}
                 </h2>
               </div>
@@ -1013,7 +1013,7 @@ export function PostsListPage({ postType }: PostsListPageProps) {
                 type="button"
                 onClick={() => setPreviewPost(null)}
                 aria-label="Tutup pratinjau"
-                className="p-1.5 text-[#50575e] hover:text-[#1d2327] cursor-pointer"
+                className="w-11 h-11 md:w-8 md:h-8 inline-flex items-center justify-center text-[#50575e] hover:text-[#1d2327] cursor-pointer shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>

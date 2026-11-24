@@ -153,7 +153,7 @@ export function UsersAdminPage({ createMode = false }: { createMode?: boolean })
   if (createMode) {
     return (
       <div className="pt-4 text-[13px]">
-        <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h1 className="text-[23px] font-normal text-[#1d2327]">Tambah Pengguna Baru</h1>
           <Link
             to="/admin/users"
@@ -310,7 +310,7 @@ export function UsersAdminPage({ createMode = false }: { createMode?: boolean })
       </div>
 
       <div className="bg-white border border-[#c3c4c7] overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full min-w-[560px] border-collapse">
           <thead>
             <tr className="border-b border-[#c3c4c7] text-left">
               <th className="p-2.5 font-semibold">Nama Tampilan</th>

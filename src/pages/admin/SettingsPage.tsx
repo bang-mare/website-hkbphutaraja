@@ -66,7 +66,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white border border-[#c3c4c7] p-5 max-w-3xl space-y-5 shadow-[0_1px_1px_rgba(0,0,0,0.04)]"
+        className="bg-white border border-[#c3c4c7] p-4 sm:p-5 max-w-3xl space-y-5 shadow-[0_1px_1px_rgba(0,0,0,0.04)]"
       >
         {section === 'general' && (
           <>
@@ -229,17 +229,22 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
               { value: '/%year%/%monthnum%/%postname%/', label: 'Bulan dan Nama', sample: '/2026/11/judul-artikel' },
               { value: '/?p=%post_id%', label: 'Polos', sample: '/berita/id-pos' },
             ].map((item) => (
-              <label key={item.value} className="flex items-center gap-2.5 cursor-pointer">
-                <input
-                  type="radio"
-                  name="permalinkStructure"
-                  checked={options.permalink_structure === item.value}
-                  onChange={() =>
-                    setOptions({ ...options, permalink_structure: item.value })
-                  }
-                />
-                <span className="font-medium w-44">{item.label}</span>
-                <code className="px-2 py-0.5 bg-[#f0f0f1] border border-[#dcdcde] text-[12px]">
+              <label
+                key={item.value}
+                className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 cursor-pointer py-1"
+              >
+                <span className="inline-flex items-center gap-2.5 sm:w-44 shrink-0">
+                  <input
+                    type="radio"
+                    name="permalinkStructure"
+                    checked={options.permalink_structure === item.value}
+                    onChange={() =>
+                      setOptions({ ...options, permalink_structure: item.value })
+                    }
+                  />
+                  <span className="font-medium">{item.label}</span>
+                </span>
+                <code className="px-2 py-0.5 bg-[#f0f0f1] border border-[#dcdcde] text-[12px] break-all w-fit ml-6 sm:ml-0">
                   {item.sample}
                 </code>
               </label>
@@ -251,7 +256,7 @@ export function SettingsPage({ section }: { section: SettingsSection }) {
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white font-medium rounded-[3px] cursor-pointer"
+            className="min-h-[40px] sm:min-h-0 px-4 py-2 bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white font-medium rounded-[3px] cursor-pointer"
           >
             {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
           </button>

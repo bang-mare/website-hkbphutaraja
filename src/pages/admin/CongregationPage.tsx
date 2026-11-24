@@ -549,7 +549,7 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
             <Link
               key={item.key}
               to={item.path}
-              className={`px-3 py-1.5 border rounded-[3px] ${
+              className={`inline-flex items-center min-h-[38px] md:min-h-0 px-3 py-1.5 border rounded-[3px] ${
                 tab === item.key
                   ? 'bg-[#2271b1] border-[#2271b1] text-white'
                   : 'bg-white border-[#c3c4c7] text-[#1d2327]'
@@ -719,20 +719,20 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
               </span>
             </div>
 
-            <div className="relative">
+            <div className="relative w-full sm:w-auto min-w-0">
               <Search className="w-3.5 h-3.5 text-[#787c82] absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Cari nama atau no. registrasi..."
-                className="h-8 pl-8 pr-2.5 border border-[#8c8f94] rounded-[3px]"
+                className="w-full sm:w-60 h-8 pl-8 pr-2.5 border border-[#8c8f94] rounded-[3px]"
               />
             </div>
           </div>
 
           <div className="bg-white border border-[#c3c4c7] overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse min-w-[680px]">
               <thead>
                 <tr className="border-b border-[#c3c4c7] text-left">
                   <th className="p-2.5 font-semibold">No. Registrasi</th>
@@ -1027,40 +1027,42 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
             </select>
           </div>
 
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-[#c3c4c7] text-left">
-                <th className="p-2.5 font-semibold">No. Registrasi</th>
-                <th className="p-2.5 font-semibold">Nama Jemaat</th>
-                <th className="p-2.5 font-semibold">Wijk</th>
-                <th className="p-2.5 font-semibold">
-                  {tab === 'birthdays' ? 'Tanggal Lahir' : 'Tanggal Pernikahan'}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#f0f0f1]">
-              {(tab === 'birthdays' ? birthdaysByMonth : anniversariesByMonth).length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="p-6 text-center text-[#50575e]">
-                    Tidak ada data pada bulan yang dipilih.
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse min-w-[460px]">
+              <thead>
+                <tr className="border-b border-[#c3c4c7] text-left">
+                  <th className="p-2.5 font-semibold">No. Registrasi</th>
+                  <th className="p-2.5 font-semibold">Nama Jemaat</th>
+                  <th className="p-2.5 font-semibold">Wijk</th>
+                  <th className="p-2.5 font-semibold">
+                    {tab === 'birthdays' ? 'Tanggal Lahir' : 'Tanggal Pernikahan'}
+                  </th>
                 </tr>
-              ) : (
-                (tab === 'birthdays' ? birthdaysByMonth : anniversariesByMonth).map((j) => (
-                  <tr key={j.id}>
-                    <td className="p-2.5 tabular-nums text-[#2271b1]">
-                      {j.no_registrasi || '-'}
-                    </td>
-                    <td className="p-2.5 font-semibold text-[#1d2327]">{j.full_name}</td>
-                    <td className="p-2.5">Wijk {j.wijk?.name || '-'}</td>
-                    <td className="p-2.5 tabular-nums">
-                      {tab === 'birthdays' ? j.birth_date : j.marriage_date}
+              </thead>
+              <tbody className="divide-y divide-[#f0f0f1]">
+                {(tab === 'birthdays' ? birthdaysByMonth : anniversariesByMonth).length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="p-6 text-center text-[#50575e]">
+                      Tidak ada data pada bulan yang dipilih.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  (tab === 'birthdays' ? birthdaysByMonth : anniversariesByMonth).map((j) => (
+                    <tr key={j.id}>
+                      <td className="p-2.5 tabular-nums text-[#2271b1]">
+                        {j.no_registrasi || '-'}
+                      </td>
+                      <td className="p-2.5 font-semibold text-[#1d2327]">{j.full_name}</td>
+                      <td className="p-2.5">Wijk {j.wijk?.name || '-'}</td>
+                      <td className="p-2.5 tabular-nums">
+                        {tab === 'birthdays' ? j.birth_date : j.marriage_date}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

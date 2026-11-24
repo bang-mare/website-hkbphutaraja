@@ -71,6 +71,7 @@ export function AdminLayout() {
     bottom?: number;
   } | null>(null);
   const closeFlyoutTimerRef = useRef<number | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   // Admin Bar dropdown states
   const [openDropdown, setOpenDropdown] = useState<
@@ -97,6 +98,32 @@ export function AdminLayout() {
 
   useEffect(() => {
     return () => cancelCloseFlyout();
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpenDropdown(null);
+        setMobileMenuOpen(false);
+        setHoveredFlyout(null);
+      }
+    };
+    const handlePointerDown = (e: MouseEvent | TouchEvent) => {
+      if (
+        headerRef.current &&
+        !headerRef.current.contains(e.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+    };
   }, []);
 
   useEffect(() => {
@@ -156,11 +183,12 @@ export function AdminLayout() {
     .join('');
 
   return (
-    <div className="min-h-screen bg-[#f0f0f1] text-[#1d2327] font-wp flex flex-col">
+    <div className="min-h-dvh overflow-x-clip bg-[#f0f0f1] text-[#1d2327] font-wp flex flex-col">
       {/* ====================================================================
           TOP WORDPRESS ADMIN BAR (#1d2327)
          ==================================================================== */}
       <header
+        ref={headerRef}
         className="fixed top-0 left-0 right-0 z-50 h-[46px] md:h-[32px] bg-[#1d2327] text-[#f0f0f1] flex items-center justify-between px-1 md:px-2 text-[13px] select-none"
         onMouseLeave={() => setOpenDropdown(null)}
       >
@@ -170,8 +198,9 @@ export function AdminLayout() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((v) => !v)}
-            aria-label="Buka menu navigasi admin"
-            className="md:hidden h-full px-2.5 flex items-center justify-center text-[#f0f0f1] hover:bg-[#2c3338] hover:text-[#72aee6] cursor-pointer"
+            aria-label={mobileMenuOpen ? 'Tutup menu navigasi admin' : 'Buka menu navigasi admin'}
+            aria-expanded={mobileMenuOpen}
+            className="md:hidden h-full min-w-[44px] px-2.5 flex items-center justify-center text-[#f0f0f1] hover:bg-[#2c3338] hover:text-[#72aee6] cursor-pointer"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -386,8 +415,8 @@ export function AdminLayout() {
         <aside
           aria-label="Menu navigasi admin"
           onScroll={() => setHoveredFlyout(null)}
-          className={`fixed md:sticky top-[46px] md:top-[32px] left-0 z-40 h-[calc(100vh-46px)] md:h-[calc(100vh-32px)] bg-[#1d2327] text-[#f0f0f1] shrink-0 transition-transform md:transition-none duration-200 overflow-y-auto flex flex-col justify-between select-none ${
-            mobileMenuOpen ? 'translate-x-0 w-[200px]' : '-translate-x-full md:translate-x-0'
+          className={`fixed md:sticky top-[46px] md:top-[32px] left-0 z-40 h-[calc(100dvh-46px)] md:h-[calc(100dvh-32px)] bg-[#1d2327] text-[#f0f0f1] shrink-0 transition-transform md:transition-none duration-200 overflow-y-auto flex flex-col justify-between select-none ${
+            mobileMenuOpen ? 'translate-x-0 w-[230px]' : '-translate-x-full md:translate-x-0'
           } ${sidebarCollapsed ? 'md:w-[36px]' : 'md:w-[160px]'}`}
         >
           <nav className="py-2 flex-1">
@@ -427,7 +456,7 @@ export function AdminLayout() {
                       <Link
                         to={entry.path}
                         title={sidebarCollapsed ? entry.label : undefined}
-                        className={`relative flex items-center gap-2 px-2.5 py-[7px] text-[13px] leading-[1.3] transition-colors ${
+                        className={`relative flex items-center gap-2 px-3 md:px-2.5 min-h-[44px] md:min-h-0 py-2 md:py-[7px] text-[14px] md:text-[13px] leading-[1.3] transition-colors ${
                           active
                             ? 'bg-[#2271b1] text-white font-semibold'
                             : isFlyoutOpen
@@ -461,7 +490,7 @@ export function AdminLayout() {
                               <li key={sub.path}>
                                 <Link
                                   to={sub.path}
-                                  className={`block pl-8 pr-2.5 py-1 text-[12px] leading-[1.4] ${
+                                  className={`flex items-center min-h-[40px] md:min-h-0 pl-8 pr-2.5 py-1.5 md:py-1 text-[13px] md:text-[12px] leading-[1.4] ${
                                     subActive
                                       ? 'text-white font-semibold'
                                       : 'text-[#c3c4c7] hover:text-[#72aee6]'
@@ -518,7 +547,7 @@ export function AdminLayout() {
               top: hoveredFlyout.top !== undefined ? `${hoveredFlyout.top}px` : undefined,
               bottom: hoveredFlyout.bottom !== undefined ? `${hoveredFlyout.bottom}px` : undefined,
             }}
-            className="hidden md:block fixed min-w-[175px] max-h-[calc(100vh-48px)] overflow-y-auto bg-[#2c3338] text-[#f0f0f1] shadow-[0_3px_8px_rgba(0,0,0,0.28)] py-1.5 z-50 border border-[#1d2327] border-l-0"
+            className="hidden md:block fixed min-w-[175px] max-h-[calc(100dvh-48px)] overflow-y-auto bg-[#2c3338] text-[#f0f0f1] shadow-[0_3px_8px_rgba(0,0,0,0.28)] py-1.5 z-50 border border-[#1d2327] border-l-0"
           >
             {sidebarCollapsed && (
               <div className="px-3 py-1.5 text-[12px] font-semibold text-white border-b border-[#3c434a] mb-1">
@@ -720,7 +749,7 @@ export function AdminLayout() {
                         type="button"
                         onClick={() => dismissNotice(notice.id)}
                         aria-label="Tutup pemberitahuan"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#787c82] hover:text-[#1d2327] cursor-pointer"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[36px] min-h-[36px] md:min-w-0 md:min-h-0 p-1.5 inline-flex items-center justify-center text-[#787c82] hover:text-[#1d2327] cursor-pointer"
                       >
                         <X className="w-4 h-4" />
                       </button>

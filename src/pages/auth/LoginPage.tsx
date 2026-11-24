@@ -143,8 +143,8 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f0f1] text-[#3c434a] font-wp flex flex-col items-center justify-center px-4 py-10">
-      <div className="w-full max-w-[340px]">
+    <div className="min-h-dvh bg-[#f0f0f1] text-[#3c434a] font-wp flex flex-col items-center justify-center px-4 py-8 sm:py-10">
+      <div className="w-full max-w-[360px]">
         {/* Logo & Teks Kustom di atas kartu seperti wp-login.php */}
         <div className="flex flex-col items-center mb-5 text-center">
           <Link
@@ -163,12 +163,12 @@ export function LoginPage() {
             ) : (
               <HkbpLogo className="w-16 h-16" variant="color" />
             )}
-            <span className="text-sm font-semibold text-[#1d2327] tracking-tight">
+            <span className="text-base sm:text-sm font-semibold text-[#1d2327] tracking-tight">
               {loginTitle}
             </span>
           </Link>
           {loginSubtitle && (
-            <p className="mt-1 text-[12px] text-[#50575e] leading-snug max-w-[300px]">
+            <p className="mt-1 text-[13px] sm:text-[12px] text-[#50575e] leading-snug max-w-[300px]">
               {loginSubtitle}
             </p>
           )}
@@ -178,12 +178,12 @@ export function LoginPage() {
         {displayedError && (
           <div
             role="alert"
-            className="mb-4 bg-white border border-[#c3c4c7] border-l-4 border-l-[#d63638] p-3 text-[13px] text-[#1d2327] shadow-[0_1px_1px_rgba(0,0,0,0.04)]"
+            className="mb-4 bg-white border border-[#c3c4c7] border-l-4 border-l-[#d63638] p-3 text-[13px] text-[#1d2327] shadow-[0_1px_1px_rgba(0,0,0,0.04)] break-words"
           >
             <p>{displayedError}</p>
             {(profileError || (profile && !hasCapability(profile.role, 'access_admin'))) && (
-              <div className="mt-2 pt-2 border-t border-[#f0f0f1] flex items-center gap-3">
-                <Link to="/" className="text-[#2271b1] underline">
+              <div className="mt-2 pt-2 border-t border-[#f0f0f1] flex flex-wrap items-center gap-3">
+                <Link to="/" className="text-[#2271b1] underline min-h-[36px] inline-flex items-center">
                   Ke Halaman Utama
                 </Link>
                 <button
@@ -192,7 +192,7 @@ export function LoginPage() {
                     void signOut();
                     setErrorMsg(null);
                   }}
-                  className="text-[#d63638] underline cursor-pointer"
+                  className="text-[#d63638] underline cursor-pointer min-h-[36px] inline-flex items-center"
                 >
                   Keluar Akun
                 </button>
@@ -217,7 +217,7 @@ export function LoginPage() {
         )}
 
         {/* Kartu Login Putih di Tengah */}
-        <div className="bg-white border border-[#c3c4c7] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-white border border-[#c3c4c7] p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           {mode === 'login' ? (
             <form onSubmit={handleLoginSubmit} noValidate>
               <div className="mb-4">
@@ -233,7 +233,7 @@ export function LoginPage() {
                   autoComplete="username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full h-10 px-2.5 text-[15px] bg-white border border-[#8c8f94] rounded-[4px] text-[#1d2327] focus:border-[#2271b1] focus:outline-none focus:ring-1 focus:ring-[#2271b1]"
+                  className="w-full min-h-[44px] h-11 px-3 text-base sm:text-[15px] bg-white border border-[#8c8f94] rounded-[4px] text-[#1d2327] focus:border-[#2271b1] focus:outline-none focus:ring-1 focus:ring-[#2271b1]"
                   placeholder="nama@hkbphutaraja.or.id"
                 />
               </div>
@@ -252,21 +252,21 @@ export function LoginPage() {
                     autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full h-10 pl-2.5 pr-10 text-[15px] bg-white border border-[#8c8f94] rounded-[4px] text-[#1d2327] focus:border-[#2271b1] focus:outline-none focus:ring-1 focus:ring-[#2271b1]"
+                    className="w-full min-h-[44px] h-11 pl-3 pr-12 text-base sm:text-[15px] bg-white border border-[#8c8f94] rounded-[4px] text-[#1d2327] focus:border-[#2271b1] focus:outline-none focus:ring-1 focus:ring-[#2271b1]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
                     aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-[#2271b1] hover:text-[#135e96] cursor-pointer"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 inline-flex items-center justify-center text-[#2271b1] hover:text-[#135e96] cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
-                <label className="inline-flex items-center gap-2 text-[13px] text-[#3c434a] cursor-pointer select-none">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                <label className="inline-flex items-center gap-2 min-h-[44px] sm:min-h-0 text-[14px] sm:text-[13px] text-[#3c434a] cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={rememberMe}
@@ -279,7 +279,7 @@ export function LoginPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-1.5 min-h-[34px] bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white text-[13px] font-medium rounded-[3px] transition-colors cursor-pointer whitespace-nowrap"
+                  className="px-5 py-2 min-h-[44px] sm:min-h-[36px] bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white text-[14px] sm:text-[13px] font-medium rounded-[3px] transition-colors cursor-pointer whitespace-nowrap"
                 >
                   {submitting ? 'Memeriksa...' : 'Masuk'}
                 </button>
@@ -299,14 +299,14 @@ export function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full h-10 px-2.5 text-[15px] bg-white border border-[#8c8f94] rounded-[4px] text-[#1d2327] focus:border-[#2271b1] focus:outline-none focus:ring-1 focus:ring-[#2271b1]"
+                  className="w-full min-h-[44px] h-11 px-3 text-base sm:text-[15px] bg-white border border-[#8c8f94] rounded-[4px] text-[#1d2327] focus:border-[#2271b1] focus:outline-none focus:ring-1 focus:ring-[#2271b1]"
                 />
               </div>
               <div className="flex justify-end">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-1.5 min-h-[34px] bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white text-[13px] font-medium rounded-[3px] transition-colors cursor-pointer"
+                  className="px-5 py-2 min-h-[44px] sm:min-h-[36px] bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white text-[14px] sm:text-[13px] font-medium rounded-[3px] transition-colors cursor-pointer"
                 >
                   {submitting ? 'Mengirim...' : 'Dapatkan Kata Sandi Baru'}
                 </button>
@@ -316,7 +316,7 @@ export function LoginPage() {
         </div>
 
         {/* Tautan bawah kartu */}
-        <div className="mt-4 px-1 flex flex-col gap-2 text-[13px] text-[#50575e]">
+        <div className="mt-4 px-1 flex flex-col gap-1 text-[14px] sm:text-[13px] text-[#50575e]">
           {mode === 'login' ? (
             <button
               type="button"
@@ -325,7 +325,7 @@ export function LoginPage() {
                 setErrorMsg(null);
                 setSuccessMsg(null);
               }}
-              className="text-left hover:text-[#2271b1] cursor-pointer w-fit"
+              className="text-left hover:text-[#2271b1] cursor-pointer w-fit min-h-[44px] sm:min-h-[30px] inline-flex items-center"
             >
               Lupa kata sandi?
             </button>
@@ -337,7 +337,7 @@ export function LoginPage() {
                 setErrorMsg(null);
                 setSuccessMsg(null);
               }}
-              className="text-left hover:text-[#2271b1] cursor-pointer w-fit"
+              className="text-left hover:text-[#2271b1] cursor-pointer w-fit min-h-[44px] sm:min-h-[30px] inline-flex items-center"
             >
               Masuk
             </button>
@@ -345,19 +345,19 @@ export function LoginPage() {
 
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 hover:text-[#2271b1] w-fit"
+            className="inline-flex items-center gap-1.5 hover:text-[#2271b1] w-fit min-h-[44px] sm:min-h-[30px]"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
             <span>{loginBackText}</span>
           </Link>
         </div>
 
         {/* Panel Pratinjau UI saat Supabase belum diisi di env */}
         {!isSupabaseReady && (
-          <div className="mt-6 bg-white border border-[#c3c4c7] border-l-4 border-l-[#dba617] p-4 text-[12px] text-[#3c434a] shadow-[0_1px_1px_rgba(0,0,0,0.04)]">
+          <div className="mt-6 bg-white border border-[#c3c4c7] border-l-4 border-l-[#dba617] p-4 text-[13px] sm:text-[12px] text-[#3c434a] shadow-[0_1px_1px_rgba(0,0,0,0.04)]">
             <div className="flex items-start gap-2 mb-2">
               <Info className="w-4 h-4 text-[#996800] shrink-0 mt-0.5" />
-              <div>
+              <div className="min-w-0">
                 <p className="font-semibold text-[#1d2327]">
                   Supabase Belum Terhubung
                 </p>
@@ -367,12 +367,12 @@ export function LoginPage() {
                 </p>
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
               <select
                 value={previewRole}
                 onChange={(e) => setPreviewRole(e.target.value as UserRole)}
                 aria-label="Pilih peran untuk pratinjau"
-                className="flex-1 h-8 px-2 text-[12px] bg-white border border-[#8c8f94] rounded-[3px] text-[#1d2327]"
+                className="flex-1 min-h-[44px] sm:min-h-[34px] h-10 sm:h-8 px-2 text-base sm:text-[12px] bg-white border border-[#8c8f94] rounded-[3px] text-[#1d2327]"
               >
                 {(['administrator', 'pendeta', 'sekretaris', 'bendahara', 'editor', 'penulis', 'kontributor'] as UserRole[]).map(
                   (r) => (
@@ -385,7 +385,7 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={handlePreviewEnter}
-                className="px-3 h-8 bg-[#f6f7f7] hover:bg-[#f0f0f1] border border-[#2271b1] text-[#2271b1] font-medium rounded-[3px] cursor-pointer whitespace-nowrap"
+                className="px-3 min-h-[44px] sm:min-h-[34px] h-10 sm:h-8 bg-[#f6f7f7] hover:bg-[#f0f0f1] border border-[#2271b1] text-[#2271b1] font-medium rounded-[3px] cursor-pointer whitespace-nowrap"
               >
                 Uji Dasbor
               </button>

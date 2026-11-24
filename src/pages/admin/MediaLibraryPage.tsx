@@ -380,14 +380,14 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
           )}
         </div>
 
-        <div className="relative">
+        <div className="relative w-full sm:w-auto min-w-0">
           <Search className="w-3.5 h-3.5 text-[#787c82] absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari media..."
-            className="h-8 pl-8 pr-2.5 border border-[#8c8f94] rounded-[3px] w-48 sm:w-56"
+            className="h-8 pl-8 pr-2.5 border border-[#8c8f94] rounded-[3px] w-full sm:w-56"
           />
         </div>
       </div>
@@ -444,10 +444,11 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
                   type="button"
                   onClick={() => toggleSelect(item.id)}
                   title="Pilih media"
-                  className={`absolute top-1.5 left-1.5 w-5 h-5 border flex items-center justify-center rounded-[2px] cursor-pointer ${
+                  aria-label={`Pilih ${item.nama}`}
+                  className={`absolute top-1.5 left-1.5 w-7 h-7 sm:w-5 sm:h-5 border flex items-center justify-center rounded-[2px] cursor-pointer ${
                     isSelected
                       ? 'bg-[#2271b1] border-[#2271b1] text-white'
-                      : 'bg-white/90 border-[#8c8f94] text-transparent opacity-0 group-hover:opacity-100'
+                      : 'bg-white/95 border-[#8c8f94] text-transparent opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100'
                   }`}
                 >
                   <Check className="w-3.5 h-3.5" />
@@ -562,28 +563,29 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
 
       {/* Modal Detail Lampiran */}
       {detailItem && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-4xl max-h-[88vh] flex flex-col border border-[#c3c4c7] shadow-2xl">
-            <div className="px-4 py-3 border-b border-[#dcdcde] flex items-center justify-between bg-[#f6f7f7]">
-              <h2 className="text-[15px] font-semibold text-[#1d2327]">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-white w-full max-w-4xl max-h-[90dvh] flex flex-col border border-[#c3c4c7] shadow-2xl">
+            <div className="px-4 py-2.5 border-b border-[#dcdcde] flex items-center justify-between gap-3 bg-[#f6f7f7]">
+              <h2 className="text-[15px] font-semibold text-[#1d2327] truncate">
                 Detail Lampiran: {detailItem.nama}
               </h2>
               <button
                 type="button"
                 onClick={() => setDetailItem(null)}
-                className="p-1 text-[#50575e] hover:text-[#1d2327] cursor-pointer"
+                aria-label="Tutup detail lampiran"
+                className="w-11 h-11 md:w-8 md:h-8 inline-flex items-center justify-center text-[#50575e] hover:text-[#1d2327] cursor-pointer shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 overflow-y-auto">
-              <div className="md:col-span-7 p-6 bg-[#f0f0f1] flex items-center justify-center">
+              <div className="md:col-span-7 p-4 sm:p-6 bg-[#f0f0f1] flex items-center justify-center">
                 {detailItem.mime.startsWith('image/') ? (
                   <img
                     src={getMediaProxyUrl(detailItem.id, { width: 1024 })}
                     alt={detailItem.alt || detailItem.nama}
-                    className="max-h-[55vh] object-contain border border-[#c3c4c7] bg-white"
+                    className="max-h-[42dvh] md:max-h-[55dvh] object-contain border border-[#c3c4c7] bg-white"
                   />
                 ) : (
                   <div className="text-center p-6 bg-white border border-[#c3c4c7]">
@@ -668,17 +670,17 @@ export function MediaLibraryPage({ defaultOpenUpload = false }: MediaLibraryPage
                   <label className="block text-[12px] text-[#50575e] mb-1">
                     URL Proxy Berkas
                   </label>
-                  <div className="flex gap-1.5">
+                  <div className="flex flex-wrap sm:flex-nowrap gap-1.5">
                     <input
                       type="text"
                       readOnly
                       value={getMediaProxyUrl(detailItem.id)}
-                      className="flex-1 h-8 px-2 bg-[#f0f0f1] border border-[#c3c4c7] rounded-[2px] font-mono text-[11px]"
+                      className="flex-1 min-w-0 h-8 px-2 bg-[#f0f0f1] border border-[#c3c4c7] rounded-[2px] font-mono text-[11px]"
                     />
                     <button
                       type="button"
                       onClick={() => void handleCopyUrl(detailItem.id)}
-                      className="px-2.5 h-8 border border-[#c3c4c7] bg-[#f6f7f7] hover:bg-[#f0f0f1] rounded-[2px] inline-flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 h-8 border border-[#c3c4c7] bg-[#f6f7f7] hover:bg-[#f0f0f1] rounded-[2px] inline-flex items-center gap-1 cursor-pointer shrink-0"
                     >
                       <Copy className="w-3.5 h-3.5" />
                       <span>{copiedId === detailItem.id ? 'Tersalin' : 'Salin'}</span>

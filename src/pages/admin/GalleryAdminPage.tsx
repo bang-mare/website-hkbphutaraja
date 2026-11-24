@@ -188,7 +188,7 @@ export function GalleryAdminPage({ createMode = false }: { createMode?: boolean 
         </div>
 
         <form onSubmit={handleSaveAlbum} className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          <div className="lg:col-span-8 space-y-4">
+          <div className="lg:col-span-8 min-w-0 space-y-4">
             <div className="bg-white border border-[#c3c4c7] p-4 space-y-3 text-[13px]">
               <div>
                 <label className="block font-semibold text-[#1d2327] mb-1">
@@ -233,16 +233,16 @@ export function GalleryAdminPage({ createMode = false }: { createMode?: boolean 
 
             {/* Daftar Foto Album */}
             <div className="bg-white border border-[#c3c4c7] p-4 text-[13px]">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <h2 className="text-[14px] font-semibold text-[#1d2327]">
                   Foto Dokumentasi ({photos.length})
                 </h2>
                 <button
                   type="button"
                   onClick={() => setPickerMode('photos')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2271b1] hover:bg-[#135e96] text-white rounded-[3px] cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] bg-[#2271b1] hover:bg-[#135e96] text-white rounded-[3px] cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4 shrink-0" />
                   <span>Tambah Foto dari Google Drive</span>
                 </button>
               </div>
@@ -264,7 +264,7 @@ export function GalleryAdminPage({ createMode = false }: { createMode?: boolean 
                           setPhotos((prev) => prev.filter((_, i) => i !== idx))
                         }
                         title="Hapus foto dari album"
-                        className="absolute top-2.5 right-2.5 w-6 h-6 bg-[#d63638] text-white rounded flex items-center justify-center cursor-pointer"
+                        className="absolute top-2 right-2 w-8 h-8 sm:w-6 sm:h-6 bg-[#d63638] text-white rounded flex items-center justify-center cursor-pointer shadow"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -295,18 +295,18 @@ export function GalleryAdminPage({ createMode = false }: { createMode?: boolean 
               <h2 className="text-[14px] font-semibold text-[#1d2327]">
                 Dokumentasi Video YouTube ({videos.length})
               </h2>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="url"
                   value={newVideoUrl}
                   onChange={(e) => setNewVideoUrl(e.target.value)}
                   placeholder="https://www.youtube.com/watch?v=..."
-                  className="flex-1 h-8 px-2.5 border border-[#8c8f94] rounded-[3px]"
+                  className="flex-1 min-w-0 h-9 sm:h-8 px-2.5 border border-[#8c8f94] rounded-[3px]"
                 />
                 <button
                   type="button"
                   onClick={handleAddVideo}
-                  className="px-3 h-8 border border-[#2271b1] text-[#2271b1] bg-[#f6f7f7] hover:bg-[#f0f6fc] rounded-[3px] cursor-pointer"
+                  className="px-3 h-9 sm:h-8 border border-[#2271b1] text-[#2271b1] bg-[#f6f7f7] hover:bg-[#f0f6fc] rounded-[3px] cursor-pointer shrink-0"
                 >
                   + Tambah Video
                 </button>
@@ -314,8 +314,8 @@ export function GalleryAdminPage({ createMode = false }: { createMode?: boolean 
               {videos.length > 0 && (
                 <ul className="divide-y divide-[#f0f0f1]">
                   {videos.map((v, idx) => (
-                    <li key={idx} className="py-2 flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center gap-2 text-[#1d2327] truncate">
+                    <li key={idx} className="py-2 flex items-center justify-between gap-2 min-w-0">
+                      <span className="inline-flex items-center gap-2 text-[#1d2327] min-w-0 flex-1">
                         <Video className="w-4 h-4 text-[#2271b1] shrink-0" />
                         <span className="truncate">{v}</span>
                       </span>
@@ -324,7 +324,7 @@ export function GalleryAdminPage({ createMode = false }: { createMode?: boolean 
                         onClick={() =>
                           setVideos((prev) => prev.filter((_, i) => i !== idx))
                         }
-                        className="text-[#d63638] text-[12px] hover:underline cursor-pointer"
+                        className="text-[#d63638] text-[12px] hover:underline cursor-pointer shrink-0 px-2 py-1"
                       >
                         Hapus
                       </button>
@@ -443,7 +443,7 @@ export function GalleryAdminPage({ createMode = false }: { createMode?: boolean 
         </div>
       ) : (
         <div className="bg-white border border-[#c3c4c7] overflow-x-auto">
-          <table className="w-full border-collapse text-[13px]">
+          <table className="w-full min-w-[520px] border-collapse text-[13px]">
             <thead>
               <tr className="border-b border-[#c3c4c7] text-left">
                 <th className="p-2.5 font-semibold">Judul Album</th>

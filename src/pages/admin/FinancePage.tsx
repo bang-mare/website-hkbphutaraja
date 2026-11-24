@@ -179,7 +179,7 @@ export function FinancePage() {
   return (
     <div className="pt-4 text-[13px]">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-[23px] font-normal text-[#1d2327]">
             Keuangan Huria (55% Pusat / 45% Huria)
           </h1>
@@ -189,17 +189,17 @@ export function FinancePage() {
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <input
             type="month"
             value={monthFilter}
             onChange={(e) => setMonthFilter(e.target.value)}
-            className="h-8 px-2 bg-white border border-[#8c8f94] rounded-[3px]"
+            className="h-9 sm:h-8 px-2 bg-white border border-[#8c8f94] rounded-[3px]"
           />
           <button
             type="button"
             onClick={handleExportXlsx}
-            className="inline-flex items-center gap-1.5 h-8 px-3 bg-white border border-[#c3c4c7] hover:bg-[#f6f7f7] rounded-[3px] cursor-pointer"
+            className="inline-flex items-center gap-1.5 h-9 sm:h-8 px-3 bg-white border border-[#c3c4c7] hover:bg-[#f6f7f7] rounded-[3px] cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Ekspor XLSX</span>
@@ -249,7 +249,7 @@ export function FinancePage() {
           <h2 className="font-semibold text-[14px] text-[#1d2327]">
             Catat Transaksi Keuangan
           </h2>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="block text-[#50575e] mb-1">Tanggal</label>
               <input
@@ -367,8 +367,8 @@ export function FinancePage() {
           </button>
         </form>
 
-        <div className="lg:col-span-8 bg-white border border-[#c3c4c7] overflow-x-auto">
-          <table className="w-full border-collapse">
+        <div className="lg:col-span-8 min-w-0 bg-white border border-[#c3c4c7] overflow-x-auto">
+          <table className="w-full min-w-[640px] border-collapse">
             <thead>
               <tr className="border-b border-[#c3c4c7] text-left">
                 <th className="p-2.5 font-semibold">Tanggal</th>

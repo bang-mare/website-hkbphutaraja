@@ -102,7 +102,7 @@ export function PublicHomePage() {
         return (
           <section
             key="hero"
-            className="hero-sacred py-12 lg:py-16"
+            className="hero-sacred py-10 sm:py-12 lg:py-16"
             style={
               primaryColor.toLowerCase() !== '#0f294a'
                 ? {
@@ -112,14 +112,14 @@ export function PublicHomePage() {
             }
           >
             {isCentered ? (
-              <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center flex flex-col items-center">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
                 <p className="text-xs uppercase tracking-[0.14em] font-semibold text-[#fbbf24] mb-2">
                   Distrik VI Dairi &middot; Huria Kristen Batak Protestan
                 </p>
-                <h1 className="font-display text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-white leading-[1.15] tracking-tight mb-3 [text-wrap:balance]">
+                <h1 className="font-display heading-hero font-bold text-white tracking-tight mb-3 [text-wrap:balance]">
                   {options.site_title}
                 </h1>
-                <p className="text-[15px] text-white/75 leading-relaxed max-w-2xl mb-4">
+                <p className="text-base text-white/85 leading-relaxed max-w-2xl mb-4">
                   Melayani persekutuan (Koinonia), kesaksian (Marturia), dan pelayanan kasih (Diakonia) bagi seluruh ruas ni huria yang tersebar di enam lingkungan (Wijk) pelayanan.
                 </p>
                 <div
@@ -131,41 +131,41 @@ export function PublicHomePage() {
                     <BookOpen className="w-4 h-4 shrink-0" />
                     <span>Ayat Renungan &middot; {options.daily_verse.reference}</span>
                   </div>
-                  <p className="font-display italic text-white text-lg leading-relaxed">
+                  <p className="font-display italic text-white text-base sm:text-lg leading-relaxed">
                     &ldquo;{options.daily_verse.text}&rdquo;
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center justify-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 w-full sm:w-auto">
                   <Link
                     to="/jadwal-ibadah"
                     style={{
                       backgroundColor: accentColor,
                       borderColor: accentColor,
                     }}
-                    className="btn-gold inline-flex items-center gap-2 px-5 py-2.5 text-sm rounded-lg whitespace-nowrap"
+                    className="btn-gold inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 text-[15px] rounded-lg whitespace-nowrap"
                   >
                     <span>Lihat Jadwal Ibadah</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     to="/warta"
-                    className="inline-flex items-center px-5 py-2.5 border border-white/40 text-white hover:bg-white/10 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap"
+                    className="inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 border border-white/40 text-white hover:bg-white/10 text-[15px] font-semibold rounded-lg transition-colors whitespace-nowrap"
                   >
                     Warta Jemaat Mingguan
                   </Link>
                 </div>
               </div>
             ) : (
-              <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                 {/* Kolom Kiri: Identitas, Visi & Ayat Renungan */}
-                <div className="lg:col-span-7 flex flex-col justify-center">
+                <div className="lg:col-span-7 flex flex-col justify-center min-w-0">
                   <p className="text-xs uppercase tracking-[0.14em] font-semibold text-[#fbbf24] mb-2">
                     Distrik VI Dairi &middot; Huria Kristen Batak Protestan
                   </p>
-                  <h1 className="font-display text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-white leading-[1.15] tracking-tight mb-3 [text-wrap:balance]">
+                  <h1 className="font-display heading-hero font-bold text-white tracking-tight mb-3 [text-wrap:balance]">
                     {options.site_title}
                   </h1>
-                  <p className="text-[15px] text-white/75 leading-relaxed max-w-2xl mb-4">
+                  <p className="text-base text-white/85 leading-relaxed max-w-2xl mb-4">
                     Melayani persekutuan (Koinonia), kesaksian (Marturia), dan pelayanan kasih (Diakonia) bagi seluruh ruas ni huria yang tersebar di enam lingkungan (Wijk) pelayanan.
                   </p>
                   <div
@@ -179,26 +179,26 @@ export function PublicHomePage() {
                       <BookOpen className="w-4 h-4 shrink-0" />
                       <span>Ayat Renungan &middot; {options.daily_verse.reference}</span>
                     </div>
-                    <p className="font-display italic text-white text-lg leading-relaxed">
+                    <p className="font-display italic text-white text-base sm:text-lg leading-relaxed">
                       &ldquo;{options.daily_verse.text}&rdquo;
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                     <Link
                       to="/jadwal-ibadah"
                       style={{
                         backgroundColor: accentColor,
                         borderColor: accentColor,
                       }}
-                      className="btn-gold inline-flex items-center gap-2 px-5 py-2.5 text-sm rounded-lg whitespace-nowrap"
+                      className="btn-gold inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 text-[15px] rounded-lg whitespace-nowrap"
                     >
                       <span>Lihat Jadwal Ibadah</span>
                       <ArrowRight className="w-4 h-4" />
                     </Link>
                     <Link
                       to="/warta"
-                      className="inline-flex items-center px-5 py-2.5 border border-white/40 text-white hover:bg-white/10 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap"
+                      className="inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 border border-white/40 text-white hover:bg-white/10 text-[15px] font-semibold rounded-lg transition-colors whitespace-nowrap"
                     >
                       Warta Jemaat Mingguan
                     </Link>
@@ -206,8 +206,8 @@ export function PublicHomePage() {
                 </div>
 
                 {/* Kolom Kanan: Kartu Ibadah Minggu Terdekat & Foto Gereja */}
-                <div className="lg:col-span-5">
-                  <div className="bg-white text-[#0f172a] rounded-xl p-5 sm:p-6 shadow-sm space-y-4">
+                <div className="lg:col-span-5 min-w-0">
+                  <div className="bg-white text-[#0f172a] rounded-xl p-4 sm:p-6 shadow-sm space-y-4">
                     {!heroImgError && heroImage && (
                       <div className="aspect-[16/9] rounded-lg overflow-hidden border border-[#e2e8f0] bg-slate-100">
                         <img
@@ -221,7 +221,7 @@ export function PublicHomePage() {
                     )}
 
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.08em] font-semibold text-slate-500 mb-1.5">
+                      <p className="text-[11px] uppercase tracking-[0.08em] font-semibold text-slate-600 mb-1.5">
                         Ibadah Minggu Terdekat
                       </p>
 
@@ -246,11 +246,11 @@ export function PublicHomePage() {
                             {nextService.title}
                           </h2>
                           {nextService.liturgical_week && (
-                            <p className="text-xs font-medium text-slate-500">
+                            <p className="text-xs font-medium text-slate-600">
                               {nextService.liturgical_week}
                             </p>
                           )}
-                          <p className="text-sm text-slate-600 leading-relaxed">
+                          <p className="text-[15px] text-slate-700 leading-relaxed">
                             {nextService.preacher ? `Pengkhotbah: ${nextService.preacher}. ` : ''}
                             {nextService.theme ||
                               'Mari bersekutu memuji Tuhan bersama seluruh keluarga jemaat.'}
@@ -258,29 +258,29 @@ export function PublicHomePage() {
                         </div>
                       ) : (
                         <div className="space-y-2.5">
-                          <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                          <div className="flex items-center justify-between gap-3 py-2 border-b border-slate-100">
                             <div>
-                              <p className="font-semibold text-sm text-[#0f172a]">
+                              <p className="font-semibold text-[15px] text-[#0f172a]">
                                 Ibadah Pagi &amp; Sekolah Minggu
                               </p>
-                              <p className="text-xs text-slate-500">Setiap Hari Minggu</p>
+                              <p className="text-xs text-slate-600">Setiap Hari Minggu</p>
                             </div>
                             <span
-                              className="font-mono-num text-xs font-semibold"
+                              className="font-mono-num text-xs font-semibold shrink-0"
                               style={{ color: accentColor }}
                             >
                               08.00 WIB
                             </span>
                           </div>
-                          <div className="flex items-center justify-between py-1">
+                          <div className="flex items-center justify-between gap-3 py-1">
                             <div>
-                              <p className="font-semibold text-sm text-[#0f172a]">
+                              <p className="font-semibold text-[15px] text-[#0f172a]">
                                 Ibadah Minggu Siang (Utama)
                               </p>
-                              <p className="text-xs text-slate-500">Gereja Induk Hutaraja</p>
+                              <p className="text-xs text-slate-600">Gereja Induk Hutaraja</p>
                             </div>
                             <span
-                              className="font-mono-num text-xs font-semibold"
+                              className="font-mono-num text-xs font-semibold shrink-0"
                               style={{ color: accentColor }}
                             >
                               10.30 WIB
@@ -290,11 +290,11 @@ export function PublicHomePage() {
                       )}
                     </div>
 
-                    <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
-                      <span className="text-slate-500">Jadwal lengkap &amp; petugas</span>
+                    <div className="pt-3 border-t border-slate-200 flex items-center justify-between gap-2 text-xs">
+                      <span className="text-slate-600">Jadwal lengkap &amp; petugas</span>
                       <Link
                         to="/jadwal-ibadah"
-                        className="font-semibold hover:underline"
+                        className="inline-flex items-center min-h-[44px] sm:min-h-0 font-semibold hover:underline"
                         style={{ color: primaryColor }}
                       >
                         Buka Jadwal &rarr;
@@ -310,40 +310,40 @@ export function PublicHomePage() {
 
       case 'quick_links':
         return (
-          <section key="quick_links" className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
+          <section key="quick_links" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
             <div className={`grid ${getGridClass(section.columns, 3)} gap-4`}>
-              <Link to="/warta" className="quick-link-card p-4 block">
+              <Link to="/warta" className="quick-link-card p-5 block">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="w-9 h-9 rounded-lg bg-[#eff6ff] text-[#0f294a] inline-flex items-center justify-center shrink-0">
+                  <span className="w-10 h-10 rounded-lg bg-[#eff6ff] text-[#0f294a] inline-flex items-center justify-center shrink-0">
                     <FileText className="w-5 h-5" />
                   </span>
-                  <span className="font-bold text-sm text-[#0f172a]">Warta Jemaat</span>
+                  <span className="font-bold text-base text-[#0f172a]">Warta Jemaat</span>
                 </div>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-[15px] text-slate-600 leading-relaxed">
                   Baca Tingting mingguan secara daring &amp; unduh PDF resmi huria.
                 </p>
               </Link>
 
-              <Link to="/jadwal-ibadah" className="quick-link-card p-4 block">
+              <Link to="/jadwal-ibadah" className="quick-link-card p-5 block">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="w-9 h-9 rounded-lg bg-[#fef3c7] text-[#b45309] inline-flex items-center justify-center shrink-0">
+                  <span className="w-10 h-10 rounded-lg bg-[#fef3c7] text-[#b45309] inline-flex items-center justify-center shrink-0">
                     <Calendar className="w-5 h-5" />
                   </span>
-                  <span className="font-bold text-sm text-[#0f172a]">Jadwal Ibadah &amp; PHD</span>
+                  <span className="font-bold text-base text-[#0f172a]">Jadwal Ibadah &amp; PHD</span>
                 </div>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-[15px] text-slate-600 leading-relaxed">
                   Kebaktian Minggu dan tuan rumah partangiangan enam lingkungan.
                 </p>
               </Link>
 
-              <Link to="/galeri" className="quick-link-card p-4 block">
+              <Link to="/galeri" className="quick-link-card p-5 block">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="w-9 h-9 rounded-lg bg-[#f5f3ff] text-[#6d28d9] inline-flex items-center justify-center shrink-0">
+                  <span className="w-10 h-10 rounded-lg bg-[#f5f3ff] text-[#6d28d9] inline-flex items-center justify-center shrink-0">
                     <Images className="w-5 h-5" />
                   </span>
-                  <span className="font-bold text-sm text-[#0f172a]">Galeri &amp; Berita Huria</span>
+                  <span className="font-bold text-base text-[#0f172a]">Galeri &amp; Berita Huria</span>
                 </div>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-[15px] text-slate-600 leading-relaxed">
                   Dokumentasi kegiatan persekutuan, katekisasi, dan berita pelayanan.
                 </p>
               </Link>
@@ -354,17 +354,17 @@ export function PublicHomePage() {
       case 'announcements':
         if (pengumumanPosts.length === 0) return null;
         return (
-          <section key="announcements" className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
-            <div className="bg-amber-50/80 border border-amber-200 rounded-xl px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
-              <div className="flex items-start sm:items-center gap-2.5">
-                <Megaphone className="w-4 h-4 shrink-0 mt-0.5 sm:mt-0" style={{ color: accentColor }} />
-                <div>
+          <section key="announcements" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+            <div className="bg-amber-50/80 border border-amber-200 rounded-xl px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[15px]">
+              <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                <Megaphone className="w-4 h-4 shrink-0 mt-1 sm:mt-0" style={{ color: accentColor }} />
+                <div className="min-w-0">
                   <span className="font-semibold text-[#0f172a] mr-2">
                     {section.title || 'Pengumuman'}:
                   </span>
                   <Link
                     to={`/berita/${pengumumanPosts[0].slug}`}
-                    className="text-slate-800 hover:underline font-medium"
+                    className="text-slate-800 hover:underline font-medium break-words"
                   >
                     {pengumumanPosts[0].title}
                   </Link>
@@ -372,7 +372,7 @@ export function PublicHomePage() {
               </div>
               <Link
                 to={`/berita/${pengumumanPosts[0].slug}`}
-                className="text-xs font-semibold hover:underline shrink-0"
+                className="inline-flex items-center min-h-[44px] sm:min-h-0 text-sm font-semibold hover:underline shrink-0"
                 style={{ color: primaryColor }}
               >
                 Baca selengkapnya &rarr;
@@ -385,19 +385,19 @@ export function PublicHomePage() {
         const displayedIbadah = ibadahList.slice(0, scheduleLimit);
         return (
           <section key="schedule" className="py-10">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.08em] text-slate-500 font-semibold mb-1">
+                  <p className="text-xs uppercase tracking-[0.08em] text-slate-600 font-semibold mb-1">
                     {section.subtitle || 'Jadwal Pelayanan Terdekat'}
                   </p>
-                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0f172a]">
+                  <h2 className="font-display heading-section font-bold text-[#0f172a]">
                     {section.title || 'Ibadah Minggu & Kategorial'}
                   </h2>
                 </div>
                 <Link
                   to="/jadwal-ibadah"
-                  className="text-sm font-semibold hover:underline"
+                  className="inline-flex items-center min-h-[44px] sm:min-h-0 text-[15px] font-semibold hover:underline"
                   style={{ color: primaryColor }}
                 >
                   Lihat jadwal lengkap &amp; PHD Wijk &rarr;
@@ -407,7 +407,7 @@ export function PublicHomePage() {
               {displayedIbadah.length > 0 ? (
                 <div className={`grid ${getGridClass(section.columns, 3)} gap-5`}>
                   {displayedIbadah.map((item) => (
-                    <div key={item.id} className="surface-card p-6">
+                    <div key={item.id} className="surface-card p-5 sm:p-6">
                       <div
                         className="flex items-center gap-2 text-xs font-semibold mb-2 font-mono-num"
                         style={{ color: accentColor }}
@@ -427,11 +427,11 @@ export function PublicHomePage() {
                         {item.title}
                       </h3>
                       {item.liturgical_week && (
-                        <p className="text-xs font-medium text-slate-500 mb-2">
+                        <p className="text-xs font-medium text-slate-600 mb-2">
                           {item.liturgical_week}
                         </p>
                       )}
-                      <p className="text-sm text-slate-600 leading-relaxed">
+                      <p className="text-[15px] text-slate-700 leading-relaxed">
                         {item.preacher ? `Pengkhotbah: ${item.preacher}. ` : ''}
                         {item.theme || 'Mari bersekutu memuji Tuhan bersama seluruh keluarga jemaat.'}
                       </p>
@@ -440,7 +440,7 @@ export function PublicHomePage() {
                 </div>
               ) : (
                 <div className={`grid ${getGridClass(section.columns, 3)} gap-5`}>
-                  <div className="surface-card p-6">
+                  <div className="surface-card p-5 sm:p-6">
                     <div
                       className="flex items-center gap-2 text-xs font-semibold mb-2 font-mono-num"
                       style={{ color: accentColor }}
@@ -451,11 +451,11 @@ export function PublicHomePage() {
                     <h3 className="font-display text-lg font-bold text-[#0f172a] mb-1">
                       Ibadah Minggu Pagi &amp; Sekolah Minggu
                     </h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">
+                    <p className="text-[15px] text-slate-700 leading-relaxed">
                       Kebaktian umum pagi dan ibadah anak-anak Sekolah Minggu berlangsung setiap hari Minggu.
                     </p>
                   </div>
-                  <div className="surface-card p-6">
+                  <div className="surface-card p-5 sm:p-6">
                     <div
                       className="flex items-center gap-2 text-xs font-semibold mb-2 font-mono-num"
                       style={{ color: accentColor }}
@@ -466,11 +466,11 @@ export function PublicHomePage() {
                     <h3 className="font-display text-lg font-bold text-[#0f172a] mb-1">
                       Ibadah Minggu Siang (Utama)
                     </h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">
+                    <p className="text-[15px] text-slate-700 leading-relaxed">
                       Kebaktian utama disertai paduan suara huria dan koor enam lingkungan.
                     </p>
                   </div>
-                  <div className="surface-card p-6">
+                  <div className="surface-card p-5 sm:p-6">
                     <div
                       className="flex items-center gap-2 text-xs font-semibold mb-2"
                       style={{ color: accentColor }}
@@ -481,7 +481,7 @@ export function PublicHomePage() {
                     <h3 className="font-display text-lg font-bold text-[#0f172a] mb-1">
                       PHD Lingkungan (Wijk)
                     </h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">
+                    <p className="text-[15px] text-slate-700 leading-relaxed">
                       Partangiangan di rumah keluarga jemaat pada 6 lingkungan dengan jadwal tuan rumah mingguan.
                     </p>
                   </div>
@@ -496,26 +496,26 @@ export function PublicHomePage() {
         const displayedWarta = wartaList.slice(0, wartaLimit);
         return (
           <section key="warta" className="py-8">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.08em] text-slate-500 font-semibold mb-1">
+                  <p className="text-xs uppercase tracking-[0.08em] text-slate-600 font-semibold mb-1">
                     {section.subtitle || 'Tingting Huria'}
                   </p>
-                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0f172a]">
+                  <h2 className="font-display heading-section font-bold text-[#0f172a]">
                     {section.title || 'Warta Jemaat Terbaru'}
                   </h2>
                 </div>
                 <Link
                   to="/warta"
-                  className="text-sm font-semibold hover:underline"
+                  className="inline-flex items-center min-h-[44px] sm:min-h-0 text-[15px] font-semibold hover:underline"
                   style={{ color: primaryColor }}
                 >
                   Arsip Warta &rarr;
                 </Link>
               </div>
               {displayedWarta.length === 0 ? (
-                <div className="surface-card p-6 text-sm text-slate-600">
+                <div className="surface-card p-6 text-[15px] text-slate-600">
                   Warta jemaat mingguan akan tampil di sini setelah diterbitkan melalui dasbor admin.
                 </div>
               ) : (
@@ -525,7 +525,7 @@ export function PublicHomePage() {
                     return (
                       <div key={w.id} className="surface-card p-5 flex flex-col justify-between">
                         <div>
-                          <div className="flex items-center gap-2 text-xs text-slate-500 mb-1.5 font-mono-num">
+                          <div className="flex items-center gap-2 text-xs text-slate-600 mb-1.5 font-mono-num">
                             <FileText className="w-3.5 h-3.5 text-[#d97706]" />
                             <span>
                               {(w.meta?.warta_date as string) ||
@@ -541,15 +541,15 @@ export function PublicHomePage() {
                             {w.title}
                           </Link>
                           {w.excerpt && (
-                            <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+                            <p className="text-[15px] text-slate-600 line-clamp-2 mb-3">
                               {w.excerpt}
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center gap-4 text-xs font-semibold pt-2.5 border-t border-slate-100">
+                        <div className="flex flex-wrap items-center gap-4 text-[13px] font-semibold pt-2.5 border-t border-slate-100">
                           <Link
                             to={`/warta/${w.slug}`}
-                            className="hover:underline"
+                            className="inline-flex items-center min-h-[44px] sm:min-h-[32px] hover:underline"
                             style={{ color: primaryColor }}
                           >
                             Baca Online &rarr;
@@ -557,7 +557,7 @@ export function PublicHomePage() {
                           {pdfUrl && (
                             <a
                               href={pdfUrl}
-                              className="inline-flex items-center gap-1 hover:underline"
+                              className="inline-flex items-center gap-1 min-h-[44px] sm:min-h-[32px] hover:underline"
                               style={{ color: accentColor }}
                             >
                               <Download className="w-3.5 h-3.5" />
@@ -579,26 +579,26 @@ export function PublicHomePage() {
         const displayedBerita = beritaList.slice(0, newsLimit);
         return (
           <section key="news" className="py-10 border-t border-[#e2e8f0]/80">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.08em] text-slate-500 font-semibold mb-1">
+                  <p className="text-xs uppercase tracking-[0.08em] text-slate-600 font-semibold mb-1">
                     {section.subtitle || 'Publikasi & Renungan'}
                   </p>
-                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0f172a]">
+                  <h2 className="font-display heading-section font-bold text-[#0f172a]">
                     {section.title || 'Berita & Artikel Huria'}
                   </h2>
                 </div>
                 <Link
                   to="/berita"
-                  className="text-sm font-semibold hover:underline"
+                  className="inline-flex items-center min-h-[44px] sm:min-h-0 text-[15px] font-semibold hover:underline"
                   style={{ color: primaryColor }}
                 >
                   Semua Berita &rarr;
                 </Link>
               </div>
               {displayedBerita.length === 0 ? (
-                <div className="surface-card p-6 text-sm text-slate-600">
+                <div className="surface-card p-6 text-[15px] text-slate-600">
                   Berita pelayanan dan renungan gereja akan tampil di sini setelah diterbitkan.
                 </div>
               ) : (
@@ -620,23 +620,23 @@ export function PublicHomePage() {
                           />
                         </Link>
                         <div className="p-5 flex-1 flex flex-col">
-                          <p className="text-xs text-slate-500 mb-1.5 font-mono-num">
+                          <p className="text-xs text-slate-600 mb-1.5 font-mono-num">
                             {new Intl.DateTimeFormat('id-ID', {
                               dateStyle: 'medium',
                             }).format(new Date(post.published_at || post.created_at))}
                           </p>
                           <Link
                             to={`/berita/${post.slug}`}
-                            className="font-display text-base font-bold text-[#0f172a] hover:text-[#0f294a] hover:underline mb-2 line-clamp-2"
+                            className="font-display text-lg font-bold text-[#0f172a] hover:text-[#0f294a] hover:underline mb-2 line-clamp-2"
                           >
                             {post.title}
                           </Link>
-                          <p className="text-sm text-slate-600 line-clamp-2 flex-1 mb-3">
+                          <p className="text-[15px] text-slate-600 line-clamp-2 flex-1 mb-3 leading-relaxed">
                             {post.excerpt}
                           </p>
                           <Link
                             to={`/berita/${post.slug}`}
-                            className="text-xs font-semibold hover:underline"
+                            className="inline-flex items-center min-h-[44px] sm:min-h-[32px] text-[13px] font-semibold hover:underline"
                             style={{ color: primaryColor }}
                           >
                             Baca selengkapnya &rarr;
@@ -655,19 +655,19 @@ export function PublicHomePage() {
       case 'wijk':
         return (
           <section key="wijk" className="py-10 border-t border-[#e2e8f0] bg-white">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-7">
                 <div className="max-w-2xl">
-                  <p className="text-xs uppercase tracking-[0.08em] text-slate-500 font-semibold mb-1">
+                  <p className="text-xs uppercase tracking-[0.08em] text-slate-600 font-semibold mb-1">
                     {section.subtitle || 'Persekutuan Jemaat'}
                   </p>
-                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0f172a]">
+                  <h2 className="font-display heading-section font-bold text-[#0f172a]">
                     {section.title || 'Enam Lingkungan (Wijk) Pelayanan'}
                   </h2>
                 </div>
                 <Link
                   to="/tentang-kami"
-                  className="text-sm font-semibold hover:underline"
+                  className="inline-flex items-center min-h-[44px] sm:min-h-0 text-[15px] font-semibold hover:underline"
                   style={{ color: primaryColor }}
                 >
                   Profil lengkap &amp; pelayan &rarr;
@@ -676,8 +676,8 @@ export function PublicHomePage() {
 
               <div className={`grid ${getGridClass(section.columns, 3)} gap-4`}>
                 {wijkList.map((wijk, index) => (
-                  <div key={wijk.id} className="surface-card p-4 space-y-2">
-                    <div className="flex items-center justify-between text-xs text-slate-500 font-mono-num">
+                  <div key={wijk.id} className="surface-card p-4 sm:p-5 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-slate-600 font-mono-num">
                       <span>0{index + 1}. Lingkungan</span>
                       <span>Wijk {index + 1}/6</span>
                     </div>
@@ -706,32 +706,32 @@ export function PublicHomePage() {
       case 'contact':
         return (
           <section key="contact" className="py-8 bg-white border-t border-[#e2e8f0]/70">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div
                 className={`rounded-xl border border-[#e2e8f0] bg-[#f8fafc] ${
                   section.variant === 'compact'
                     ? 'p-5 max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4'
-                    : 'p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4'
+                    : 'p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4'
                 }`}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 min-w-0">
                   <span
                     className="w-10 h-10 rounded-lg inline-flex items-center justify-center shrink-0 text-white"
                     style={{ backgroundColor: primaryColor }}
                   >
                     <MapPin className="w-5 h-5" />
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-display text-lg font-bold text-[#0f172a]">
                       Sekretariat {options.site_title}
                     </p>
-                    <p className="text-sm text-slate-600">{options.church_address}</p>
+                    <p className="text-[15px] text-slate-600 break-words">{options.church_address}</p>
                   </div>
                 </div>
                 <Link
                   to="/kontak"
                   style={{ backgroundColor: primaryColor }}
-                  className="btn-navy px-4 py-2.5 text-sm rounded-lg whitespace-nowrap self-start sm:self-auto"
+                  className="btn-navy inline-flex items-center justify-center min-h-[44px] px-4 py-2.5 text-[15px] rounded-lg whitespace-nowrap w-full sm:w-auto"
                 >
                   Peta &amp; Hubungi Kami
                 </Link>

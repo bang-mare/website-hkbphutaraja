@@ -138,7 +138,9 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
 
   // Editor UI Controls
   const [rightTab, setRightTab] = useState<'document' | 'block'>('document');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
+  );
   const [inserterOpen, setInserterOpen] = useState(false);
   const [inserterSearch, setInserterSearch] = useState('');
   const [slashBlockId, setSlashBlockId] = useState<string | null>(null);
@@ -554,16 +556,16 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
   }
 
   return (
-    <div className="-mx-4 sm:-mx-5 -mb-8 flex flex-col min-h-[calc(100vh-80px)] bg-white border-t border-[#c3c4c7]">
+    <div className="-mx-4 sm:-mx-5 -mb-8 flex flex-col min-h-[calc(100dvh-80px)] bg-white border-t border-[#c3c4c7]">
       {/* ====================================================================
           TOP GUTENBERG TOOLBAR
          ==================================================================== */}
-      <div className="sticky top-[46px] md:top-[32px] z-20 h-[56px] bg-white border-b border-[#e0e0e0] px-3 flex items-center justify-between gap-2">
+      <div className="sticky top-[46px] md:top-[32px] z-20 min-h-[56px] bg-white border-b border-[#e0e0e0] px-2.5 sm:px-3 py-1.5 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <Link
             to={metaInfo.path}
             title={`Kembali ke daftar ${metaInfo.label}`}
-            className="w-9 h-9 flex items-center justify-center rounded-[2px] bg-[#1d2327] text-white hover:bg-[#2c3338]"
+            className="w-9 h-9 flex items-center justify-center rounded-[2px] bg-[#1d2327] text-white hover:bg-[#2c3338] shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
@@ -584,7 +586,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
             </button>
 
             {inserterOpen && (
-              <div className="absolute left-0 top-full mt-2 w-72 bg-white border border-[#c3c4c7] shadow-xl p-3 z-40 rounded-[2px]">
+              <div className="absolute left-0 top-full mt-2 w-[min(18rem,calc(100vw-1.5rem))] bg-white border border-[#c3c4c7] shadow-xl p-3 z-40 rounded-[2px]">
                 <input
                   type="search"
                   value={inserterSearch}
@@ -635,7 +637,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
           </button>
         </div>
 
-        <div className="flex items-center gap-2 text-[13px]">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[13px]">
           {autosaveStatus && (
             <span className="hidden lg:inline text-[12px] text-[#50575e]">
               {autosaveStatus}
@@ -646,7 +648,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
             type="button"
             disabled={saving}
             onClick={() => void performSave('draft', { createRevision: true })}
-            className="px-3 h-8 text-[#2271b1] hover:bg-[#f0f6fc] rounded-[2px] cursor-pointer whitespace-nowrap"
+            className="px-2.5 sm:px-3 h-9 sm:h-8 text-[#2271b1] hover:bg-[#f0f6fc] rounded-[2px] cursor-pointer whitespace-nowrap"
           >
             Simpan Draf
           </button>
@@ -654,7 +656,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
           <button
             type="button"
             onClick={() => setShowPreview(true)}
-            className="px-3 h-8 border border-[#c3c4c7] hover:bg-[#f6f7f7] text-[#1d2327] rounded-[2px] inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            className="px-2.5 sm:px-3 h-9 sm:h-8 border border-[#c3c4c7] hover:bg-[#f6f7f7] text-[#1d2327] rounded-[2px] inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
           >
             <Eye className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Pratinjau</span>
@@ -669,7 +671,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                   createRevision: true,
                 })
               }
-              className="px-3.5 h-8 bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white font-medium rounded-[2px] cursor-pointer whitespace-nowrap"
+              className="px-3 sm:px-3.5 h-9 sm:h-8 bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white font-medium rounded-[2px] cursor-pointer whitespace-nowrap"
             >
               {saving
                 ? 'Menyimpan...'
@@ -684,7 +686,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
               type="button"
               disabled={saving}
               onClick={() => void performSave('pending', { createRevision: true })}
-              className="px-3.5 h-8 bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white font-medium rounded-[2px] cursor-pointer whitespace-nowrap"
+              className="px-3 sm:px-3.5 h-9 sm:h-8 bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white font-medium rounded-[2px] cursor-pointer whitespace-nowrap"
             >
               {saving ? 'Mengirim...' : 'Kirim untuk Tinjauan'}
             </button>
@@ -694,7 +696,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
             type="button"
             onClick={() => setSidebarOpen((s) => !s)}
             title="Pengaturan Pos & Blok"
-            className={`w-8 h-8 flex items-center justify-center rounded-[2px] cursor-pointer ${
+            className={`w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-[2px] cursor-pointer ${
               sidebarOpen
                 ? 'bg-[#1d2327] text-white'
                 : 'hover:bg-[#f0f0f1] text-[#1d2327]'
@@ -708,10 +710,10 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
       {/* ====================================================================
           BODY: CANVAS TENGAH + PANEL KANAN (POS / BLOK)
          ==================================================================== */}
-      <div className="flex flex-1 min-h-0">
+      <div className="relative flex flex-1 min-h-0">
         {/* Canvas Editor Tengah */}
         <div
-          className="flex-1 overflow-y-auto px-4 sm:px-10 py-10 bg-white"
+          className="flex-1 min-w-0 overflow-y-auto px-4 sm:px-10 py-6 sm:py-10 bg-white"
           onClick={() => setInserterOpen(false)}
         >
           <div className="max-w-3xl mx-auto">
@@ -1117,7 +1119,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                               updateBlock(block.id, { buttonUrl: e.target.value })
                             }
                             placeholder="https://tautan-tujuan"
-                            className="h-9 px-2.5 text-[12px] border border-[#8c8f94] rounded-[2px] w-56"
+                            className="h-9 px-2.5 text-[12px] border border-[#8c8f94] rounded-[2px] w-full sm:w-56"
                           />
                         </div>
                       </div>
@@ -1238,32 +1240,46 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
             PANEL KANAN: POS / BLOK INSPECTOR
            ==================================================================== */}
         {sidebarOpen && (
-          <aside className="w-[290px] sm:w-[310px] border-l border-[#e0e0e0] bg-white overflow-y-auto shrink-0 text-[13px]">
-            {/* Tab Pos / Blok */}
-            <div className="flex border-b border-[#e0e0e0] bg-[#f6f7f7]">
-              <button
-                type="button"
-                onClick={() => setRightTab('document')}
-                className={`flex-1 py-2.5 font-medium border-b-2 cursor-pointer ${
-                  rightTab === 'document'
-                    ? 'border-b-[#2271b1] bg-white text-[#1d2327]'
-                    : 'border-b-transparent text-[#50575e] hover:text-[#1d2327]'
-                }`}
-              >
-                {metaInfo.singular}
-              </button>
-              <button
-                type="button"
-                onClick={() => setRightTab('block')}
-                className={`flex-1 py-2.5 font-medium border-b-2 cursor-pointer ${
-                  rightTab === 'block'
-                    ? 'border-b-[#2271b1] bg-white text-[#1d2327]'
-                    : 'border-b-transparent text-[#50575e] hover:text-[#1d2327]'
-                }`}
-              >
-                Blok
-              </button>
-            </div>
+          <>
+            <div
+              className="fixed inset-0 z-20 bg-black/30 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden="true"
+            />
+            <aside className="fixed right-0 top-[46px] md:top-[32px] bottom-0 z-30 w-[min(310px,90vw)] lg:static lg:z-auto lg:w-[310px] border-l border-[#e0e0e0] bg-white overflow-y-auto shrink-0 text-[13px] shadow-xl lg:shadow-none">
+              {/* Tab Pos / Blok */}
+              <div className="flex border-b border-[#e0e0e0] bg-[#f6f7f7]">
+                <button
+                  type="button"
+                  onClick={() => setRightTab('document')}
+                  className={`flex-1 py-2.5 font-medium border-b-2 cursor-pointer ${
+                    rightTab === 'document'
+                      ? 'border-b-[#2271b1] bg-white text-[#1d2327]'
+                      : 'border-b-transparent text-[#50575e] hover:text-[#1d2327]'
+                  }`}
+                >
+                  {metaInfo.singular}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRightTab('block')}
+                  className={`flex-1 py-2.5 font-medium border-b-2 cursor-pointer ${
+                    rightTab === 'block'
+                      ? 'border-b-[#2271b1] bg-white text-[#1d2327]'
+                      : 'border-b-transparent text-[#50575e] hover:text-[#1d2327]'
+                  }`}
+                >
+                  Blok
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  aria-label="Tutup panel pengaturan"
+                  className="lg:hidden px-3 inline-flex items-center justify-center text-[#50575e] hover:text-[#1d2327] border-l border-[#e0e0e0] cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
             {rightTab === 'document' ? (
               <div className="divide-y divide-[#e0e0e0]">
@@ -1876,26 +1892,28 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
               </div>
             )}
           </aside>
+          </>
         )}
       </div>
 
       {/* Modal Pratinjau Konten */}
       {showPreview && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white border border-[#c3c4c7] max-w-3xl w-full max-h-[85vh] flex flex-col shadow-xl">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#c3c4c7] bg-[#f6f7f7]">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white border border-[#c3c4c7] max-w-3xl w-full max-h-[90dvh] flex flex-col shadow-xl">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#c3c4c7] bg-[#f6f7f7]">
               <span className="text-[13px] font-semibold text-[#1d2327]">
                 Pratinjau {metaInfo.singular}
               </span>
               <button
                 type="button"
                 onClick={() => setShowPreview(false)}
-                className="p-1 text-[#50575e] hover:text-[#1d2327] cursor-pointer"
+                aria-label="Tutup pratinjau"
+                className="w-9 h-9 inline-flex items-center justify-center text-[#50575e] hover:text-[#1d2327] cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 sm:p-8 overflow-y-auto bg-[#FBF9F5] text-[#1C1917]">
+            <div className="p-5 sm:p-8 overflow-y-auto bg-[#FBF9F5] text-[#1C1917]">
               {isSafeHttpOrRelativeUrl(featuredUrl) && (
                 <img
                   src={isSafeHttpOrRelativeUrl(featuredUrl)}
@@ -1904,11 +1922,11 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                   className="w-full max-h-72 object-cover rounded mb-6 border border-stone-200"
                 />
               )}
-              <h1 className="font-display text-3xl font-semibold mb-4">
+              <h1 className="font-display text-2xl sm:text-3xl font-semibold mb-4">
                 {title || '(Tanpa Judul)'}
               </h1>
               <div
-                className="space-y-4 leading-relaxed text-[16px] [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-semibold [&_blockquote]:p-4 [&_blockquote]:bg-[#F4EFE6] [&_blockquote]:border [&_blockquote]:border-stone-200 [&_blockquote]:italic [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_iframe]:w-full [&_iframe]:aspect-video"
+                className="hkbp-prose space-y-4 leading-relaxed text-[16px]"
                 dangerouslySetInnerHTML={{
                   __html: sanitizeHtml(previewHtml || '<p>(Belum ada konten)</p>'),
                 }}
@@ -1920,9 +1938,9 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
 
       {/* Modal Revisi */}
       {activeRevisionModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white border border-[#c3c4c7] max-w-2xl w-full max-h-[85vh] flex flex-col shadow-xl text-[13px]">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#c3c4c7] bg-[#f6f7f7]">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white border border-[#c3c4c7] max-w-2xl w-full max-h-[90dvh] flex flex-col shadow-xl text-[13px]">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#c3c4c7] bg-[#f6f7f7]">
               <h2 className="text-[15px] font-semibold text-[#1d2327]">
                 Revisi #{activeRevisionModal.revision_number} —{' '}
                 {new Intl.DateTimeFormat('id-ID', {
@@ -1933,7 +1951,8 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
               <button
                 type="button"
                 onClick={() => setActiveRevisionModal(null)}
-                className="p-1 text-[#50575e] hover:text-[#1d2327] cursor-pointer"
+                aria-label="Tutup modal revisi"
+                className="w-9 h-9 inline-flex items-center justify-center text-[#50575e] hover:text-[#1d2327] cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>

@@ -91,9 +91,9 @@ export function CustomizeThemePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         <form
           onSubmit={handleSave}
-          className="lg:col-span-5 bg-white border border-[#c3c4c7] p-5 space-y-4"
+          className="lg:col-span-5 bg-white border border-[#c3c4c7] p-4 sm:p-5 space-y-4 min-w-0"
         >
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-medium text-[#1d2327] mb-1">
                 Warna Utama (Header/Footer)
@@ -103,13 +103,13 @@ export function CustomizeThemePage() {
                   type="color"
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="w-10 h-8 border border-[#8c8f94] cursor-pointer"
+                  className="w-10 h-9 sm:h-8 border border-[#8c8f94] cursor-pointer shrink-0"
                 />
                 <input
                   type="text"
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="flex-1 h-8 px-2 border border-[#8c8f94] rounded-[2px] font-mono text-[12px]"
+                  className="flex-1 min-w-0 h-9 sm:h-8 px-2 border border-[#8c8f94] rounded-[2px] font-mono text-[12px]"
                 />
               </div>
             </div>
@@ -122,13 +122,13 @@ export function CustomizeThemePage() {
                   type="color"
                   value={accentColor}
                   onChange={(e) => setAccentColor(e.target.value)}
-                  className="w-10 h-8 border border-[#8c8f94] cursor-pointer"
+                  className="w-10 h-9 sm:h-8 border border-[#8c8f94] cursor-pointer shrink-0"
                 />
                 <input
                   type="text"
                   value={accentColor}
                   onChange={(e) => setAccentColor(e.target.value)}
-                  className="flex-1 h-8 px-2 border border-[#8c8f94] rounded-[2px] font-mono text-[12px]"
+                  className="flex-1 min-w-0 h-9 sm:h-8 px-2 border border-[#8c8f94] rounded-[2px] font-mono text-[12px]"
                 />
               </div>
             </div>
@@ -138,18 +138,18 @@ export function CustomizeThemePage() {
             <label className="block font-medium text-[#1d2327] mb-1">
               Logo Kustom Situs (Kosongkan untuk Logo HKBP Bawaan)
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap sm:flex-nowrap gap-2">
               <input
                 type="text"
                 value={logoUrl}
                 onChange={(e) => setLogoUrl(e.target.value)}
                 placeholder="/api/media/..."
-                className="flex-1 h-8 px-2 border border-[#8c8f94] rounded-[2px]"
+                className="flex-1 min-w-0 h-9 sm:h-8 px-2 border border-[#8c8f94] rounded-[2px]"
               />
               <button
                 type="button"
                 onClick={() => setPickerTarget('logo')}
-                className="px-3 h-8 border border-[#2271b1] text-[#2271b1] bg-[#f6f7f7] rounded-[2px] cursor-pointer"
+                className="px-3 h-9 sm:h-8 border border-[#2271b1] text-[#2271b1] bg-[#f6f7f7] rounded-[2px] cursor-pointer shrink-0"
               >
                 Pilih
               </button>
@@ -160,17 +160,17 @@ export function CustomizeThemePage() {
             <label className="block font-medium text-[#1d2327] mb-1">
               Gambar Banner Beranda (Hero)
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap sm:flex-nowrap gap-2">
               <input
                 type="text"
                 value={heroImageUrl}
                 onChange={(e) => setHeroImageUrl(e.target.value)}
-                className="flex-1 h-8 px-2 border border-[#8c8f94] rounded-[2px]"
+                className="flex-1 min-w-0 h-9 sm:h-8 px-2 border border-[#8c8f94] rounded-[2px]"
               />
               <button
                 type="button"
                 onClick={() => setPickerTarget('hero')}
-                className="px-3 h-8 border border-[#2271b1] text-[#2271b1] bg-[#f6f7f7] rounded-[2px] cursor-pointer"
+                className="px-3 h-9 sm:h-8 border border-[#2271b1] text-[#2271b1] bg-[#f6f7f7] rounded-[2px] cursor-pointer shrink-0"
               >
                 Pilih
               </button>
@@ -206,18 +206,18 @@ export function CustomizeThemePage() {
               <label className="block text-[#50575e] mb-1">
                 Logo Halaman Login (Kosongkan untuk pakai Logo Situs / HKBP Bawaan)
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap sm:flex-nowrap gap-2">
                 <input
                   type="text"
                   value={loginLogoUrl}
                   onChange={(e) => setLoginLogoUrl(e.target.value)}
                   placeholder="/api/media/..."
-                  className="flex-1 h-8 px-2 border border-[#8c8f94] rounded-[2px]"
+                  className="flex-1 min-w-0 h-9 sm:h-8 px-2 border border-[#8c8f94] rounded-[2px]"
                 />
                 <button
                   type="button"
                   onClick={() => setPickerTarget('login_logo')}
-                  className="px-3 h-8 border border-[#2271b1] text-[#2271b1] bg-[#f6f7f7] rounded-[2px] cursor-pointer"
+                  className="px-3 h-9 sm:h-8 border border-[#2271b1] text-[#2271b1] bg-[#f6f7f7] rounded-[2px] cursor-pointer shrink-0"
                 >
                   Pilih
                 </button>
@@ -225,7 +225,7 @@ export function CustomizeThemePage() {
                   <button
                     type="button"
                     onClick={() => setLoginLogoUrl('')}
-                    className="px-2.5 h-8 border border-[#c3c4c7] text-[#50575e] bg-white hover:bg-[#f6f7f7] rounded-[2px] cursor-pointer"
+                    className="px-2.5 h-9 sm:h-8 border border-[#c3c4c7] text-[#50575e] bg-white hover:bg-[#f6f7f7] rounded-[2px] cursor-pointer shrink-0"
                   >
                     Reset
                   </button>
@@ -278,7 +278,7 @@ export function CustomizeThemePage() {
         </form>
 
         {/* Kolom Kanan: Pratinjau Langsung Publik & Halaman Login */}
-        <div className="lg:col-span-7 space-y-5">
+        <div className="lg:col-span-7 min-w-0 space-y-5">
           <div className="bg-white border border-[#c3c4c7] p-4 space-y-3">
             <p className="font-semibold text-[#1d2327]">Pratinjau Tampilan Publik</p>
             <div className="border border-slate-200 rounded-lg overflow-hidden bg-[#f8fafc]">

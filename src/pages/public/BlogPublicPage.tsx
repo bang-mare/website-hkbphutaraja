@@ -159,20 +159,20 @@ export function BlogPublicPage({
   if (isDetail) {
     if (loading) {
       return (
-        <div className="max-w-4xl mx-auto px-4 py-12 text-sm text-slate-500">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-[15px] text-slate-500">
           Memuat artikel...
         </div>
       );
     }
     if (!detail) {
       return (
-        <div className="max-w-4xl mx-auto px-4 py-12 space-y-4">
-          <h1 className="font-display text-2xl font-bold text-[#0f172a]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-4">
+          <h1 className="heading-page font-display font-bold text-[#0f172a]">
             Artikel tidak ditemukan
           </h1>
           <Link
             to="/berita"
-            className="text-sm font-semibold underline"
+            className="inline-flex items-center min-h-[44px] text-[15px] font-semibold underline"
             style={{ color: primaryColor }}
           >
             &larr; Kembali ke Berita
@@ -188,38 +188,38 @@ export function BlogPublicPage({
     );
 
     return (
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-6">
+      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-6">
         <Link
           to="/berita"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
+          className="inline-flex items-center gap-1.5 min-h-[44px] text-[15px] font-semibold hover:underline"
           style={{ color: primaryColor }}
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 shrink-0" />
           <span>Semua Berita &amp; Artikel</span>
         </Link>
 
         <header className="space-y-4">
-          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 font-mono-num">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 font-mono-num">
             <span className="inline-flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" style={{ color: accentColor }} />
+              <Calendar className="w-4 h-4 shrink-0" style={{ color: accentColor }} />
               {new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' }).format(
                 new Date(detail.published_at || detail.created_at)
               )}
             </span>
             {detail.author?.display_name && (
               <span className="inline-flex items-center gap-1.5 font-sans">
-                <User className="w-3.5 h-3.5" style={{ color: primaryColor }} />
+                <User className="w-4 h-4 shrink-0" style={{ color: primaryColor }} />
                 {detail.author.display_name}
               </span>
             )}
           </div>
 
-          <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#0f172a] leading-tight">
+          <h1 className="heading-page font-display font-bold text-[#0f172a]">
             {detail.title}
           </h1>
 
           {detail.terms && detail.terms.length > 0 && (
-            <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium">
               {detail.terms.map((t) => (
                 <Link
                   key={t.id}
@@ -228,7 +228,7 @@ export function BlogPublicPage({
                       ? `/kategori/${t.slug}`
                       : `/tag/${t.slug}`
                   }
-                  className="underline text-slate-600 hover:text-[#0f294a]"
+                  className="inline-flex items-center min-h-[36px] underline text-slate-600 hover:text-[#0f294a]"
                 >
                   {t.taxonomy === 'post_tag' ? `#${t.name}` : t.name}
                 </Link>
@@ -248,7 +248,7 @@ export function BlogPublicPage({
               />
             </div>
             {heroCaption && (
-              <figcaption className="text-xs text-slate-500 italic">
+              <figcaption className="text-sm text-slate-500 italic">
                 {heroCaption}
               </figcaption>
             )}
@@ -256,7 +256,7 @@ export function BlogPublicPage({
         )}
 
         <div
-          className="surface-card p-6 sm:p-8 space-y-4 text-base text-slate-800 leading-relaxed [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[#0f172a] [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-[#0f172a] [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:p-4 [&_blockquote]:bg-slate-50 [&_blockquote]:border [&_blockquote]:border-[#e2e8f0] [&_blockquote]:rounded-lg [&_blockquote]:italic [&_iframe]:w-full [&_iframe]:aspect-video [&_img]:w-full [&_img]:aspect-[16/9] [&_img]:object-cover [&_img]:rounded-lg [&_img]:mx-auto"
+          className="surface-card p-5 sm:p-8 space-y-4 text-base sm:text-[17px] text-slate-800 leading-[1.75] hkbp-prose [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[#0f172a] [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-[#0f172a] [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_blockquote]:p-4 [&_blockquote]:bg-slate-50 [&_blockquote]:border [&_blockquote]:border-[#e2e8f0] [&_blockquote]:rounded-lg [&_blockquote]:italic [&_iframe]:w-full [&_iframe]:aspect-video [&_img]:w-full [&_img]:aspect-[16/9] [&_img]:object-cover [&_img]:rounded-lg [&_img]:mx-auto"
           dangerouslySetInnerHTML={{
             __html: sanitizeHtml(bodyHtml || '<p>Belum ada isi artikel.</p>'),
           }}
@@ -267,7 +267,7 @@ export function BlogPublicPage({
 
   return (
     <div className="bg-[#f8fafc]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
         <header className="mb-8">
           <p
             className="text-xs uppercase tracking-[0.12em] font-semibold mb-2"
@@ -275,16 +275,16 @@ export function BlogPublicPage({
           >
             Kabar Pelayanan &amp; Renungan
           </p>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#0f172a] mb-2">
+          <h1 className="heading-page font-display font-bold text-[#0f172a] mb-2">
             Berita &amp; Artikel Huria
           </h1>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 space-y-6 min-w-0">
             {/* Bar Pencarian */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="relative flex-1 min-w-[220px]">
+              <div className="relative flex-1 min-w-0 w-full sm:w-auto">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="search"
@@ -294,7 +294,7 @@ export function BlogPublicPage({
                     setPage(1);
                   }}
                   placeholder="Cari berita, renungan, atau pengumuman..."
-                  className="w-full h-10 pl-9 pr-3 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-[#0f294a]"
+                  className="w-full min-h-[44px] h-11 pl-9 pr-3 bg-white border border-slate-300 rounded-lg text-base sm:text-sm focus:outline-none focus:border-[#0f294a]"
                 />
               </div>
               {(selectedCategory !== 'all' || selectedTag !== 'all') && (
@@ -304,7 +304,7 @@ export function BlogPublicPage({
                     setSelectedCategory('all');
                     setSelectedTag('all');
                   }}
-                  className="text-xs font-semibold underline text-slate-600 hover:text-[#0f294a]"
+                  className="inline-flex items-center min-h-[44px] px-2 text-sm font-semibold underline text-slate-600 hover:text-[#0f294a]"
                 >
                   Reset filter
                 </Link>
@@ -312,9 +312,9 @@ export function BlogPublicPage({
             </div>
 
             {loading ? (
-              <p className="text-sm text-slate-500">Memuat berita...</p>
+              <p className="text-[15px] text-slate-500">Memuat berita...</p>
             ) : pagedPosts.length === 0 ? (
-              <div className="surface-card p-8 text-center text-sm text-slate-600">
+              <div className="surface-card p-8 text-center text-[15px] text-slate-600">
                 Belum ada artikel yang cocok dengan filter Anda.
               </div>
             ) : (
@@ -338,8 +338,8 @@ export function BlogPublicPage({
                           className="w-full aspect-[16/9]"
                         />
                       </Link>
-                      <div className="p-5 flex flex-col justify-between sm:col-span-8">
-                        <div>
+                      <div className="p-5 flex flex-col justify-between sm:col-span-8 min-w-0">
+                        <div className="min-w-0">
                           <p className="text-xs text-slate-500 mb-1.5 font-mono-num">
                             {new Intl.DateTimeFormat('id-ID', {
                               dateStyle: 'long',
@@ -347,17 +347,17 @@ export function BlogPublicPage({
                           </p>
                           <Link
                             to={`/berita/${post.slug}`}
-                            className="font-display text-xl font-bold text-[#0f172a] hover:text-[#0f294a] hover:underline block mb-2"
+                            className="font-display text-xl font-bold text-[#0f172a] hover:text-[#0f294a] hover:underline block mb-2 break-words"
                           >
                             {post.title}
                           </Link>
-                          <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+                          <p className="text-[15px] text-slate-600 line-clamp-2 mb-3 break-words">
                             {post.excerpt}
                           </p>
                         </div>
                         <Link
                           to={`/berita/${post.slug}`}
-                          className="text-xs font-semibold hover:underline"
+                          className="inline-flex items-center min-h-[44px] sm:min-h-[32px] text-sm font-semibold hover:underline w-fit"
                           style={{ color: primaryColor }}
                         >
                           Baca selengkapnya &rarr;
@@ -371,23 +371,23 @@ export function BlogPublicPage({
 
             {/* Paginasi */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between pt-4 border-t border-[#e2e8f0] text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[#e2e8f0] text-sm">
                 <button
                   type="button"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="px-3.5 py-1.5 border border-slate-300 bg-white hover:bg-slate-50 rounded-lg font-medium disabled:opacity-40 cursor-pointer"
+                  className="px-4 py-2 min-h-[44px] sm:min-h-[38px] border border-slate-300 bg-white hover:bg-slate-50 rounded-lg font-medium disabled:opacity-40 cursor-pointer"
                 >
                   &larr; Sebelumnya
                 </button>
-                <span className="text-slate-600 font-mono-num text-xs">
+                <span className="text-slate-600 font-mono-num text-sm">
                   Halaman {page} dari {totalPages}
                 </span>
                 <button
                   type="button"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="px-3.5 py-1.5 border border-slate-300 bg-white hover:bg-slate-50 rounded-lg font-medium disabled:opacity-40 cursor-pointer"
+                  className="px-4 py-2 min-h-[44px] sm:min-h-[38px] border border-slate-300 bg-white hover:bg-slate-50 rounded-lg font-medium disabled:opacity-40 cursor-pointer"
                 >
                   Berikutnya &rarr;
                 </button>
@@ -396,12 +396,12 @@ export function BlogPublicPage({
           </div>
 
           {/* Sidebar Kategori, Tag & Widget */}
-          <aside className="lg:col-span-4 space-y-6">
+          <aside className="lg:col-span-4 space-y-6 min-w-0">
             <div className="surface-card p-5">
               <h2 className="font-display text-lg font-bold text-[#0f172a] mb-3">
                 Kategori
               </h2>
-              <ul className="space-y-1.5 text-sm">
+              <ul className="space-y-1 text-[15px]">
                 <li>
                   <button
                     type="button"
@@ -409,7 +409,7 @@ export function BlogPublicPage({
                       setSelectedCategory('all');
                       setPage(1);
                     }}
-                    className={`hover:underline cursor-pointer ${
+                    className={`min-h-[40px] flex items-center w-full text-left hover:underline cursor-pointer ${
                       selectedCategory === 'all'
                         ? 'font-semibold text-[#0f294a]'
                         : 'text-slate-700'
@@ -419,10 +419,10 @@ export function BlogPublicPage({
                   </button>
                 </li>
                 {categories.map((cat) => (
-                  <li key={cat.id} className="flex items-center justify-between">
+                  <li key={cat.id} className="flex items-center justify-between gap-2">
                     <Link
                       to={`/kategori/${cat.slug}`}
-                      className={`hover:underline ${
+                      className={`min-h-[40px] flex items-center hover:underline break-words ${
                         selectedCategory === cat.slug
                           ? 'font-semibold text-[#0f294a]'
                           : 'text-slate-700'
@@ -430,7 +430,7 @@ export function BlogPublicPage({
                     >
                       {cat.name}
                     </Link>
-                    <span className="text-xs text-slate-400 font-mono-num">{cat.count}</span>
+                    <span className="text-xs text-slate-400 font-mono-num shrink-0">{cat.count}</span>
                   </li>
                 ))}
               </ul>
@@ -441,12 +441,12 @@ export function BlogPublicPage({
                 <h2 className="font-display text-lg font-bold text-[#0f172a] mb-3">
                   Topik / Tag
                 </h2>
-                <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-sm">
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-[15px]">
                   {tags.map((tag) => (
                     <Link
                       key={tag.id}
                       to={`/tag/${tag.slug}`}
-                      className={`hover:underline ${
+                      className={`inline-flex items-center min-h-[36px] hover:underline ${
                         selectedTag === tag.slug
                           ? 'font-semibold text-[#0f294a]'
                           : 'text-slate-600'
@@ -464,7 +464,7 @@ export function BlogPublicPage({
                 <h2 className="font-display text-lg font-bold text-[#0f172a] mb-2">
                   {w.title}
                 </h2>
-                <p className="text-sm text-slate-600 whitespace-pre-line">
+                <p className="text-[15px] text-slate-600 whitespace-pre-line break-words">
                   {String(w.config?.body || '')}
                 </p>
               </div>

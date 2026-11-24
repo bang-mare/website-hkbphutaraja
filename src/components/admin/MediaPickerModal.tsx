@@ -194,16 +194,16 @@ export function MediaPickerModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3 sm:p-6 font-wp">
-      <div className="bg-white w-full max-w-5xl h-[85vh] flex flex-col border border-[#c3c4c7] shadow-2xl">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-2 sm:p-6 font-wp">
+      <div className="bg-white w-full max-w-5xl h-[90dvh] flex flex-col border border-[#c3c4c7] shadow-2xl">
         {/* Header ala WordPress Media Modal */}
-        <div className="px-4 py-3 border-b border-[#dcdcde] flex items-center justify-between bg-white">
-          <h2 className="text-[18px] font-semibold text-[#1d2327]">{title}</h2>
+        <div className="px-4 py-2.5 border-b border-[#dcdcde] flex items-center justify-between gap-3 bg-white">
+          <h2 className="text-[18px] font-semibold text-[#1d2327] truncate">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Tutup pemilih media"
-            className="p-1 text-[#50575e] hover:text-[#1d2327] cursor-pointer"
+            className="w-11 h-11 md:w-8 md:h-8 inline-flex items-center justify-center text-[#50575e] hover:text-[#1d2327] cursor-pointer shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -243,7 +243,7 @@ export function MediaPickerModal({
 
         {/* Content */}
         {tab === 'upload' ? (
-          <div className="flex-1 p-6 flex flex-col items-center justify-center gap-4 bg-white overflow-y-auto">
+          <div className="flex-1 p-4 sm:p-6 flex flex-col items-center justify-center gap-4 bg-white overflow-y-auto">
             <div className="w-full max-w-2xl">
               <GoogleDriveConnectCard compact onError={(msg) => setErrorMsg(msg)} />
             </div>
@@ -258,7 +258,7 @@ export function MediaPickerModal({
                 setDragActive(false);
                 void handleUploadFiles(e.dataTransfer.files);
               }}
-              className={`w-full max-w-2xl border-2 border-dashed p-10 text-center rounded-[2px] transition-colors ${
+              className={`w-full max-w-2xl border-2 border-dashed p-5 sm:p-10 text-center rounded-[2px] transition-colors ${
                 dragActive
                   ? 'border-[#2271b1] bg-[#f0f6fc]'
                   : 'border-[#c3c4c7] bg-[#f6f7f7]'
@@ -315,25 +315,25 @@ export function MediaPickerModal({
           <div className="flex-1 min-h-0 flex flex-col md:flex-row">
             {/* Grid Media */}
             <div className="flex-1 flex flex-col min-h-0 bg-white">
-              <div className="px-4 py-2.5 border-b border-[#f0f0f1] flex items-center justify-between gap-3">
+              <div className="px-4 py-2.5 border-b border-[#f0f0f1] flex flex-wrap items-center justify-between gap-2.5">
                 <span className="text-[12px] text-[#50575e]">
                   {multiple
                     ? 'Klik beberapa item untuk memilih sekaligus.'
                     : 'Klik satu item media untuk memilih.'}
                 </span>
-                <div className="relative">
+                <div className="relative w-full sm:w-auto min-w-0">
                   <Search className="w-3.5 h-3.5 text-[#787c82] absolute left-2.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="search"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Cari berkas..."
-                    className="h-7 pl-8 pr-2.5 text-[12px] border border-[#8c8f94] rounded-[2px]"
+                    className="w-full sm:w-52 min-h-[38px] md:min-h-[28px] h-9 md:h-7 pl-8 pr-2.5 text-[13px] md:text-[12px] border border-[#8c8f94] rounded-[2px]"
                   />
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-3 sm:p-4">
                 {loading ? (
                   <p className="text-[13px] text-[#50575e] py-8 text-center">
                     Memuat pustaka media...
@@ -343,7 +343,7 @@ export function MediaPickerModal({
                     Belum ada berkas media yang sesuai. Unggah berkas baru melalui tab Unggah Berkas.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
                     {filteredItems.map((item) => {
                       const isSelected = selectedIds.includes(item.id);
                       const isImage = item.mime.startsWith('image/');
@@ -393,7 +393,7 @@ export function MediaPickerModal({
             </div>
 
             {/* Detail Lampiran Kanan */}
-            <aside className="w-full md:w-72 border-t md:border-t-0 md:border-l border-[#dcdcde] bg-[#f6f7f7] p-4 overflow-y-auto text-[12px]">
+            <aside className="w-full md:w-72 max-h-[38%] md:max-h-none border-t md:border-t-0 md:border-l border-[#dcdcde] bg-[#f6f7f7] p-4 overflow-y-auto text-[12px] shrink-0">
               {!activeItem ? (
                 <p className="text-[#50575e]">Pilih salah satu berkas untuk melihat detail lampiran.</p>
               ) : (
@@ -473,7 +473,7 @@ export function MediaPickerModal({
         )}
 
         {/* Footer Modal */}
-        <div className="px-4 py-3 border-t border-[#dcdcde] bg-white flex items-center justify-between">
+        <div className="px-4 py-3 border-t border-[#dcdcde] bg-white flex flex-wrap items-center justify-between gap-2">
           <span className="text-[12px] text-[#50575e] tabular-nums">
             {selectedIds.length} berkas dipilih
           </span>
@@ -481,7 +481,7 @@ export function MediaPickerModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 border border-[#c3c4c7] bg-[#f6f7f7] text-[#1d2327] text-[13px] rounded-[3px] cursor-pointer"
+              className="px-3.5 py-2 min-h-[44px] sm:min-h-[34px] border border-[#c3c4c7] bg-[#f6f7f7] text-[#1d2327] text-[13px] rounded-[3px] cursor-pointer"
             >
               Batal
             </button>
@@ -489,7 +489,7 @@ export function MediaPickerModal({
               type="button"
               disabled={selectedIds.length === 0 && !activeItem}
               onClick={handleConfirm}
-              className="px-4 py-1.5 bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-50 text-white text-[13px] font-medium rounded-[3px] cursor-pointer"
+              className="px-4 py-2 min-h-[44px] sm:min-h-[34px] bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-50 text-white text-[13px] font-medium rounded-[3px] cursor-pointer"
             >
               Pilih Media
             </button>

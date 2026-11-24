@@ -39,7 +39,7 @@ export function AboutPage() {
     <div className="bg-[#f8fafc]">
       {/* Header Banner */}
       <section
-        className="hero-sacred py-10"
+        className="hero-sacred py-10 sm:py-12"
         style={
           primaryColor.toLowerCase() !== '#0f294a'
             ? {
@@ -48,30 +48,32 @@ export function AboutPage() {
             : undefined
         }
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.14em] text-[#fbbf24] font-semibold mb-2">
-            Profil Gereja &middot; Distrik VI Dairi
-          </p>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold text-white mb-3">
-            Tentang {options.site_title}
-          </h1>
-          <p className="text-sm sm:text-base text-white/75 leading-relaxed">
-            Huria Kristen Batak Protestan (HKBP) Ressort Hutaraja adalah persekutuan orang-orang percaya di bawah naungan Distrik VI Dairi yang terpanggil untuk bersekutu (Koinonia), bersaksi (Marturia), dan melayani (Diakonia).
-          </p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            <p className="text-xs uppercase tracking-[0.14em] text-[#fbbf24] font-semibold mb-2">
+              Profil Gereja &middot; Distrik VI Dairi
+            </p>
+            <h1 className="heading-page font-display font-bold text-white mb-3">
+              Tentang {options.site_title}
+            </h1>
+            <p className="text-[15px] sm:text-base text-white/85 leading-relaxed">
+              Huria Kristen Batak Protestan (HKBP) Ressort Hutaraja adalah persekutuan orang-orang percaya di bawah naungan Distrik VI Dairi yang terpanggil untuk bersekutu (Koinonia), bersaksi (Marturia), dan melayani (Diakonia).
+            </p>
+          </div>
         </div>
       </section>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-10 sm:space-y-12">
         {/* Sejarah & Visi Misi */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="surface-card p-6 sm:p-7 space-y-3">
             <p className="text-xs uppercase tracking-[0.08em] font-semibold text-slate-500">
               Sejarah Huria
             </p>
-            <h2 className="font-display text-2xl font-bold text-[#0f172a]">
+            <h2 className="heading-section font-display font-bold text-[#0f172a]">
               Sejarah Singkat Huria
             </h2>
-            <p className="text-sm text-slate-700 leading-relaxed">
+            <p className="text-[15px] sm:text-base text-slate-700 leading-relaxed">
               Sejak berdirinya persekutuan jemaat di Hutaraja, gereja terus bertumbuh melalui pelayanan firman, pendidikan iman, dan kebersamaan keluarga Batak Kristen di wilayah Dairi. Halaman ini dapat disesuaikan kapan saja oleh sekretariat melalui menu Halaman di Dasbor Admin.
             </p>
           </div>
@@ -83,13 +85,13 @@ export function AboutPage() {
             >
               Panggilan Pelayanan
             </p>
-            <h2 className="font-display text-2xl font-bold text-[#0f172a]">
+            <h2 className="heading-section font-display font-bold text-[#0f172a]">
               Visi &amp; Misi Pelayanan
             </h2>
-            <p className="text-sm text-slate-700 leading-relaxed">
+            <p className="text-[15px] sm:text-base text-slate-700 leading-relaxed">
               Menjadi gereja yang inklusif, berakar kuat pada Firman Tuhan, serta menghadirkan damai sejahtera di tengah enam lingkungan (Wijk) dan masyarakat sekitar.
             </p>
-            <ul className="list-disc pl-5 text-sm text-slate-700 space-y-1.5">
+            <ul className="list-disc pl-5 text-[15px] sm:text-base text-slate-700 space-y-1.5">
               <li>Menyelenggarakan ibadah yang hidup dan membangun iman keluarga.</li>
               <li>Memperkuat persekutuan kategorial dan PHD Lingkungan setiap minggu.</li>
               <li>Menjalankan pelayanan kasih (diakonia) secara transparan dan akuntabel.</li>
@@ -103,7 +105,7 @@ export function AboutPage() {
             <p className="text-xs uppercase tracking-[0.08em] text-slate-500 font-semibold mb-1">
               Fungsionaris &amp; Majelis
             </p>
-            <h2 className="font-display text-2xl font-bold text-[#0f172a]">
+            <h2 className="heading-section font-display font-bold text-[#0f172a]">
               Struktur Pelayan Huria (Parhalado)
             </h2>
           </div>
@@ -119,7 +121,7 @@ export function AboutPage() {
                 <h3 className="font-display text-lg font-bold text-[#0f172a] mb-2">
                   {srv.name}
                 </h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{srv.desc}</p>
+                <p className="text-[15px] text-slate-600 leading-relaxed">{srv.desc}</p>
               </div>
             ))}
           </div>
@@ -131,7 +133,7 @@ export function AboutPage() {
             <p className="text-xs uppercase tracking-[0.08em] text-slate-500 font-semibold mb-1">
               Wilayah Pelayanan
             </p>
-            <h2 className="font-display text-2xl font-bold text-[#0f172a]">
+            <h2 className="heading-section font-display font-bold text-[#0f172a]">
               Enam Lingkungan (Wijk) {options.site_title}
             </h2>
           </div>
@@ -147,9 +149,9 @@ export function AboutPage() {
                 >
                   Wijk {w.name}
                 </h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{w.description}</p>
+                <p className="text-[15px] text-slate-600 leading-relaxed">{w.description}</p>
                 {w.koordinator_name && (
-                  <p className="text-xs text-slate-500 pt-2 border-t border-slate-100">
+                  <p className="text-sm text-slate-500 pt-2 border-t border-slate-100">
                     Koordinator: <strong className="text-slate-800">{w.koordinator_name}</strong>
                   </p>
                 )}

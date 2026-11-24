@@ -198,7 +198,7 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
         <h1 className="text-[23px] font-normal text-[#1d2327]">
           {mode === 'minggu' ? 'Jadwal Ibadah Minggu' : 'PHD Lingkungan (6 Wijk)'}
         </h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             to="/admin/jadwal"
             className={`px-3 py-1.5 border rounded-[3px] ${
@@ -231,7 +231,7 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
             <h2 className="font-semibold text-[14px] text-[#1d2327]">
               {editIbadahId ? 'Edit Jadwal Ibadah' : 'Tambah Jadwal Ibadah Minggu'}
             </h2>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
                 <label className="block text-[#50575e] mb-1">Tanggal *</label>
                 <input
@@ -273,7 +273,7 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
                 className="w-full h-8 px-2.5 border border-[#8c8f94] rounded-[2px]"
               />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
                 <label className="block text-[#50575e] mb-1">Pengkhotbah (Parjamita)</label>
                 <input
@@ -293,7 +293,7 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
                 <label className="block text-[#50575e] mb-1">Organis / Musik</label>
                 <input
@@ -353,8 +353,8 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
             </div>
           </form>
 
-          <div className="lg:col-span-8 bg-white border border-[#c3c4c7] overflow-x-auto">
-            <table className="w-full border-collapse">
+          <div className="lg:col-span-8 min-w-0 bg-white border border-[#c3c4c7] overflow-x-auto">
+            <table className="w-full min-w-[540px] border-collapse">
               <thead>
                 <tr className="border-b border-[#c3c4c7] text-left">
                   <th className="p-2.5 font-semibold">Tanggal &amp; Jam</th>
@@ -455,7 +455,7 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
                 <label className="block text-[#50575e] mb-1">Hari Tetap</label>
                 <select
@@ -548,8 +548,8 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
             </div>
           </form>
 
-          <div className="lg:col-span-8 bg-white border border-[#c3c4c7] overflow-x-auto">
-            <table className="w-full border-collapse">
+          <div className="lg:col-span-8 min-w-0 bg-white border border-[#c3c4c7] overflow-x-auto">
+            <table className="w-full min-w-[540px] border-collapse">
               <thead>
                 <tr className="border-b border-[#c3c4c7] text-left">
                   <th className="p-2.5 font-semibold">Wijk</th>

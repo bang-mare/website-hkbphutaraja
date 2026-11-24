@@ -255,8 +255,8 @@ export function AttendancePage() {
           </button>
         </form>
 
-        <div className="lg:col-span-8 bg-white border border-[#c3c4c7] overflow-x-auto">
-          <table className="w-full border-collapse">
+        <div className="lg:col-span-8 min-w-0 bg-white border border-[#c3c4c7] overflow-x-auto">
+          <table className="w-full min-w-[540px] border-collapse">
             <thead>
               <tr className="border-b border-[#c3c4c7] text-left">
                 <th className="p-2.5 font-semibold">Tanggal</th>

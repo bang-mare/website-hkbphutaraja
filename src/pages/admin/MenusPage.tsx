@@ -262,7 +262,7 @@ export function MenusPage() {
         <select
           value={selectedMenuId}
           onChange={(e) => setSelectedMenuId(e.target.value)}
-          className="h-8 px-2.5 bg-white border border-[#8c8f94] rounded-[3px]"
+          className="h-9 sm:h-8 w-full sm:w-auto max-w-full min-w-0 px-2.5 bg-white border border-[#8c8f94] rounded-[3px]"
         >
           {menus.map((m) => (
             <option key={m.id} value={m.id}>
@@ -272,17 +272,20 @@ export function MenusPage() {
         </select>
 
         {showNewMenu && (
-          <form onSubmit={handleCreateMenu} className="flex items-center gap-2 ml-auto">
+          <form
+            onSubmit={handleCreateMenu}
+            className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto"
+          >
             <input
               type="text"
               value={newMenuName}
               onChange={(e) => setNewMenuName(e.target.value)}
               placeholder="Nama menu baru..."
-              className="h-8 px-2.5 border border-[#8c8f94] rounded-[3px]"
+              className="flex-1 min-w-0 h-9 sm:h-8 px-2.5 border border-[#8c8f94] rounded-[3px]"
             />
             <button
               type="submit"
-              className="h-8 px-3 bg-[#2271b1] text-white rounded-[3px] cursor-pointer"
+              className="h-9 sm:h-8 px-3 bg-[#2271b1] text-white rounded-[3px] cursor-pointer shrink-0"
             >
               Buat Menu
             </button>
@@ -439,7 +442,7 @@ export function MenusPage() {
         </div>
 
         {/* Panel Kanan: Struktur Menu Drag-and-Drop */}
-        <div className="lg:col-span-8 bg-white border border-[#c3c4c7]">
+        <div className="lg:col-span-8 min-w-0 bg-white border border-[#c3c4c7]">
           <div className="px-4 py-3 border-b border-[#c3c4c7] bg-[#f6f7f7] flex flex-wrap items-center justify-between gap-2">
             <span className="font-semibold text-[#1d2327]">
               Struktur Menu (Seret atau gunakan panah untuk mengatur urutan &amp; sub-menu)
@@ -475,12 +478,12 @@ export function MenusPage() {
                     setDragIndex(null);
                   }}
                   className={`border border-[#c3c4c7] bg-[#f6f7f7] p-3 flex flex-col sm:flex-row sm:items-center gap-3 ${
-                    item.parentLocalId ? 'ml-8 border-l-2 border-l-[#2271b1]' : ''
+                    item.parentLocalId ? 'ml-4 sm:ml-8 border-l-2 border-l-[#2271b1]' : ''
                   }`}
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <GripVertical className="w-4 h-4 text-[#787c82] cursor-grab shrink-0" />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1 min-w-0">
                       <input
                         type="text"
                         value={item.title}
@@ -489,7 +492,7 @@ export function MenusPage() {
                           next[idx] = { ...next[idx], title: e.target.value };
                           setEditableItems(next);
                         }}
-                        className="h-7 px-2 bg-white border border-[#8c8f94] rounded-[2px] font-medium"
+                        className="h-8 sm:h-7 px-2 bg-white border border-[#8c8f94] rounded-[2px] font-medium min-w-0"
                       />
                       <input
                         type="text"
@@ -499,18 +502,18 @@ export function MenusPage() {
                           next[idx] = { ...next[idx], url: e.target.value };
                           setEditableItems(next);
                         }}
-                        className="h-7 px-2 bg-white border border-[#8c8f94] rounded-[2px] font-mono text-[12px]"
+                        className="h-8 sm:h-7 px-2 bg-white border border-[#8c8f94] rounded-[2px] font-mono text-[12px] min-w-0"
                       />
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => moveItem(idx, -1)}
                       disabled={idx === 0}
                       title="Naik"
-                      className="p-1 bg-white border border-[#c3c4c7] rounded disabled:opacity-40 cursor-pointer"
+                      className="w-9 h-9 sm:w-7 sm:h-7 inline-flex items-center justify-center bg-white border border-[#c3c4c7] rounded disabled:opacity-40 cursor-pointer"
                     >
                       <ArrowUp className="w-3.5 h-3.5" />
                     </button>
@@ -519,7 +522,7 @@ export function MenusPage() {
                       onClick={() => moveItem(idx, 1)}
                       disabled={idx === editableItems.length - 1}
                       title="Turun"
-                      className="p-1 bg-white border border-[#c3c4c7] rounded disabled:opacity-40 cursor-pointer"
+                      className="w-9 h-9 sm:w-7 sm:h-7 inline-flex items-center justify-center bg-white border border-[#c3c4c7] rounded disabled:opacity-40 cursor-pointer"
                     >
                       <ArrowDown className="w-3.5 h-3.5" />
                     </button>
@@ -528,7 +531,7 @@ export function MenusPage() {
                       onClick={() => toggleIndent(idx)}
                       disabled={idx === 0 && !item.parentLocalId}
                       title={item.parentLocalId ? 'Jadikan menu utama' : 'Jadikan sub-menu'}
-                      className="p-1 bg-white border border-[#c3c4c7] rounded disabled:opacity-40 cursor-pointer"
+                      className="w-9 h-9 sm:w-7 sm:h-7 inline-flex items-center justify-center bg-white border border-[#c3c4c7] rounded disabled:opacity-40 cursor-pointer"
                     >
                       {item.parentLocalId ? (
                         <Outdent className="w-3.5 h-3.5" />
@@ -544,7 +547,7 @@ export function MenusPage() {
                         )
                       }
                       title="Hapus"
-                      className="p-1 bg-white border border-[#c3c4c7] text-[#d63638] rounded cursor-pointer"
+                      className="w-9 h-9 sm:w-7 sm:h-7 inline-flex items-center justify-center bg-white border border-[#c3c4c7] text-[#d63638] rounded cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

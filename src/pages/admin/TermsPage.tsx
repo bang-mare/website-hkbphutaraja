@@ -113,13 +113,13 @@ export function TermsPage({ taxonomy }: TermsPageProps) {
     <div className="pt-4">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h1 className="text-[23px] font-normal text-[#1d2327]">{titleLabel}</h1>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto min-w-0">
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={`Cari ${titleLabel}...`}
-            className="h-7 pl-2.5 pr-7 text-[13px] bg-white border border-[#8c8f94] rounded-[3px]"
+            className="w-full sm:w-52 h-8 md:h-7 pl-2.5 pr-7 text-[13px] bg-white border border-[#8c8f94] rounded-[3px]"
           />
           <Search className="w-3.5 h-3.5 text-[#787c82] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
@@ -210,8 +210,8 @@ export function TermsPage({ taxonomy }: TermsPageProps) {
         </div>
 
         {/* Kolom Kanan: Tabel Daftar Terms */}
-        <div className="lg:col-span-8">
-          <div className="flex items-center justify-between mb-2">
+        <div className="lg:col-span-8 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-1">
               <select
                 value={bulkAction}
@@ -344,7 +344,7 @@ export function TermsPage({ taxonomy }: TermsPageProps) {
                         </td>
                         <td className="p-2.5 align-top">
                           <div className="font-semibold text-[#2271b1]">{term.name}</div>
-                          <div className="mt-1 flex items-center gap-1.5 text-[12px] opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12px] opacity-100 [@media(hover:hover)]:lg:opacity-0 [@media(hover:hover)]:lg:group-hover:opacity-100 [@media(hover:hover)]:lg:group-focus-within:opacity-100 transition-opacity">
                             <button
                               type="button"
                               onClick={() => {

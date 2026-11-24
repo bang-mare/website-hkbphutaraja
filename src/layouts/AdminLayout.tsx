@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Gauge,
@@ -67,7 +67,13 @@ export function AdminLayout() {
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [hoveredMenuId, setHoveredMenuId] = useState<string | null>(null);
+  const [hoveredFlyout, setHoveredFlyout] = useState<{
+    entry: AdminMenuEntry;
+    left: number;
+    top?: number;
+    bottom?: number;
+  } | null>(null);
+  const closeFlyoutTimerRef = useRef<number | null>(null);
 
   // Admin Bar dropdown states
   const [openDropdown, setOpenDropdown] = useState<
@@ -79,9 +85,28 @@ export function AdminLayout() {
   const [activeHelpTabId, setActiveHelpTabId] = useState<string>('');
   const [pendingCommentsCount, setPendingCommentsCount] = useState(0);
 
+  const cancelCloseFlyout = () => {
+    if (closeFlyoutTimerRef.current !== null) {
+      window.clearTimeout(closeFlyoutTimerRef.current);
+      closeFlyoutTimerRef.current = null;
+    }
+  };
+
+  const scheduleCloseFlyout = () => {
+    cancelCloseFlyout();
+    closeFlyoutTimerRef.current = window.setTimeout(() => {
+      setHoveredFlyout(null);
+    }, 100);
+  };
+
+  useEffect(() => {
+    return () => cancelCloseFlyout();
+  }, []);
+
   useEffect(() => {
     setMobileMenuOpen(false);
     setOpenDropdown(null);
+    setHoveredFlyout(null);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -399,7 +424,8 @@ export function AdminLayout() {
         {/* Sidebar Kiri Gelap (#1d2327) */}
         <aside
           aria-label="Menu navigasi admin"
-          className={`fixed md:sticky top-[46px] md:top-[32px] left-0 z-40 h-[calc(100vh-46px)] md:h-[calc(100vh-32px)] bg-[#1d2327] text-[#f0f0f1] shrink-0 transition-transform md:transition-none duration-200 overflow-y-auto md:overflow-visible flex flex-col justify-between select-none ${
+          onScroll={() => setHoveredFlyout(null)}
+          className={`fixed md:sticky top-[46px] md:top-[32px] left-0 z-40 h-[calc(100vh-46px)] md:h-[calc(100vh-32px)] bg-[#1d2327] text-[#f0f0f1] shrink-0 transition-transform md:transition-none duration-200 overflow-y-auto flex flex-col justify-between select-none ${
             mobileMenuOpen ? 'translate-x-0 w-[200px]' : '-translate-x-full md:translate-x-0'
           } ${sidebarCollapsed ? 'md:w-[36px]' : 'md:w-[160px]'}`}
         >
@@ -409,14 +435,33 @@ export function AdminLayout() {
                 const IconComp = ICON_MAP[entry.iconName] || Gauge;
                 const active = isMenuActive(entry);
                 const hasSubmenus = Boolean(entry.submenus && entry.submenus.length > 0);
-                const isHovered = hoveredMenuId === entry.id;
+                const isFlyoutOpen = hoveredFlyout?.entry.id === entry.id;
 
                 return (
                   <React.Fragment key={entry.id}>
                     <li
                       className="relative"
-                      onMouseEnter={() => setHoveredMenuId(entry.id)}
-                      onMouseLeave={() => setHoveredMenuId(null)}
+                      onMouseEnter={(e) => {
+                        cancelCloseFlyout();
+                        if (!hasSubmenus || (active && !sidebarCollapsed)) {
+                          setHoveredFlyout(null);
+                          return;
+                        }
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const subCount = entry.submenus?.length || 0;
+                        const estimatedHeight =
+                          (sidebarCollapsed ? 32 : 0) + subCount * 30 + 16;
+                        const opensUpward = rect.top + estimatedHeight > window.innerHeight - 8;
+                        setHoveredFlyout({
+                          entry,
+                          left: Math.round(rect.right),
+                          top: opensUpward ? undefined : Math.max(34, Math.round(rect.top)),
+                          bottom: opensUpward
+                            ? Math.max(8, Math.round(window.innerHeight - rect.bottom))
+                            : undefined,
+                        });
+                      }}
+                      onMouseLeave={scheduleCloseFlyout}
                     >
                       <Link
                         to={entry.path}
@@ -424,7 +469,9 @@ export function AdminLayout() {
                         className={`relative flex items-center gap-2 px-2.5 py-[7px] text-[13px] leading-[1.3] transition-colors ${
                           active
                             ? 'bg-[#2271b1] text-white font-semibold'
-                            : 'text-[#f0f0f1] hover:bg-[#191e23] hover:text-[#72aee6]'
+                            : isFlyoutOpen
+                              ? 'bg-[#191e23] text-[#72aee6]'
+                              : 'text-[#f0f0f1] hover:bg-[#191e23] hover:text-[#72aee6]'
                         }`}
                       >
                         <IconComp
@@ -473,28 +520,6 @@ export function AdminLayout() {
                           })}
                         </ul>
                       )}
-
-                      {/* Flyout Submenu saat hover (ketika tidak aktif atau sidebar collapsed) */}
-                      {hasSubmenus &&
-                        isHovered &&
-                        (!active || sidebarCollapsed) && (
-                          <div className="hidden md:block absolute left-full top-0 min-w-[170px] bg-[#2c3338] text-[#f0f0f1] shadow-[0_3px_5px_rgba(0,0,0,0.2)] py-1.5 z-50 border-l border-[#1d2327]">
-                            {sidebarCollapsed && (
-                              <div className="px-3 py-1.5 text-[12px] font-semibold text-white border-b border-[#3c434a] mb-1">
-                                {entry.label}
-                              </div>
-                            )}
-                            {entry.submenus!.map((sub) => (
-                              <Link
-                                key={sub.path}
-                                to={sub.path}
-                                className="block px-3 py-1.5 text-[12px] text-[#c3c4c7] hover:text-[#72aee6] whitespace-nowrap"
-                              >
-                                {sub.label}
-                              </Link>
-                            ))}
-                          </div>
-                        )}
                     </li>
 
                     {entry.separatorAfter && (
@@ -510,7 +535,10 @@ export function AdminLayout() {
           <div className="hidden md:block border-t border-[#2c3338] py-1">
             <button
               type="button"
-              onClick={() => setSidebarCollapsed((c) => !c)}
+              onClick={() => {
+                setHoveredFlyout(null);
+                setSidebarCollapsed((c) => !c);
+              }}
               title={sidebarCollapsed ? 'Bentangkan menu' : 'Ciutkan menu'}
               className="w-full flex items-center gap-2 px-2.5 py-2 text-[12px] text-[#a7aaad] hover:text-[#72aee6] cursor-pointer"
             >
@@ -525,6 +553,40 @@ export function AdminLayout() {
             </button>
           </div>
         </aside>
+
+        {/* Flyout Submenu Fixed (terjepit ke viewport agar tidak menyebabkan scrollbar / kedip saat hover item bawah seperti Pengaturan) */}
+        {hoveredFlyout && hoveredFlyout.entry.submenus && (
+          <div
+            onMouseEnter={cancelCloseFlyout}
+            onMouseLeave={scheduleCloseFlyout}
+            style={{
+              left: `${hoveredFlyout.left}px`,
+              top: hoveredFlyout.top !== undefined ? `${hoveredFlyout.top}px` : undefined,
+              bottom: hoveredFlyout.bottom !== undefined ? `${hoveredFlyout.bottom}px` : undefined,
+            }}
+            className="hidden md:block fixed min-w-[175px] max-h-[calc(100vh-48px)] overflow-y-auto bg-[#2c3338] text-[#f0f0f1] shadow-[0_3px_8px_rgba(0,0,0,0.28)] py-1.5 z-50 border border-[#1d2327] border-l-0"
+          >
+            {sidebarCollapsed && (
+              <div className="px-3 py-1.5 text-[12px] font-semibold text-white border-b border-[#3c434a] mb-1">
+                {hoveredFlyout.entry.label}
+              </div>
+            )}
+            {hoveredFlyout.entry.submenus.map((sub) => (
+              <Link
+                key={sub.path}
+                to={sub.path}
+                onClick={() => setHoveredFlyout(null)}
+                className={`block px-3 py-1.5 text-[12px] whitespace-nowrap ${
+                  isSubmenuActive(sub.path)
+                    ? 'text-white font-semibold'
+                    : 'text-[#c3c4c7] hover:text-[#72aee6]'
+                }`}
+              >
+                {sub.label}
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* ==================================================================
             MAIN CONTENT AREA (#f0f0f1)

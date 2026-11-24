@@ -18,6 +18,7 @@ import {
   fetchPublishedPosts,
   resolvePostFeaturedImage,
 } from '../../lib/publicData';
+import { PostThumbnail } from '../../components/PostThumbnail';
 import type { IbadahMinggu, PostRecord } from '../../types/cms';
 
 export function PublicHomePage() {
@@ -393,38 +394,37 @@ export function PublicHomePage() {
         </div>
       </section>
 
-      {/* Warta Jemaat Terbaru & Berita Terbaru */}
-      <section className="py-4 pb-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Warta Terbaru */}
-          <div className="lg:col-span-5">
-            <div className="flex items-end justify-between mb-5">
-              <div>
-                <p className="text-xs uppercase tracking-[0.08em] text-slate-500 font-semibold mb-1">
-                  Tingting Huria
-                </p>
-                <h2 className="font-display text-2xl font-bold text-[#0f172a]">
-                  Warta Jemaat Terbaru
-                </h2>
-              </div>
-              <Link
-                to="/warta"
-                className="text-sm font-semibold hover:underline"
-                style={{ color: primaryColor }}
-              >
-                Arsip Warta &rarr;
-              </Link>
+      {/* Baris 1 (Atas): Warta Jemaat Terbaru */}
+      <section className="py-6 pb-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
+            <div>
+              <p className="text-xs uppercase tracking-[0.08em] text-slate-500 font-semibold mb-1">
+                Tingting Huria
+              </p>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0f172a]">
+                Warta Jemaat Terbaru
+              </h2>
             </div>
-            {wartaList.length === 0 ? (
-              <div className="surface-card p-6 text-sm text-slate-600">
-                Warta jemaat mingguan akan tampil di sini setelah diterbitkan melalui dasbor admin.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {wartaList.map((w) => {
-                  const pdfUrl = (w.meta?.warta_pdf_url as string) || '';
-                  return (
-                    <div key={w.id} className="surface-card p-5">
+            <Link
+              to="/warta"
+              className="text-sm font-semibold hover:underline"
+              style={{ color: primaryColor }}
+            >
+              Arsip Warta &rarr;
+            </Link>
+          </div>
+          {wartaList.length === 0 ? (
+            <div className="surface-card p-6 text-sm text-slate-600">
+              Warta jemaat mingguan akan tampil di sini setelah diterbitkan melalui dasbor admin.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {wartaList.map((w) => {
+                const pdfUrl = (w.meta?.warta_pdf_url as string) || '';
+                return (
+                  <div key={w.id} className="surface-card p-5 flex flex-col justify-between">
+                    <div>
                       <div className="flex items-center gap-2 text-xs text-slate-500 mb-1.5 font-mono-num">
                         <FileText className="w-3.5 h-3.5 text-[#d97706]" />
                         <span>
@@ -445,99 +445,104 @@ export function PublicHomePage() {
                           {w.excerpt}
                         </p>
                       )}
-                      <div className="flex items-center gap-4 text-xs font-semibold pt-2 border-t border-slate-100">
-                        <Link
-                          to={`/warta/${w.slug}`}
-                          className="hover:underline"
-                          style={{ color: primaryColor }}
-                        >
-                          Baca Online &rarr;
-                        </Link>
-                        {pdfUrl && (
-                          <a
-                            href={pdfUrl}
-                            className="inline-flex items-center gap-1 hover:underline"
-                            style={{ color: accentColor }}
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>Unduh PDF</span>
-                          </a>
-                        )}
-                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Berita & Artikel Terbaru */}
-          <div className="lg:col-span-7">
-            <div className="flex items-end justify-between mb-5">
-              <div>
-                <p className="text-xs uppercase tracking-[0.08em] text-slate-500 font-semibold mb-1">
-                  Publikasi &amp; Renungan
-                </p>
-                <h2 className="font-display text-2xl font-bold text-[#0f172a]">
-                  Berita &amp; Artikel Huria
-                </h2>
-              </div>
-              <Link
-                to="/berita"
-                className="text-sm font-semibold hover:underline"
-                style={{ color: primaryColor }}
-              >
-                Semua Berita &rarr;
-              </Link>
-            </div>
-            {beritaList.length === 0 ? (
-              <div className="surface-card p-6 text-sm text-slate-600">
-                Berita pelayanan dan renungan gereja akan tampil di sini setelah diterbitkan.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {beritaList.map((post) => {
-                  const thumb = resolvePostFeaturedImage(post);
-                  return (
-                    <article
-                      key={post.id}
-                      className="surface-card overflow-hidden flex flex-col"
-                    >
-                      {thumb && (
-                        <Link
-                          to={`/berita/${post.slug}`}
-                          className="block aspect-[16/10] bg-gradient-to-br from-[#0f294a] to-[#1e3a8a] overflow-hidden"
+                    <div className="flex items-center gap-4 text-xs font-semibold pt-2.5 border-t border-slate-100">
+                      <Link
+                        to={`/warta/${w.slug}`}
+                        className="hover:underline"
+                        style={{ color: primaryColor }}
+                      >
+                        Baca Online &rarr;
+                      </Link>
+                      {pdfUrl && (
+                        <a
+                          href={pdfUrl}
+                          className="inline-flex items-center gap-1 hover:underline"
+                          style={{ color: accentColor }}
                         >
-                          <img
-                            src={thumb}
-                            alt={post.title}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300"
-                          />
-                        </Link>
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Unduh PDF</span>
+                        </a>
                       )}
-                      <div className="p-5 flex-1 flex flex-col">
-                        <p className="text-xs text-slate-500 mb-1.5 font-mono-num">
-                          {new Intl.DateTimeFormat('id-ID', {
-                            dateStyle: 'medium',
-                          }).format(new Date(post.published_at || post.created_at))}
-                        </p>
-                        <Link
-                          to={`/berita/${post.slug}`}
-                          className="font-display text-base font-bold text-[#0f172a] hover:text-[#0f294a] hover:underline mb-2"
-                        >
-                          {post.title}
-                        </Link>
-                        <p className="text-sm text-slate-600 line-clamp-2 flex-1">
-                          {post.excerpt}
-                        </p>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Baris 2 (Bawah): Berita & Artikel Huria */}
+      <section className="py-10 pb-12 border-t border-[#e2e8f0]/80">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
+            <div>
+              <p className="text-xs uppercase tracking-[0.08em] text-slate-500 font-semibold mb-1">
+                Publikasi &amp; Renungan
+              </p>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#0f172a]">
+                Berita &amp; Artikel Huria
+              </h2>
+            </div>
+            <Link
+              to="/berita"
+              className="text-sm font-semibold hover:underline"
+              style={{ color: primaryColor }}
+            >
+              Semua Berita &rarr;
+            </Link>
           </div>
+          {beritaList.length === 0 ? (
+            <div className="surface-card p-6 text-sm text-slate-600">
+              Berita pelayanan dan renungan gereja akan tampil di sini setelah diterbitkan.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {beritaList.map((post) => {
+                const thumb = resolvePostFeaturedImage(post);
+                const categoryName = post.terms?.find((t) => t.taxonomy === 'category')?.name;
+                return (
+                  <article
+                    key={post.id}
+                    className="surface-card overflow-hidden flex flex-col group"
+                  >
+                    <Link to={`/berita/${post.slug}`} className="block">
+                      <PostThumbnail
+                        src={thumb}
+                        alt={post.title}
+                        categoryLabel={categoryName}
+                        className="aspect-[16/10]"
+                      />
+                    </Link>
+                    <div className="p-5 flex-1 flex flex-col">
+                      <p className="text-xs text-slate-500 mb-1.5 font-mono-num">
+                        {new Intl.DateTimeFormat('id-ID', {
+                          dateStyle: 'medium',
+                        }).format(new Date(post.published_at || post.created_at))}
+                      </p>
+                      <Link
+                        to={`/berita/${post.slug}`}
+                        className="font-display text-base font-bold text-[#0f172a] hover:text-[#0f294a] hover:underline mb-2 line-clamp-2"
+                      >
+                        {post.title}
+                      </Link>
+                      <p className="text-sm text-slate-600 line-clamp-2 flex-1 mb-3">
+                        {post.excerpt}
+                      </p>
+                      <Link
+                        to={`/berita/${post.slug}`}
+                        className="text-xs font-semibold hover:underline"
+                        style={{ color: primaryColor }}
+                      >
+                        Baca selengkapnya &rarr;
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 

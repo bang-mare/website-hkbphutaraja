@@ -12,6 +12,7 @@ import {
   resolvePostFeaturedImage,
   submitPublicComment,
 } from '../../lib/publicData';
+import { PostThumbnail } from '../../components/PostThumbnail';
 import type { CommentRecord, PostRecord, Term } from '../../types/cms';
 
 export function BlogPublicPage({
@@ -392,29 +393,24 @@ export function BlogPublicPage({
               <div className="space-y-5">
                 {pagedPosts.map((post) => {
                   const thumb = resolvePostFeaturedImage(post);
+                  const categoryName = post.terms?.find((t) => t.taxonomy === 'category')?.name;
                   return (
                     <article
                       key={post.id}
-                      className="surface-card overflow-hidden grid grid-cols-1 sm:grid-cols-12"
+                      className="surface-card overflow-hidden grid grid-cols-1 sm:grid-cols-12 group"
                     >
-                      {thumb && (
-                        <Link
-                          to={`/berita/${post.slug}`}
-                          className="sm:col-span-4 bg-gradient-to-br from-[#0f294a] to-[#1e3a8a] min-h-[160px] overflow-hidden"
-                        >
-                          <img
-                            src={thumb}
-                            alt={post.title}
-                            referrerPolicy="no-referrer"
-                            className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300"
-                          />
-                        </Link>
-                      )}
-                      <div
-                        className={`p-5 flex flex-col justify-between ${
-                          thumb ? 'sm:col-span-8' : 'sm:col-span-12'
-                        }`}
+                      <Link
+                        to={`/berita/${post.slug}`}
+                        className="sm:col-span-4 block"
                       >
+                        <PostThumbnail
+                          src={thumb}
+                          alt={post.title}
+                          categoryLabel={categoryName}
+                          className="h-full min-h-[170px] aspect-[16/10] sm:aspect-auto"
+                        />
+                      </Link>
+                      <div className="p-5 flex flex-col justify-between sm:col-span-8">
                         <div>
                           <p className="text-xs text-slate-500 mb-1.5 font-mono-num">
                             {new Intl.DateTimeFormat('id-ID', {

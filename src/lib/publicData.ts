@@ -443,10 +443,25 @@ export async function fetchPublishedPostBySlug(
 }
 
 export function resolvePostFeaturedImage(post: PostRecord): string {
-  const metaUrl = (post.meta?.featured_url as string) || '';
+  const metaUrl = ((post.meta?.featured_url as string) || '').trim();
   if (metaUrl) return metaUrl;
   if (post.featured_media_id) {
     return getMediaProxyUrl(post.featured_media_id, { width: 768 });
+  }
+  if (Array.isArray(post.content)) {
+    for (const block of post.content) {
+      if (block.type === 'image') {
+        if (block.url && block.url.trim()) return block.url.trim();
+        if (block.mediaId) return getMediaProxyUrl(block.mediaId, { width: 768 });
+      }
+      if (block.type === 'gallery' && Array.isArray(block.gallery) && block.gallery[0]?.url) {
+        return block.gallery[0].url.trim();
+      }
+    }
+  }
+  if (post.content_html) {
+    const imgMatch = post.content_html.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch?.[1]) return imgMatch[1].trim();
   }
   return '';
 }

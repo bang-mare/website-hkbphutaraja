@@ -292,7 +292,7 @@ export interface SiteOptionsMap {
 
 export interface JemaatRecord {
   id: string;
-  no_induk: string | null;
+  no_registrasi: string | null;
   full_name: string;
   gender: 'L' | 'P' | null;
   birth_place: string;

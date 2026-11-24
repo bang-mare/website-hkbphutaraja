@@ -355,7 +355,7 @@ CREATE TRIGGER trg_options_updated_at
 -- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.jemaat (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  no_induk TEXT UNIQUE,
+  no_registrasi TEXT,
   full_name TEXT NOT NULL,
   gender TEXT CHECK (gender IN ('L', 'P')),
   birth_place TEXT DEFAULT '',
@@ -377,6 +377,7 @@ CREATE TABLE IF NOT EXISTS public.jemaat (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS idx_jemaat_no_registrasi ON public.jemaat(no_registrasi);
 CREATE INDEX IF NOT EXISTS idx_jemaat_wijk_id ON public.jemaat(wijk_id);
 CREATE INDEX IF NOT EXISTS idx_jemaat_birth_date ON public.jemaat(birth_date);
 CREATE INDEX IF NOT EXISTS idx_jemaat_marriage_date ON public.jemaat(marriage_date);

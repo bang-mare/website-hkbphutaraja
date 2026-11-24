@@ -3,8 +3,22 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft, Info } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { HkbpLogo } from '../../components/HkbpLogo';
+import { DEFAULT_SITE_OPTIONS, fetchSiteOptions } from '../../lib/publicData';
 import { hasCapability, ROLE_LABELS } from '../../lib/roles';
-import type { UserRole } from '../../types/cms';
+import type { SiteOptionsMap, UserRole } from '../../types/cms';
+
+function isSafeImageUrl(url: string | undefined): string {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('http://')
+  ) {
+    return trimmed;
+  }
+  return '';
+}
 
 export function LoginPage() {
   const {
@@ -20,6 +34,9 @@ export function LoginPage() {
   const location = useLocation();
   const fromPath = (location.state as { from?: string } | null)?.from || '/admin';
 
+  const [siteOptions, setSiteOptions] = useState<SiteOptionsMap>(DEFAULT_SITE_OPTIONS);
+  const [logoImgError, setLogoImgError] = useState(false);
+
   const [mode, setMode] = useState<'login' | 'lostpassword'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,11 +48,30 @@ export function LoginPage() {
   const [previewRole, setPreviewRole] = useState<UserRole>('administrator');
 
   useEffect(() => {
+    fetchSiteOptions().then((opts) => {
+      setSiteOptions(opts);
+      setLogoImgError(false);
+    });
+  }, []);
+
+  useEffect(() => {
     if (!profile) return;
     if (hasCapability(profile.role, 'access_admin')) {
       navigate(fromPath.startsWith('/admin') ? fromPath : '/admin', { replace: true });
     }
   }, [profile, navigate, fromPath]);
+
+  const customLogoUrl = isSafeImageUrl(
+    siteOptions.login_logo_url || siteOptions.theme_logo_url
+  );
+  const loginTitle =
+    siteOptions.login_title?.trim() ||
+    siteOptions.site_title ||
+    'HKBP Ressort Hutaraja';
+  const loginSubtitle = siteOptions.login_subtitle?.trim() || '';
+  const loginBackText =
+    siteOptions.login_back_text?.trim() ||
+    `Kembali ke ${siteOptions.site_title || 'HKBP Ressort Hutaraja'}`;
 
   const displayedError = errorMsg || profileError;
 
@@ -109,18 +145,33 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-[#f0f0f1] text-[#3c434a] font-wp flex flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-[340px]">
-        {/* Logo HKBP di atas kartu seperti wp-login.php */}
-        <div className="flex flex-col items-center mb-5">
+        {/* Logo & Teks Kustom di atas kartu seperti wp-login.php */}
+        <div className="flex flex-col items-center mb-5 text-center">
           <Link
             to="/"
             className="inline-flex flex-col items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2271b1] rounded"
-            title="HKBP Ressort Hutaraja"
+            title={loginTitle}
           >
-            <HkbpLogo className="w-16 h-16" variant="color" />
+            {customLogoUrl && !logoImgError ? (
+              <img
+                src={customLogoUrl}
+                alt={loginTitle}
+                referrerPolicy="no-referrer"
+                onError={() => setLogoImgError(true)}
+                className="w-16 h-16 object-contain rounded"
+              />
+            ) : (
+              <HkbpLogo className="w-16 h-16" variant="color" />
+            )}
             <span className="text-sm font-semibold text-[#1d2327] tracking-tight">
-              HKBP Ressort Hutaraja
+              {loginTitle}
             </span>
           </Link>
+          {loginSubtitle && (
+            <p className="mt-1 text-[12px] text-[#50575e] leading-snug max-w-[300px]">
+              {loginSubtitle}
+            </p>
+          )}
         </div>
 
         {/* Pesan Error / Sukses khas wp-login.php */}
@@ -297,7 +348,7 @@ export function LoginPage() {
             className="inline-flex items-center gap-1.5 hover:text-[#2271b1] w-fit"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Kembali ke HKBP Ressort Hutaraja</span>
+            <span>{loginBackText}</span>
           </Link>
         </div>
 

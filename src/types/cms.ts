@@ -281,6 +281,10 @@ export interface SiteOptionsMap {
   theme_accent_color: string;
   theme_logo_url?: string;
   theme_hero_image_url?: string;
+  login_logo_url?: string;
+  login_title?: string;
+  login_subtitle?: string;
+  login_back_text?: string;
   church_address: string;
   church_phone?: string;
   daily_verse: { reference: string; text: string };

@@ -40,6 +40,10 @@ export const DEFAULT_SITE_OPTIONS: SiteOptionsMap = {
   theme_accent_color: '#d97706',
   theme_logo_url: '',
   theme_hero_image_url: '/src/assets/images/church_hero_sanctuary_1795501235668.jpg',
+  login_logo_url: '',
+  login_title: 'HKBP Ressort Hutaraja',
+  login_subtitle: '',
+  login_back_text: 'Kembali ke HKBP Ressort Hutaraja',
   church_address: 'Jl. Gereja Hutaraja No. 1, Kec. Siempat Nempu, Kab. Dairi, Sumatera Utara',
   church_phone: '+62 813-6211-0400',
   daily_verse: {

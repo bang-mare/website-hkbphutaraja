@@ -12,6 +12,10 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
 import { UpdatesPage } from './pages/admin/UpdatesPage';
 import { ProfilePage } from './pages/admin/ProfilePage';
+import { PostsListPage } from './pages/admin/PostsListPage';
+import { PostEditorPage } from './pages/admin/PostEditorPage';
+import { TermsPage } from './pages/admin/TermsPage';
+import { CommentsPage } from './pages/admin/CommentsPage';
 import { ModulePlaceholderPage } from './pages/admin/ModulePlaceholderPage';
 
 export default function App() {
@@ -44,12 +48,7 @@ export default function App() {
                 path="posts"
                 element={
                   <ProtectedRoute requiredCapability="manage_posts">
-                    <ModulePlaceholderPage
-                      title="Pos"
-                      addNewLabel="Tambah Pos Baru"
-                      stage="Tahap 2"
-                      description="Daftar berita & artikel dengan WP List Table, Quick Edit, filter status (Semua/Terbit/Draf/Sampah), pencarian, dan tindakan massal."
-                    />
+                    <PostsListPage postType="post" />
                   </ProtectedRoute>
                 }
               />
@@ -57,11 +56,7 @@ export default function App() {
                 path="posts/new"
                 element={
                   <ProtectedRoute requiredCapability="manage_posts">
-                    <ModulePlaceholderPage
-                      title="Tambah Pos Baru"
-                      stage="Tahap 2"
-                      description="Editor blok bergaya Gutenberg (Paragraf, Judul, Gambar, Galeri, Daftar, Kutipan, Tombol, Kolom, Embed YouTube, Pemisah) dengan panel kanan Pos/Blok, autosave, dan riwayat revisi."
-                    />
+                    <PostEditorPage postType="post" />
                   </ProtectedRoute>
                 }
               />
@@ -69,11 +64,7 @@ export default function App() {
                 path="posts/categories"
                 element={
                   <ProtectedRoute requiredCapability="publish_posts">
-                    <ModulePlaceholderPage
-                      title="Kategori"
-                      stage="Tahap 2"
-                      description="Pengelolaan kategori berita dan renungan gereja dengan slug dan hierarki."
-                    />
+                    <TermsPage taxonomy="category" />
                   </ProtectedRoute>
                 }
               />
@@ -81,11 +72,15 @@ export default function App() {
                 path="posts/tags"
                 element={
                   <ProtectedRoute requiredCapability="publish_posts">
-                    <ModulePlaceholderPage
-                      title="Tag"
-                      stage="Tahap 2"
-                      description="Pengelolaan tag pos untuk pengelompokan topik artikel dan pengumuman."
-                    />
+                    <TermsPage taxonomy="post_tag" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="posts/:id"
+                element={
+                  <ProtectedRoute requiredCapability="manage_posts">
+                    <PostEditorPage postType="post" />
                   </ProtectedRoute>
                 }
               />
@@ -122,12 +117,7 @@ export default function App() {
                 path="pages"
                 element={
                   <ProtectedRoute requiredCapability="manage_pages">
-                    <ModulePlaceholderPage
-                      title="Halaman"
-                      addNewLabel="Tambah Halaman Baru"
-                      stage="Tahap 2"
-                      description="Pengelolaan halaman statis seperti Tentang Kami, Sejarah Huria, Persembahan, dan Kontak."
-                    />
+                    <PostsListPage postType="page" />
                   </ProtectedRoute>
                 }
               />
@@ -135,40 +125,35 @@ export default function App() {
                 path="pages/new"
                 element={
                   <ProtectedRoute requiredCapability="manage_pages">
-                    <ModulePlaceholderPage
-                      title="Tambah Halaman Baru"
-                      stage="Tahap 2"
-                      description="Editor blok untuk menyusun halaman statis baru lengkap dengan urutan menu dan halaman induk."
-                    />
+                    <PostEditorPage postType="page" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="pages/:id"
+                element={
+                  <ProtectedRoute requiredCapability="manage_pages">
+                    <PostEditorPage postType="page" />
                   </ProtectedRoute>
                 }
               />
 
-              {/* Komentar (Tahap 2/4) */}
+              {/* Komentar (Tahap 2) */}
               <Route
                 path="comments"
                 element={
                   <ProtectedRoute requiredCapability="manage_comments">
-                    <ModulePlaceholderPage
-                      title="Komentar"
-                      stage="Tahap 2"
-                      description="Moderasi komentar jemaat (Disetujui, Menunggu, Spam, Sampah) dengan tindakan cepat."
-                    />
+                    <CommentsPage />
                   </ProtectedRoute>
                 }
               />
 
-              {/* Warta Jemaat (Tahap 2 & 4) */}
+              {/* Warta Jemaat (Tahap 2) */}
               <Route
                 path="warta"
                 element={
                   <ProtectedRoute requiredCapability="manage_warta">
-                    <ModulePlaceholderPage
-                      title="Warta Jemaat"
-                      addNewLabel="Tambah Warta Baru"
-                      stage="Tahap 2 &amp; Tahap 4"
-                      description="Daftar Warta Jemaat mingguan yang dapat dibaca online maupun diunduh dalam format PDF."
-                    />
+                    <PostsListPage postType="warta" />
                   </ProtectedRoute>
                 }
               />
@@ -176,11 +161,15 @@ export default function App() {
                 path="warta/new"
                 element={
                   <ProtectedRoute requiredCapability="manage_warta">
-                    <ModulePlaceholderPage
-                      title="Tambah Warta Jemaat"
-                      stage="Tahap 2 &amp; Tahap 4"
-                      description="Terbitkan Warta Jemaat mingguan baru dan lampirkan berkas PDF dari Pustaka Media."
-                    />
+                    <PostEditorPage postType="warta" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="warta/:id"
+                element={
+                  <ProtectedRoute requiredCapability="manage_warta">
+                    <PostEditorPage postType="warta" />
                   </ProtectedRoute>
                 }
               />

@@ -13,7 +13,7 @@ export function UpdatesPage() {
     {
       stage: 'Tahap 2',
       title: 'Pos, Halaman, Kategori, Tag, Editor Blok Gutenberg, Status & Revisi',
-      done: false,
+      done: true,
     },
     {
       stage: 'Tahap 3',

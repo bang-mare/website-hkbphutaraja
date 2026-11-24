@@ -9,6 +9,7 @@ import type { UserRole } from '../../types/cms';
 export function LoginPage() {
   const {
     profile,
+    profileError,
     isSupabaseReady,
     signIn,
     signOut,
@@ -35,6 +36,8 @@ export function LoginPage() {
       navigate(fromPath.startsWith('/admin') ? fromPath : '/admin', { replace: true });
     }
   }, [profile, navigate, fromPath]);
+
+  const displayedError = errorMsg || profileError;
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,13 +124,13 @@ export function LoginPage() {
         </div>
 
         {/* Pesan Error / Sukses khas wp-login.php */}
-        {errorMsg && (
+        {displayedError && (
           <div
             role="alert"
             className="mb-4 bg-white border border-[#c3c4c7] border-l-4 border-l-[#d63638] p-3 text-[13px] text-[#1d2327] shadow-[0_1px_1px_rgba(0,0,0,0.04)]"
           >
-            <p>{errorMsg}</p>
-            {profile && !hasCapability(profile.role, 'access_admin') && (
+            <p>{displayedError}</p>
+            {(profileError || (profile && !hasCapability(profile.role, 'access_admin'))) && (
               <div className="mt-2 pt-2 border-t border-[#f0f0f1] flex items-center gap-3">
                 <Link to="/" className="text-[#2271b1] underline">
                   Ke Halaman Utama

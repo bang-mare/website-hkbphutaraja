@@ -8,6 +8,7 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
+  profileError: string | null;
   loading: boolean;
   isSupabaseReady: boolean;
   isPreviewSession: boolean;
@@ -69,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(isSupabaseConfigured);
   const [isPreviewSession, setIsPreviewSession] = useState<boolean>(false);
 
@@ -89,12 +91,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .maybeSingle();
 
         if (error) {
-          console.error('Gagal memuat profil:', error.message);
+          const msg = `Login berhasil, tetapi gagal memuat tabel profiles (${error.message}). Jalankan ulang migrasi SQL 001_initial_schema.sql (bagian GRANT & RLS) di Supabase SQL Editor.`;
+          console.warn(msg);
+          setProfileError(msg);
           return {
             profile: null,
-            error: `Login berhasil, tetapi gagal memuat tabel profiles (${error.message}). Pastikan migrasi SQL 001_initial_schema.sql sudah dijalankan di Supabase.`,
+            error: msg,
           };
         }
+
+        setProfileError(null);
 
         if (data) {
           const loaded = data as Profile;
@@ -121,10 +127,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(fallback);
         return { profile: fallback, error: null };
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Kesalahan tidak diketahui';
+        const errText = err instanceof Error ? err.message : 'Kesalahan tidak diketahui';
+        const msg = `Gagal memeriksa profil pengguna: ${errText}`;
+        setProfileError(msg);
         return {
           profile: null,
-          error: `Gagal memeriksa profil pengguna: ${msg}`,
+          error: msg,
         };
       }
     },
@@ -171,6 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }, 0);
       } else {
         setProfile(null);
+        setProfileError(null);
       }
       setLoading(false);
     });
@@ -227,6 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setUser(null);
     setProfile(null);
+    setProfileError(null);
   };
 
   const resetPassword = async (email: string) => {
@@ -281,6 +291,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         session,
         profile,
+        profileError,
         loading,
         isSupabaseReady: isSupabaseConfigured,
         isPreviewSession,

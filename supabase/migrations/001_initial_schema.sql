@@ -522,6 +522,32 @@ ALTER TABLE public.kehadiran ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.keuangan ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_log ENABLE ROW LEVEL SECURITY;
 
+-- HAK AKSES SKEMA & TABEL (RLS tetap menyaring setiap baris & operasi)
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
+GRANT SELECT ON
+  public.wijk,
+  public.media,
+  public.posts,
+  public.terms,
+  public.term_relationships,
+  public.comments,
+  public.menus,
+  public.menu_items,
+  public.widgets,
+  public.options,
+  public.ibadah_minggu,
+  public.phd_lingkungan
+TO anon;
+GRANT INSERT ON public.comments TO anon;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
+
+GRANT EXECUTE ON FUNCTION public.current_user_role() TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.has_any_role(TEXT[]) TO anon, authenticated, service_role;
+
 -- WIJK: Publik bisa baca; Admin/Pendeta/Sekretaris bisa kelola
 DROP POLICY IF EXISTS "wijk_public_read" ON public.wijk;
 CREATE POLICY "wijk_public_read" ON public.wijk FOR SELECT USING (true);

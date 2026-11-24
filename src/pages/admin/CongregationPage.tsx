@@ -38,8 +38,34 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
 
   // XLSX Import State
   const [importRows, setImportRows] = useState<Array<Record<string, unknown>>>([]);
+  const [importMode, setImportMode] = useState<'upsert' | 'skip'>('upsert');
+  const [inFileDuplicateAction, setInFileDuplicateAction] = useState<'suffix' | 'skip'>('suffix');
   const [importing, setImporting] = useState(false);
   const [monthFilter, setMonthFilter] = useState<number>(new Date().getMonth() + 1);
+
+  const normalizeExcelDate = (raw: unknown): string | null => {
+    const val = String(raw ?? '').trim();
+    if (!val || val === '-') return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+    const dmy = val.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+    if (dmy) {
+      const a = Number(dmy[1]);
+      const b = Number(dmy[2]);
+      let y = Number(dmy[3]);
+      if (y < 100) y += y >= 30 ? 1900 : 2000;
+      // Jika bagian pertama > 12 pasti DD/MM/YYYY, selain itu anggap DD/MM/YYYY (standar Indonesia)
+      const day = a > 12 || b <= 12 ? a : b;
+      const month = a > 12 || b <= 12 ? b : a;
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        return `${String(y).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      }
+    }
+    const parsed = new Date(val);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString().slice(0, 10);
+    }
+    return null;
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -100,6 +126,35 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
     });
   }, [jemaatList, monthFilter]);
 
+  const importStats = useMemo(() => {
+    const existingSet = new Set(
+      jemaatList
+        .map((j) => (j.no_induk || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+    const seenInFile = new Set<string>();
+    let inFileDupCount = 0;
+    let existingDbCount = 0;
+    let validCount = 0;
+
+    importRows.forEach((r) => {
+      const name = String(r.full_name || r.nama || r.nama_lengkap || '').trim();
+      if (!name) return;
+      validCount++;
+      const rawNo = String(r.no_induk || r.no_register || '').trim();
+      if (!rawNo || rawNo === '-') return;
+      const key = rawNo.toLowerCase();
+      if (seenInFile.has(key)) {
+        inFileDupCount++;
+      } else {
+        seenInFile.add(key);
+        if (existingSet.has(key)) existingDbCount++;
+      }
+    });
+
+    return { validCount, inFileDupCount, existingDbCount };
+  }, [importRows, jemaatList]);
+
   const resetForm = () => {
     setEditId(null);
     setNoInduk('');
@@ -144,7 +199,14 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
       : await supabase.from('jemaat').insert(payload);
 
     if (error) {
-      addNotice({ type: 'error', message: error.message });
+      if (error.message.includes('jemaat_no_induk_key')) {
+        addNotice({
+          type: 'error',
+          message: `No. Induk "${noInduk.trim()}" sudah terdaftar pada jemaat lain. Gunakan No. Induk unik atau edit data yang sudah ada.`,
+        });
+      } else {
+        addNotice({ type: 'error', message: error.message });
+      }
     } else {
       addNotice({ type: 'success', message: 'Data jemaat berhasil disimpan.' });
       resetForm();
@@ -196,6 +258,7 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
       raw: false,
     });
     setImportRows(rows);
+    e.target.value = '';
   };
 
   const handleCommitImport = async () => {
@@ -204,36 +267,95 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
     const wijkNameToId = new Map<string, string>();
     wijkList.forEach((w) => wijkNameToId.set(w.name.toLowerCase(), w.id));
 
-    const prepared = importRows
-      .filter((r) => String(r.full_name || r.nama || '').trim() !== '')
-      .map((r) => {
-        const wijkRaw = String(r.wijk || r.lingkungan || '').trim().toLowerCase();
-        const genderRaw = String(r.gender || r.jenis_kelamin || 'L').trim().toUpperCase();
-        return {
-          no_induk: String(r.no_induk || '').trim() || null,
-          full_name: String(r.full_name || r.nama || '').trim(),
-          gender: genderRaw === 'P' ? 'P' : 'L',
-          wijk_id: wijkNameToId.get(wijkRaw) || null,
-          birth_date: String(r.birth_date || r.tanggal_lahir || '').trim() || null,
-          marriage_date: String(r.marriage_date || r.tanggal_nikah || '').trim() || null,
-          baptism_date: String(r.baptism_date || '').trim() || null,
-          sidi_date: String(r.sidi_date || '').trim() || null,
-          family_role: String(r.family_role || 'Anggota Keluarga').trim(),
-          phone: String(r.phone || r.telepon || '').trim(),
-          address: String(r.address || r.alamat || '').trim(),
-          status_keanggotaan: 'aktif',
-          is_active: true,
-        };
-      });
+    const usedInBatch = new Map<string, number>();
+    const withNoInduk: Array<Record<string, unknown>> = [];
+    const withoutNoInduk: Array<Record<string, unknown>> = [];
+    let skippedInFile = 0;
 
-    const { error } = await supabase.from('jemaat').insert(prepared);
+    for (const r of importRows) {
+      const fullNameVal = String(r.full_name || r.nama || r.nama_lengkap || '').trim();
+      if (!fullNameVal) continue;
+
+      const wijkRaw = String(r.wijk || r.lingkungan || '')
+        .trim()
+        .toLowerCase()
+        .replace(/^wijk\s+/i, '');
+      const genderRaw = String(r.gender || r.jenis_kelamin || 'L').trim().toUpperCase();
+      const rawNo = String(r.no_induk || r.no_register || '').trim();
+
+      let finalNoInduk: string | null = !rawNo || rawNo === '-' ? null : rawNo;
+
+      if (finalNoInduk) {
+        const lowerKey = finalNoInduk.toLowerCase();
+        const prevCount = usedInBatch.get(lowerKey) || 0;
+        if (prevCount > 0) {
+          if (inFileDuplicateAction === 'skip') {
+            skippedInFile++;
+            continue;
+          }
+          // Beri akhiran unik deterministik (mis. HR-001-2, HR-001-3) agar sesama anggota keluarga tidak saling menimpa
+          let seq = prevCount + 1;
+          let candidate = `${finalNoInduk}-${seq}`;
+          while (usedInBatch.has(candidate.toLowerCase())) {
+            seq++;
+            candidate = `${finalNoInduk}-${seq}`;
+          }
+          usedInBatch.set(lowerKey, seq);
+          usedInBatch.set(candidate.toLowerCase(), 1);
+          finalNoInduk = candidate;
+        } else {
+          usedInBatch.set(lowerKey, 1);
+        }
+      }
+
+      const rowObj = {
+        no_induk: finalNoInduk,
+        full_name: fullNameVal,
+        gender: genderRaw === 'P' ? 'P' : 'L',
+        wijk_id: wijkNameToId.get(wijkRaw) || null,
+        birth_date: normalizeExcelDate(r.birth_date || r.tanggal_lahir),
+        marriage_date: normalizeExcelDate(r.marriage_date || r.tanggal_nikah),
+        baptism_date: normalizeExcelDate(r.baptism_date || r.tanggal_baptis),
+        sidi_date: normalizeExcelDate(r.sidi_date || r.tanggal_sidi),
+        family_role: String(r.family_role || r.peran_keluarga || 'Anggota Keluarga').trim(),
+        phone: String(r.phone || r.telepon || r.no_hp || '').trim(),
+        address: String(r.address || r.alamat || '').trim(),
+        status_keanggotaan: 'aktif',
+        is_active: true,
+      };
+
+      if (finalNoInduk) {
+        withNoInduk.push(rowObj);
+      } else {
+        withoutNoInduk.push(rowObj);
+      }
+    }
+
+    let importError: string | null = null;
+
+    if (withNoInduk.length > 0) {
+      const { error } = await supabase.from('jemaat').upsert(withNoInduk, {
+        onConflict: 'no_induk',
+        ignoreDuplicates: importMode === 'skip',
+      });
+      if (error) importError = error.message;
+    }
+
+    if (!importError && withoutNoInduk.length > 0) {
+      const { error } = await supabase.from('jemaat').insert(withoutNoInduk);
+      if (error) importError = error.message;
+    }
+
     setImporting(false);
-    if (error) {
-      addNotice({ type: 'error', message: `Gagal impor XLSX: ${error.message}` });
+    if (importError) {
+      addNotice({ type: 'error', message: `Gagal impor XLSX: ${importError}` });
     } else {
+      const totalProcessed = withNoInduk.length + withoutNoInduk.length;
       addNotice({
         type: 'success',
-        message: `${prepared.length} data jemaat berhasil diimpor.`,
+        message: `${totalProcessed} data jemaat berhasil diproses${
+          skippedInFile > 0 ? ` (${skippedInFile} baris duplikat dalam file dilewati)` : ''
+        }.`,
       });
       setImportRows([]);
       void loadData();
@@ -530,14 +652,14 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
       )}
 
       {tab === 'import' && (
-        <div className="bg-white border border-[#c3c4c7] p-5 space-y-4 max-w-4xl">
+        <div className="bg-white border border-[#c3c4c7] p-5 space-y-4 max-w-5xl">
           <h2 className="text-[16px] font-semibold text-[#1d2327]">
             Import Data Jemaat dari Excel (.xlsx / .csv)
           </h2>
           <p className="text-[#50575e]">
             Gunakan kolom standar: <code>no_induk</code>, <code>full_name</code>,{' '}
             <code>gender</code> (L/P), <code>wijk</code> (Letare, Exaudi, Judika, Galatia, Efesus, Jeremia),{' '}
-            <code>birth_date</code> (YYYY-MM-DD), <code>marriage_date</code>, <code>phone</code>,{' '}
+            <code>birth_date</code> (YYYY-MM-DD / DD-MM-YYYY), <code>marriage_date</code>, <code>phone</code>,{' '}
             <code>address</code>.
           </p>
 
@@ -565,23 +687,85 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
 
           {importRows.length > 0 && (
             <div className="space-y-3 pt-3 border-t border-[#f0f0f1]">
-              <div className="flex items-center justify-between">
+              {(importStats.existingDbCount > 0 || importStats.inFileDupCount > 0) && (
+                <div className="bg-[#fcf9e8] border border-[#c3c4c7] border-l-4 border-l-[#dba617] p-3 text-[12px] text-[#1d2327] space-y-1">
+                  <div className="font-semibold">Deteksi No. Induk Terdaftar / Ganda:</div>
+                  <ul className="list-disc pl-4 space-y-0.5 text-[#50575e]">
+                    {importStats.existingDbCount > 0 && (
+                      <li>
+                        <strong>{importStats.existingDbCount}</strong> baris memiliki{' '}
+                        <code>no_induk</code> yang sudah tersimpan di database.
+                      </li>
+                    )}
+                    {importStats.inFileDupCount > 0 && (
+                      <li>
+                        <strong>{importStats.inFileDupCount}</strong> baris memiliki{' '}
+                        <code>no_induk</code> yang sama di dalam berkas Excel (misalnya satu No. Register keluarga untuk beberapa anggota).
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-[#f6f7f7] border border-[#c3c4c7] p-3">
+                <div>
+                  <label className="block font-semibold text-[#1d2327] mb-1">
+                    Jika No. Induk Sudah Ada di Database
+                  </label>
+                  <select
+                    value={importMode}
+                    onChange={(e) => setImportMode(e.target.value as 'upsert' | 'skip')}
+                    className="w-full h-8 px-2 bg-white border border-[#8c8f94] rounded-[2px]"
+                  >
+                    <option value="upsert">Perbarui data jemaat yang ada (Upsert)</option>
+                    <option value="skip">Lewati baris yang sudah ada</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-[#1d2327] mb-1">
+                    Jika No. Induk Ganda di Dalam Berkas Excel
+                  </label>
+                  <select
+                    value={inFileDuplicateAction}
+                    onChange={(e) => setInFileDuplicateAction(e.target.value as 'suffix' | 'skip')}
+                    className="w-full h-8 px-2 bg-white border border-[#8c8f94] rounded-[2px]"
+                  >
+                    <option value="suffix">Beri akhiran otomatis (-2, -3) agar tetap tersimpan</option>
+                    <option value="skip">Lewati baris duplikat dalam berkas</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-semibold text-[#1d2327]">
-                  Pratinjau {importRows.length} baris siap diimpor:
+                  Pratinjau {importStats.validCount} baris valid siap diproses (dari {importRows.length} baris berkas):
                 </span>
-                <button
-                  type="button"
-                  disabled={importing}
-                  onClick={() => void handleCommitImport()}
-                  className="px-4 py-1.5 bg-[#00a32a] hover:bg-[#008a20] text-white font-medium rounded-[3px] cursor-pointer"
-                >
-                  {importing ? 'Mengimpor...' : `Impor ${importRows.length} Baris ke Supabase`}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={importing}
+                    onClick={() => setImportRows([])}
+                    className="px-3 py-1.5 border border-[#c3c4c7] bg-[#f6f7f7] hover:bg-[#f0f0f1] text-[#50575e] rounded-[3px] cursor-pointer"
+                  >
+                    Bersihkan
+                  </button>
+                  <button
+                    type="button"
+                    disabled={importing || importStats.validCount === 0}
+                    onClick={() => void handleCommitImport()}
+                    className="px-4 py-1.5 bg-[#00a32a] hover:bg-[#008a20] disabled:opacity-60 text-white font-medium rounded-[3px] cursor-pointer"
+                  >
+                    {importing
+                      ? 'Mengimpor...'
+                      : `Proses ${importStats.validCount} Baris ke Supabase`}
+                  </button>
+                </div>
               </div>
               <div className="max-h-64 overflow-auto border border-[#c3c4c7]">
                 <table className="w-full border-collapse text-[12px]">
                   <thead>
                     <tr className="bg-[#f6f7f7] border-b border-[#c3c4c7] text-left">
+                      <th className="p-2">No. Induk</th>
                       <th className="p-2">Nama</th>
                       <th className="p-2">L/P</th>
                       <th className="p-2">Wijk</th>
@@ -592,11 +776,18 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
                   <tbody className="divide-y divide-[#f0f0f1]">
                     {importRows.slice(0, 20).map((r, i) => (
                       <tr key={i}>
-                        <td className="p-2">{String(r.full_name || r.nama || '-')}</td>
-                        <td className="p-2">{String(r.gender || 'L')}</td>
-                        <td className="p-2">{String(r.wijk || '-')}</td>
-                        <td className="p-2 tabular-nums">{String(r.birth_date || '-')}</td>
-                        <td className="p-2">{String(r.phone || '-')}</td>
+                        <td className="p-2 tabular-nums">
+                          {String(r.no_induk || r.no_register || '-')}
+                        </td>
+                        <td className="p-2">
+                          {String(r.full_name || r.nama || r.nama_lengkap || '-')}
+                        </td>
+                        <td className="p-2">{String(r.gender || r.jenis_kelamin || 'L')}</td>
+                        <td className="p-2">{String(r.wijk || r.lingkungan || '-')}</td>
+                        <td className="p-2 tabular-nums">
+                          {String(r.birth_date || r.tanggal_lahir || '-')}
+                        </td>
+                        <td className="p-2">{String(r.phone || r.telepon || r.no_hp || '-')}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -163,6 +163,7 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
     'skip_existing' | 'update_existing' | 'insert_all'
   >('skip_existing');
   const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState('');
   const [monthFilter, setMonthFilter] = useState<number>(new Date().getMonth() + 1);
 
   // Hapus Kolektif State
@@ -243,27 +244,47 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('jemaat')
-      .select('*, wijk:wijk(id, name)')
-      .order('full_name', { ascending: true });
+    const PAGE_SIZE = 1000;
+    const allRows: Array<Record<string, unknown>> = [];
+    let pageFrom = 0;
+    let fetchError: { message: string } | null = null;
+
+    while (true) {
+      const { data, error } = await supabase
+        .from('jemaat')
+        .select('*, wijk:wijk(id, name)')
+        .order('full_name', { ascending: true })
+        .order('id', { ascending: true })
+        .range(pageFrom, pageFrom + PAGE_SIZE - 1);
+
+      if (error) {
+        fetchError = error;
+        break;
+      }
+
+      const batch = (data as Array<Record<string, unknown>>) || [];
+      allRows.push(...batch);
+      if (batch.length < PAGE_SIZE) {
+        break;
+      }
+      pageFrom += PAGE_SIZE;
+    }
 
     setLoading(false);
-    if (error) {
-      checkSchemaMismatch(error.message);
-      addNotice({ type: 'error', message: error.message });
+    if (fetchError) {
+      checkSchemaMismatch(fetchError.message);
+      addNotice({ type: 'error', message: fetchError.message });
     } else {
-      const rows = (data as Array<Record<string, unknown>>) || [];
       if (
-        rows.length > 0 &&
-        'no_induk' in rows[0] &&
-        !('no_registrasi' in rows[0])
+        allRows.length > 0 &&
+        'no_induk' in allRows[0] &&
+        !('no_registrasi' in allRows[0])
       ) {
         setMigrationNeeded(true);
       } else {
         setMigrationNeeded(false);
       }
-      setJemaatList(rows as unknown as JemaatRecord[]);
+      setJemaatList(allRows as unknown as JemaatRecord[]);
     }
 
     await loadPermohonan();
@@ -731,15 +752,59 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
 
   const handleCommitImport = async () => {
     if (importRows.length === 0) return;
+    if (!isSupabaseConfigured || !supabase) {
+      addNotice({
+        type: 'error',
+        message:
+          'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk mengimpor data jemaat ke database.',
+      });
+      return;
+    }
+
     setImporting(true);
+    setImportProgress('Menyiapkan data...');
 
     const wijkNameToId = new Map<string, string>();
     wijkList.forEach((w) => wijkNameToId.set(w.name.toLowerCase(), w.id));
 
     const existingMap = new Map<string, string>();
-    jemaatList.forEach((j) => {
-      existingMap.set(makeMemberKey(j.no_registrasi, j.full_name), j.id);
-    });
+    if (duplicatePolicy !== 'insert_all') {
+      const PAGE_SIZE = 1000;
+      let pageFrom = 0;
+      let existingLookupFailed = false;
+
+      while (true) {
+        const { data: existingPage, error: existingErr } = await supabase
+          .from('jemaat')
+          .select('id, no_registrasi, full_name')
+          .order('id', { ascending: true })
+          .range(pageFrom, pageFrom + PAGE_SIZE - 1);
+
+        if (existingErr) {
+          existingLookupFailed = true;
+          break;
+        }
+
+        const rows =
+          (existingPage as Array<{
+            id: string;
+            no_registrasi: string | null;
+            full_name: string;
+          }>) || [];
+        rows.forEach((j) => {
+          existingMap.set(makeMemberKey(j.no_registrasi, j.full_name), j.id);
+        });
+
+        if (rows.length < PAGE_SIZE) break;
+        pageFrom += PAGE_SIZE;
+      }
+
+      if (existingLookupFailed) {
+        jemaatList.forEach((j) => {
+          existingMap.set(makeMemberKey(j.no_registrasi, j.full_name), j.id);
+        });
+      }
+    }
 
     const seenInBatch = new Set<string>();
     const toInsert: Array<Record<string, unknown>> = [];
@@ -842,37 +907,55 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
       toInsert.push(payload);
     }
 
-    if (!isSupabaseConfigured || !supabase) {
-      setImporting(false);
-      addNotice({
-        type: 'error',
-        message:
-          'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk mengimpor data jemaat ke database.',
-      });
-      return;
-    }
-
     let importError: string | null = null;
+    let insertedCount = 0;
+    let updatedCount = 0;
 
     if (toInsert.length > 0) {
-      const { error } = await supabase.from('jemaat').insert(toInsert);
-      if (error) importError = error.message;
-    }
-
-    if (!importError && toUpdate.length > 0) {
-      for (const item of toUpdate) {
-        const { error } = await supabase
-          .from('jemaat')
-          .update(item.payload)
-          .eq('id', item.id);
+      const INSERT_CHUNK_SIZE = 200;
+      for (let i = 0; i < toInsert.length; i += INSERT_CHUNK_SIZE) {
+        const chunk = toInsert.slice(i, i + INSERT_CHUNK_SIZE);
+        setImportProgress(
+          `Menyimpan data baru (${Math.min(i + chunk.length, toInsert.length)} / ${toInsert.length})...`
+        );
+        const { error } = await supabase.from('jemaat').insert(chunk);
         if (error) {
           importError = error.message;
           break;
         }
+        insertedCount += chunk.length;
       }
     }
 
+    if (!importError && toUpdate.length > 0) {
+      const UPDATE_CONCURRENCY = 15;
+      for (let i = 0; i < toUpdate.length; i += UPDATE_CONCURRENCY) {
+        const batch = toUpdate.slice(i, i + UPDATE_CONCURRENCY);
+        setImportProgress(
+          `Memperbarui data (${Math.min(i + batch.length, toUpdate.length)} / ${toUpdate.length})...`
+        );
+        const results = await Promise.all(
+          batch.map((item) =>
+            supabase!.from('jemaat').update(item.payload).eq('id', item.id)
+          )
+        );
+        const failed = results.find((r) => r.error);
+        if (failed?.error) {
+          importError = failed.error.message;
+          break;
+        }
+        updatedCount += batch.length;
+      }
+    }
+
+    if (insertedCount > 0 || updatedCount > 0) {
+      setImportProgress('Memuat ulang seluruh data jemaat...');
+      await loadData();
+    }
+
     setImporting(false);
+    setImportProgress('');
+
     if (importError) {
       if (checkSchemaMismatch(importError)) {
         addNotice({
@@ -881,17 +964,22 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
             'Gagal impor XLSX: kolom database belum diperbarui ke no_registrasi (non-unik). Jalankan SQL migrasi 002_jemaat_no_registrasi.sql di Supabase SQL Editor.',
         });
       } else {
-        addNotice({ type: 'error', message: `Gagal impor XLSX: ${importError}` });
+        addNotice({
+          type: 'error',
+          message:
+            insertedCount > 0 || updatedCount > 0
+              ? `Sebagian tersimpan (${insertedCount} ditambah, ${updatedCount} diperbarui), lalu terjadi kendala: ${importError}`
+              : `Gagal impor XLSX: ${importError}`,
+        });
       }
     } else {
       addNotice({
         type: 'success',
-        message: `Impor selesai: ${toInsert.length} anggota ditambahkan${
-          toUpdate.length > 0 ? `, ${toUpdate.length} diperbarui` : ''
+        message: `Impor selesai: ${insertedCount} anggota ditambahkan${
+          updatedCount > 0 ? `, ${updatedCount} diperbarui` : ''
         }${skippedCount > 0 ? `, ${skippedCount} anggota yang sudah ada dilewati` : ''}.`,
       });
       setImportRows([]);
-      void loadData();
     }
   };
 
@@ -2177,7 +2265,7 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
                     className="px-4 py-1.5 bg-[#00a32a] hover:bg-[#008a20] disabled:opacity-60 text-white font-medium rounded-[3px] cursor-pointer"
                   >
                     {importing
-                      ? 'Mengimpor...'
+                      ? importProgress || 'Mengimpor...'
                       : `Proses ${importStats.validCount} Baris`}
                   </button>
                 </div>

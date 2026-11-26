@@ -162,10 +162,35 @@ export function DashboardPage() {
         }
 
         if (wijkRes.data && wijkRes.data.length > 0) {
-          const { data: jemaatWijkRows } = await supabase!
-            .from('jemaat')
-            .select('wijk_id, birth_date, full_name, id')
-            .eq('status_keanggotaan', 'aktif');
+          const PAGE_SIZE = 1000;
+          const jemaatWijkRows: Array<{
+            wijk_id: string | null;
+            birth_date: string | null;
+            full_name: string;
+            id: string;
+          }> = [];
+          let from = 0;
+
+          while (true) {
+            const { data: batch, error: batchErr } = await supabase!
+              .from('jemaat')
+              .select('wijk_id, birth_date, full_name, id')
+              .eq('status_keanggotaan', 'aktif')
+              .order('id', { ascending: true })
+              .range(from, from + PAGE_SIZE - 1);
+
+            if (batchErr || !batch) break;
+            jemaatWijkRows.push(
+              ...(batch as Array<{
+                wijk_id: string | null;
+                birth_date: string | null;
+                full_name: string;
+                id: string;
+              }>)
+            );
+            if (batch.length < PAGE_SIZE) break;
+            from += PAGE_SIZE;
+          }
 
           const countMap = new Map<string, number>();
           const upcomingBdays: BirthdayPerson[] = [];
@@ -176,7 +201,7 @@ export function DashboardPage() {
           const currentMonth = today.getMonth() + 1;
           const currentDay = today.getDate();
 
-          (jemaatWijkRows || []).forEach((row) => {
+          jemaatWijkRows.forEach((row) => {
             if (row.wijk_id) {
               countMap.set(row.wijk_id, (countMap.get(row.wijk_id) || 0) + 1);
             }

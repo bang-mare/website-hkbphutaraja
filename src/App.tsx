@@ -18,6 +18,7 @@ import { WartaPublicPage } from './pages/public/WartaPublicPage';
 import { BlogPublicPage } from './pages/public/BlogPublicPage';
 import { GalleryPublicPage } from './pages/public/GalleryPublicPage';
 import { ContactPublicPage } from './pages/public/ContactPublicPage';
+import { DataJemaatPublicPage } from './pages/public/DataJemaatPublicPage';
 import { StaticPagePublic } from './pages/public/StaticPagePublic';
 
 // Admin Pages
@@ -68,6 +69,7 @@ export default function App() {
               <Route path="/tag/:slug" element={<BlogPublicPage filterMode="tag" />} />
               <Route path="/galeri" element={<GalleryPublicPage />} />
               <Route path="/galeri/:slug" element={<GalleryPublicPage />} />
+              <Route path="/data-jemaat" element={<DataJemaatPublicPage />} />
               <Route path="/kontak" element={<ContactPublicPage />} />
               {/* Halaman Statis Dinamis (Page) */}
               <Route path="/:slug" element={<StaticPagePublic />} />
@@ -221,6 +223,14 @@ export default function App() {
                 element={
                   <ProtectedRoute requiredCapability="manage_jemaat">
                     <CongregationPage tab="list" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="jemaat/permohonan"
+                element={
+                  <ProtectedRoute requiredCapability="manage_jemaat">
+                    <CongregationPage tab="requests" />
                   </ProtectedRoute>
                 }
               />

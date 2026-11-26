@@ -242,6 +242,7 @@ export type HomepageSectionId =
   | 'hero'
   | 'quick_links'
   | 'announcements'
+  | 'jemaat_stats'
   | 'schedule'
   | 'warta'
   | 'news'
@@ -375,4 +376,133 @@ export interface KeuanganRecord {
   created_at: string;
   updated_at: string;
 }
+
+export type PermohonanJenis =
+  | 'Tambah Anggota/Anak Lahir'
+  | 'Perbaikan Biodata'
+  | 'Pindah/Mutasi'
+  | 'Meninggal';
+
+export type PermohonanStatus =
+  | 'menunggu_sintua'
+  | 'terverifikasi_sintua'
+  | 'disetujui'
+  | 'ditolak';
+
+export interface PermohonanAnggotaDraft {
+  nama_lengkap: string;
+  tempat_lahir: string;
+  tanggal_lahir: string;
+  jenis_kelamin: 'L' | 'P';
+  status_keluarga: 'Anak' | 'Ama/Suami' | 'Ina/Istri';
+}
+
+export type PermohonanEditableFieldKey =
+  | 'full_name'
+  | 'no_registrasi'
+  | 'family_role'
+  | 'gender'
+  | 'birth_place'
+  | 'birth_date'
+  | 'wijk_id'
+  | 'address'
+  | 'phone'
+  | 'baptism_date'
+  | 'sidi_date'
+  | 'marriage_date'
+  | 'status_keanggotaan';
+
+export interface PermohonanPerubahanField {
+  field: PermohonanEditableFieldKey;
+  field_label: string;
+  nama_anggota: string;
+  data_lama: string;
+  data_benar: string;
+}
+
+export interface PermohonanAttachmentMeta {
+  fileName: string;
+  fileSize?: number;
+  mimeType?: string;
+  previewDataUrl?: string;
+}
+
+export interface PermohonanPerubahanRecord {
+  id: string;
+  request_code: string;
+  jenis_permohonan: PermohonanJenis;
+  wijk_id: string | null;
+  wijk_name: string;
+  no_registrasi: string;
+  nama_pemohon: string;
+  nama_suami: string;
+  nama_istri: string;
+  email_pemohon: string;
+  alamat_pemohon: string;
+  no_hp_pemohon: string;
+  verifikasi_identitas: string;
+  daftar_anggota: PermohonanAnggotaDraft[];
+  daftar_perubahan: PermohonanPerubahanField[];
+  kelengkapan_dokumen: Record<string, PermohonanAttachmentMeta>;
+  detail_perubahan: string;
+  status_verifikasi: PermohonanStatus;
+  catatan_sintua: string;
+  catatan_admin: string;
+  verified_by?: string | null;
+  verified_at?: string | null;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PermohonanPublicStatusRecord {
+  id: string;
+  request_code: string;
+  jenis_permohonan: PermohonanJenis;
+  wijk_name: string;
+  status_verifikasi: PermohonanStatus;
+  detail_perubahan: string;
+  daftar_anggota: PermohonanAnggotaDraft[];
+  daftar_perubahan: PermohonanPerubahanField[];
+  catatan_sintua: string;
+  catatan_admin: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PublicJemaatBirthdayItem {
+  id: string;
+  full_name: string;
+  wijk_name: string;
+  birth_date: string;
+  usia_baru: number;
+  hari_lagi: number;
+}
+
+export interface PublicJemaatWijkStat {
+  id: string;
+  name: string;
+  jiwa: number;
+  kk: number;
+  persentase: number;
+}
+
+export interface PublicJemaatStats {
+  total_jiwa: number;
+  total_kk: number;
+  per_wijk: PublicJemaatWijkStat[];
+  kategorial: {
+    sekolah_minggu: number;
+    remaja_nhkbp: number;
+    punguan_ama: number;
+    punguan_ina: number;
+    lansia: number;
+    sudah_baptis: number;
+    sudah_sidi: number;
+    sudah_menikah: number;
+  };
+  ulang_tahun_minggu_ini: PublicJemaatBirthdayItem[];
+}
+
 

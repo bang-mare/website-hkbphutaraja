@@ -20,7 +20,14 @@ import {
   resolvePostFeaturedImage,
 } from '../../lib/publicData';
 import { PostThumbnail } from '../../components/PostThumbnail';
-import type { HomepageSectionConfig, IbadahMinggu, PostRecord } from '../../types/cms';
+import { PublicJemaatStatsSection } from '../../components/PublicJemaatStatsSection';
+import { createEmptyPublicStats, fetchPublicJemaatStats } from '../../lib/jemaatData';
+import type {
+  HomepageSectionConfig,
+  IbadahMinggu,
+  PostRecord,
+  PublicJemaatStats,
+} from '../../types/cms';
 
 function getGridClass(columns?: 1 | 2 | 3 | 4, defaultCols: 1 | 2 | 3 | 4 = 3): string {
   const cols = columns || defaultCols;
@@ -68,7 +75,16 @@ export function PublicHomePage() {
   const [ibadahList, setIbadahList] = useState<IbadahMinggu[]>([]);
   const [wartaList, setWartaList] = useState<PostRecord[]>([]);
   const [beritaList, setBeritaList] = useState<PostRecord[]>([]);
+  const [jemaatStats, setJemaatStats] = useState<PublicJemaatStats>(() =>
+    createEmptyPublicStats(wijkList)
+  );
+  const [loadingJemaatStats, setLoadingJemaatStats] = useState(false);
   const [heroImgError, setHeroImgError] = useState(false);
+
+  const showJemaatStats = useMemo(
+    () => layoutSections.some((s) => s.id === 'jemaat_stats' && s.enabled),
+    [layoutSections]
+  );
 
   useEffect(() => {
     Promise.all([
@@ -81,6 +97,20 @@ export function PublicHomePage() {
       setBeritaList(berita);
     });
   }, [scheduleLimit, wartaLimit, newsLimit]);
+
+  useEffect(() => {
+    if (!showJemaatStats) return;
+    let active = true;
+    setLoadingJemaatStats(true);
+    fetchPublicJemaatStats(wijkList).then(({ stats }) => {
+      if (!active) return;
+      setJemaatStats(stats);
+      setLoadingJemaatStats(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [showJemaatStats, wijkList]);
 
   const primaryColor = options.theme_primary_color || '#0f294a';
   const accentColor = options.theme_accent_color || '#d97706';
@@ -377,6 +407,23 @@ export function PublicHomePage() {
               >
                 Baca selengkapnya &rarr;
               </Link>
+            </div>
+          </section>
+        );
+
+      case 'jemaat_stats':
+        return (
+          <section key="jemaat_stats" className="py-10 border-t border-[#e2e8f0]/80">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <PublicJemaatStatsSection
+                stats={jemaatStats}
+                loading={loadingJemaatStats}
+                primaryColor={primaryColor}
+                accentColor={accentColor}
+                subtitle={section.subtitle || 'Statistik Ruas Ni Huria (Aktif)'}
+                title={section.title || 'Skala Pelayanan & Demografi Jemaat'}
+                showCtaBar
+              />
             </div>
           </section>
         );

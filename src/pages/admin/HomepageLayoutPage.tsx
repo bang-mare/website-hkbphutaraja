@@ -49,6 +49,12 @@ const SECTION_META: Record<HomepageSectionId, SectionDescriptor> = {
     description: 'Pita pengumuman singkat dari pos terbaru berkategori Pengumuman (otomatis tersembunyi jika kosong).',
     hasTitle: true,
   },
+  jemaat_stats: {
+    name: 'Statistik & Ulang Tahun Jemaat',
+    description: 'Ringkasan total jiwa aktif, kepala keluarga, sebaran 6 Wijk, demografi kategorial HKBP, dan ulang tahun minggu ini.',
+    hasSubtitle: true,
+    hasTitle: true,
+  },
   schedule: {
     name: 'Jadwal Ibadah Terdekat',
     description: 'Daftar ibadah Minggu & kategorial terdekat beserta tautan ke jadwal lengkap.',
@@ -217,7 +223,7 @@ export function HomepageLayoutPage() {
 
       <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* KOLOM KIRI: DAFTAR SEKSI & PENGATURAN */}
-        <div className="lg:col-span-7 space-y-3">
+        <div className="lg:col-span-7 min-w-0 space-y-3">
           <div className="bg-white border border-[#c3c4c7] p-3 flex flex-wrap items-center justify-between gap-2 shadow-[0_1px_1px_rgba(0,0,0,0.04)]">
             <div className="text-[12px] text-[#50575e]">
               <strong className="text-[#1d2327]">{enabledSections.length}</strong> bagian tampil &middot;{' '}
@@ -334,7 +340,7 @@ export function HomepageLayoutPage() {
                         type="button"
                         onClick={() => updateItem(item.id, { enabled: !item.enabled })}
                         title={item.enabled ? 'Sembunyikan dari beranda' : 'Tampilkan di beranda'}
-                        className={`inline-flex items-center gap-1 px-2.5 h-7 rounded-[3px] border text-[12px] font-medium cursor-pointer ${
+                        className={`inline-flex items-center gap-1 px-2.5 h-9 sm:h-7 rounded-[3px] border text-[12px] font-medium cursor-pointer ${
                           item.enabled
                             ? 'bg-[#edfaef] border-[#00a32a]/40 text-[#007017] hover:bg-[#dcf5e0]'
                             : 'bg-white border-[#c3c4c7] text-[#50575e] hover:bg-[#f6f7f7]'
@@ -358,7 +364,7 @@ export function HomepageLayoutPage() {
                         disabled={idx === 0}
                         onClick={() => moveItem(idx, idx - 1)}
                         title="Pindah ke atas"
-                        className="w-7 h-7 inline-flex items-center justify-center border border-[#c3c4c7] bg-white hover:bg-[#f6f7f7] disabled:opacity-35 rounded-[3px] cursor-pointer"
+                        className="w-9 h-9 sm:w-7 sm:h-7 inline-flex items-center justify-center border border-[#c3c4c7] bg-white hover:bg-[#f6f7f7] disabled:opacity-35 rounded-[3px] cursor-pointer"
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
@@ -367,7 +373,7 @@ export function HomepageLayoutPage() {
                         disabled={idx === layout.length - 1}
                         onClick={() => moveItem(idx, idx + 1)}
                         title="Pindah ke bawah"
-                        className="w-7 h-7 inline-flex items-center justify-center border border-[#c3c4c7] bg-white hover:bg-[#f6f7f7] disabled:opacity-35 rounded-[3px] cursor-pointer"
+                        className="w-9 h-9 sm:w-7 sm:h-7 inline-flex items-center justify-center border border-[#c3c4c7] bg-white hover:bg-[#f6f7f7] disabled:opacity-35 rounded-[3px] cursor-pointer"
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
                       </button>
@@ -377,7 +383,7 @@ export function HomepageLayoutPage() {
                           setExpandedId(isExpanded ? null : item.id)
                         }
                         title="Pengaturan detail bagian"
-                        className="w-7 h-7 inline-flex items-center justify-center border border-[#c3c4c7] bg-[#f6f7f7] hover:bg-[#f0f0f1] rounded-[3px] cursor-pointer"
+                        className="w-9 h-9 sm:w-7 sm:h-7 inline-flex items-center justify-center border border-[#c3c4c7] bg-[#f6f7f7] hover:bg-[#f0f0f1] rounded-[3px] cursor-pointer"
                       >
                         {isExpanded ? (
                           <ChevronUp className="w-3.5 h-3.5" />
@@ -510,8 +516,8 @@ export function HomepageLayoutPage() {
         </div>
 
         {/* KOLOM KANAN: PRATINJAU STRUKTUR BERANDA */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white border border-[#c3c4c7] p-4 space-y-3 shadow-[0_1px_1px_rgba(0,0,0,0.04)] sticky top-12">
+        <div className="lg:col-span-5 min-w-0 space-y-4">
+          <div className="bg-white border border-[#c3c4c7] p-4 space-y-3 shadow-[0_1px_1px_rgba(0,0,0,0.04)] lg:sticky lg:top-12">
             <div className="flex items-center justify-between pb-2 border-b border-[#f0f0f1]">
               <div className="flex items-center gap-2 font-semibold text-[#1d2327]">
                 <LayoutTemplate className="w-4 h-4 text-[#2271b1]" />

@@ -200,6 +200,7 @@ export function getAdminMenuForRole(role: UserRole | undefined | null): AdminMen
       capability: 'manage_jemaat',
       submenus: [
         { label: 'Data Jemaat', path: '/admin/jemaat' },
+        { label: 'Permohonan Perubahan', path: '/admin/jemaat/permohonan' },
         { label: 'Import XLSX', path: '/admin/jemaat/import' },
         { label: 'Ulang Tahun', path: '/admin/jemaat/ulang-tahun' },
         { label: 'Ulang Tahun Pernikahan', path: '/admin/jemaat/pernikahan' },

@@ -170,7 +170,7 @@ export function WidgetsPage() {
         </div>
 
         {/* Daftar Area Widget */}
-        <div className="lg:col-span-8 space-y-4">
+        <div className="lg:col-span-8 min-w-0 space-y-4">
           {loading ? (
             <div className="bg-white border border-[#c3c4c7] p-6 text-center text-[#50575e]">
               Memuat widget...
@@ -198,7 +198,7 @@ export function WidgetsPage() {
                           key={w.id}
                           className="border border-[#c3c4c7] bg-[#f6f7f7] p-3 space-y-2"
                         >
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
                             <input
                               type="text"
                               value={w.title}
@@ -209,14 +209,14 @@ export function WidgetsPage() {
                                   )
                                 )
                               }
-                              className="flex-1 h-7 px-2 bg-white border border-[#8c8f94] rounded-[2px] font-semibold"
+                              className="flex-1 min-w-0 h-8 sm:h-7 px-2 bg-white border border-[#8c8f94] rounded-[2px] font-semibold"
                             />
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5 shrink-0">
                               <button
                                 type="button"
                                 disabled={idx === 0}
                                 onClick={() => void moveWidget(areaWidgets, idx, -1)}
-                                className="p-1 bg-white border border-[#c3c4c7] rounded disabled:opacity-40 cursor-pointer"
+                                className="w-9 h-9 sm:w-7 sm:h-7 inline-flex items-center justify-center bg-white border border-[#c3c4c7] rounded disabled:opacity-40 cursor-pointer"
                               >
                                 <ArrowUp className="w-3.5 h-3.5" />
                               </button>
@@ -224,14 +224,14 @@ export function WidgetsPage() {
                                 type="button"
                                 disabled={idx === areaWidgets.length - 1}
                                 onClick={() => void moveWidget(areaWidgets, idx, 1)}
-                                className="p-1 bg-white border border-[#c3c4c7] rounded disabled:opacity-40 cursor-pointer"
+                                className="w-9 h-9 sm:w-7 sm:h-7 inline-flex items-center justify-center bg-white border border-[#c3c4c7] rounded disabled:opacity-40 cursor-pointer"
                               >
                                 <ArrowDown className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 type="button"
                                 onClick={() => void handleDeleteWidget(w.id)}
-                                className="p-1 bg-white border border-[#c3c4c7] text-[#d63638] rounded cursor-pointer"
+                                className="w-9 h-9 sm:w-7 sm:h-7 inline-flex items-center justify-center bg-white border border-[#c3c4c7] text-[#d63638] rounded cursor-pointer"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>

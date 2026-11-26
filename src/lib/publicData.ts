@@ -34,6 +34,12 @@ export const DEFAULT_HOMEPAGE_LAYOUT: HomepageSectionConfig[] = [
     title: 'Pengumuman',
   },
   {
+    id: 'jemaat_stats',
+    enabled: true,
+    subtitle: 'Statistik Ruas Ni Huria (Aktif)',
+    title: 'Skala Pelayanan & Demografi Jemaat',
+  },
+  {
     id: 'schedule',
     enabled: true,
     subtitle: 'Jadwal Pelayanan Terdekat',
@@ -222,9 +228,10 @@ export const DEFAULT_HEADER_MENU_ITEMS: MenuItemRecord[] = [
   { id: 'dm-2', menu_id: 'default', parent_id: null, title: 'Tentang Kami', item_type: 'custom', object_id: null, url: '/tentang-kami', target: '_self', sort_order: 2, created_at: '', updated_at: '' },
   { id: 'dm-3', menu_id: 'default', parent_id: null, title: 'Jadwal Ibadah', item_type: 'custom', object_id: null, url: '/jadwal-ibadah', target: '_self', sort_order: 3, created_at: '', updated_at: '' },
   { id: 'dm-4', menu_id: 'default', parent_id: null, title: 'Warta Jemaat', item_type: 'custom', object_id: null, url: '/warta', target: '_self', sort_order: 4, created_at: '', updated_at: '' },
-  { id: 'dm-5', menu_id: 'default', parent_id: null, title: 'Berita', item_type: 'custom', object_id: null, url: '/berita', target: '_self', sort_order: 5, created_at: '', updated_at: '' },
-  { id: 'dm-6', menu_id: 'default', parent_id: null, title: 'Galeri', item_type: 'custom', object_id: null, url: '/galeri', target: '_self', sort_order: 6, created_at: '', updated_at: '' },
-  { id: 'dm-7', menu_id: 'default', parent_id: null, title: 'Kontak', item_type: 'custom', object_id: null, url: '/kontak', target: '_self', sort_order: 7, created_at: '', updated_at: '' },
+  { id: 'dm-8', menu_id: 'default', parent_id: null, title: 'Data Jemaat', item_type: 'custom', object_id: null, url: '/data-jemaat', target: '_self', sort_order: 5, created_at: '', updated_at: '' },
+  { id: 'dm-5', menu_id: 'default', parent_id: null, title: 'Berita', item_type: 'custom', object_id: null, url: '/berita', target: '_self', sort_order: 6, created_at: '', updated_at: '' },
+  { id: 'dm-6', menu_id: 'default', parent_id: null, title: 'Galeri', item_type: 'custom', object_id: null, url: '/galeri', target: '_self', sort_order: 7, created_at: '', updated_at: '' },
+  { id: 'dm-7', menu_id: 'default', parent_id: null, title: 'Kontak', item_type: 'custom', object_id: null, url: '/kontak', target: '_self', sort_order: 8, created_at: '', updated_at: '' },
 ];
 
 export const DEFAULT_WIDGETS: WidgetRecord[] = [

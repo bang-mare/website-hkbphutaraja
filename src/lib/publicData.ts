@@ -263,6 +263,9 @@ export const DEFAULT_WIDGETS: WidgetRecord[] = [
   },
 ];
 
+const SUPABASE_REQUIRED_ERROR =
+  'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase (VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY) untuk menyimpan pengaturan ke database.';
+
 // ==============================================================================
 // OPTIONS (PENGATURAN & KUSTOMISASI TEMA)
 // ==============================================================================
@@ -289,8 +292,7 @@ export async function saveSiteOptions(
   autoload = true
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured || !supabase) {
-    Object.assign(DEFAULT_SITE_OPTIONS, updates);
-    return { error: null };
+    return { error: SUPABASE_REQUIRED_ERROR };
   }
 
   const rows = Object.entries(updates).map(([option_name, option_value]) => ({
@@ -311,13 +313,7 @@ export async function fetchMenusAndItems(): Promise<{
   items: MenuItemRecord[];
 }> {
   if (!isSupabaseConfigured || !supabase) {
-    return {
-      menus: [
-        { id: 'default', name: 'Menu Utama', slug: 'menu-utama', location: 'header', created_at: '', updated_at: '' },
-        { id: 'footer', name: 'Menu Footer', slug: 'menu-footer', location: 'footer', created_at: '', updated_at: '' },
-      ],
-      items: DEFAULT_HEADER_MENU_ITEMS,
-    };
+    return { menus: [], items: [] };
   }
 
   const [menusRes, itemsRes] = await Promise.all([
@@ -372,17 +368,24 @@ export async function saveMenuStructure(
   }>
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured || !supabase) {
-    return { error: null };
+    return { error: SUPABASE_REQUIRED_ERROR };
   }
 
   // Pastikan hanya satu menu yang memakai lokasi tersebut
   if (location) {
-    await supabase.from('menus').update({ location: null }).eq('location', location).neq('id', menuId);
+    const { error: resetErr } = await supabase
+      .from('menus')
+      .update({ location: null })
+      .eq('location', location)
+      .neq('id', menuId);
+    if (resetErr) return { error: resetErr.message };
   }
   const { error: menuErr } = await supabase.from('menus').update({ location }).eq('id', menuId);
   if (menuErr) return { error: menuErr.message };
 
-  await supabase.from('menu_items').delete().eq('menu_id', menuId);
+  const { error: delErr } = await supabase.from('menu_items').delete().eq('menu_id', menuId);
+  if (delErr) return { error: delErr.message };
+
   if (items.length > 0) {
     const idMap = new Map<string, string>();
     // Insert level atas dulu agar parent_id valid
@@ -426,12 +429,12 @@ export async function saveMenuStructure(
   return { error: null };
 }
 
-export async function createMenuRecord(name: string, slug: string): Promise<{ menu: MenuRecord | null; error: string | null }> {
+export async function createMenuRecord(
+  name: string,
+  slug: string
+): Promise<{ menu: MenuRecord | null; error: string | null }> {
   if (!isSupabaseConfigured || !supabase) {
-    return {
-      menu: { id: `menu-${Date.now()}`, name, slug, location: null, created_at: '', updated_at: '' },
-      error: null,
-    };
+    return { menu: null, error: SUPABASE_REQUIRED_ERROR };
   }
   const { data, error } = await supabase
     .from('menus')
@@ -446,21 +449,21 @@ export async function createMenuRecord(name: string, slug: string): Promise<{ me
 // ==============================================================================
 export async function fetchWidgets(area?: WidgetArea): Promise<WidgetRecord[]> {
   if (!isSupabaseConfigured || !supabase) {
-    return area ? DEFAULT_WIDGETS.filter((w) => w.area === area) : DEFAULT_WIDGETS;
+    return [];
   }
 
   let query = supabase.from('widgets').select('*').order('sort_order', { ascending: true });
   if (area) query = query.eq('area', area);
   const { data } = await query;
-  const list = (data as WidgetRecord[]) || [];
-  if (list.length === 0 && !area) return DEFAULT_WIDGETS;
-  return list;
+  return (data as WidgetRecord[]) || [];
 }
 
 export async function saveWidgetRecord(
   widget: Partial<WidgetRecord> & { area: WidgetArea; widget_type: WidgetRecord['widget_type']; title: string }
 ): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured || !supabase) return { error: null };
+  if (!isSupabaseConfigured || !supabase) {
+    return { error: SUPABASE_REQUIRED_ERROR };
+  }
 
   if (widget.id) {
     const { error } = await supabase
@@ -489,7 +492,9 @@ export async function saveWidgetRecord(
 }
 
 export async function deleteWidgetRecord(id: string): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured || !supabase) return { error: null };
+  if (!isSupabaseConfigured || !supabase) {
+    return { error: SUPABASE_REQUIRED_ERROR };
+  }
   const { error } = await supabase.from('widgets').delete().eq('id', id);
   return { error: error ? error.message : null };
 }

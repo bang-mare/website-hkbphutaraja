@@ -41,6 +41,10 @@ export function AttendancePage() {
 
     if (!isSupabaseConfigured || !supabase) {
       setLoading(false);
+      addNotice({
+        type: 'error',
+        message: 'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk memuat data kehadiran.',
+      });
       return;
     }
 
@@ -72,7 +76,10 @@ export function AttendancePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSupabaseConfigured || !supabase) {
-      addNotice({ type: 'warning', message: 'Hubungkan Supabase untuk mencatat kehadiran.' });
+      addNotice({
+        type: 'error',
+        message: 'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk menyimpan data kehadiran.',
+      });
       return;
     }
 
@@ -102,7 +109,13 @@ export function AttendancePage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!supabase) return;
+    if (!isSupabaseConfigured || !supabase) {
+      addNotice({
+        type: 'error',
+        message: 'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk menghapus data kehadiran.',
+      });
+      return;
+    }
     const { error } = await supabase.from('kehadiran').delete().eq('id', id);
     if (error) {
       addNotice({ type: 'error', message: error.message });

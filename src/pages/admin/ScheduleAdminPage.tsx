@@ -48,6 +48,11 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
 
     if (!isSupabaseConfigured || !supabase) {
       setLoading(false);
+      addNotice({
+        type: 'error',
+        message:
+          'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk memuat dan menyimpan jadwal ibadah.',
+      });
       return;
     }
 
@@ -105,7 +110,11 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
 
     if (!isSupabaseConfigured || !supabase) {
       setSaving(false);
-      addNotice({ type: 'success', message: 'Jadwal Ibadah Minggu disimpan (Pratinjau).' });
+      addNotice({
+        type: 'error',
+        message:
+          'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk menyimpan jadwal Ibadah Minggu.',
+      });
       return;
     }
 
@@ -124,7 +133,13 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
   };
 
   const handleDeleteIbadah = async (id: string) => {
-    if (!supabase) return;
+    if (!isSupabaseConfigured || !supabase) {
+      addNotice({
+        type: 'error',
+        message: 'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk menghapus jadwal.',
+      });
+      return;
+    }
     const { error } = await supabase.from('ibadah_minggu').delete().eq('id', id);
     if (error) {
       addNotice({ type: 'error', message: error.message });
@@ -163,7 +178,11 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
 
     if (!isSupabaseConfigured || !supabase) {
       setSaving(false);
-      addNotice({ type: 'success', message: 'Jadwal PHD Lingkungan disimpan (Pratinjau).' });
+      addNotice({
+        type: 'error',
+        message:
+          'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk menyimpan jadwal PHD Lingkungan.',
+      });
       return;
     }
 
@@ -182,7 +201,13 @@ export function ScheduleAdminPage({ mode }: { mode: 'minggu' | 'phd' }) {
   };
 
   const handleDeletePhd = async (id: string) => {
-    if (!supabase) return;
+    if (!isSupabaseConfigured || !supabase) {
+      addNotice({
+        type: 'error',
+        message: 'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk menghapus jadwal.',
+      });
+      return;
+    }
     const { error } = await supabase.from('phd_lingkungan').delete().eq('id', id);
     if (error) {
       addNotice({ type: 'error', message: error.message });

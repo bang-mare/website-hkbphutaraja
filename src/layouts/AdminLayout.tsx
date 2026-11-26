@@ -30,7 +30,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../contexts/AdminContext';
 import { getAdminMenuForRole, hasCapability, ROLE_LABELS } from '../lib/roles';
 import { HkbpLogo } from '../components/HkbpLogo';
-import type { AdminMenuEntry, UserRole } from '../types/cms';
+import type { AdminMenuEntry } from '../types/cms';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Gauge,
@@ -49,7 +49,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export function AdminLayout() {
-  const { profile, signOut, isPreviewSession, enterPreviewSession } = useAuth();
+  const { profile, signOut } = useAuth();
   const {
     notices,
     dismissNotice,
@@ -308,35 +308,8 @@ export function AdminLayout() {
           )}
         </div>
 
-        {/* Right Zone: Preview Role Switcher (hanya mode pratinjau lokal) + Halo, [nama] */}
+        {/* Right Zone: Halo, [nama] */}
         <div className="flex items-center h-full gap-1">
-          {isPreviewSession && (
-            <div className="hidden lg:flex items-center gap-1.5 mr-2 px-2 py-0.5 bg-[#2c3338] border border-[#50575e] rounded-[2px] text-[11px] text-[#f0f0f1]">
-              <span className="text-[#dba617] font-medium">Mode Pratinjau:</span>
-              <select
-                value={profile?.role || 'administrator'}
-                onChange={(e) => enterPreviewSession(e.target.value as UserRole)}
-                aria-label="Ganti peran pratinjau"
-                className="bg-[#1d2327] text-[#f0f0f1] border border-[#50575e] rounded-[2px] px-1.5 py-0.5 text-[11px] focus:outline-none cursor-pointer"
-              >
-                {(
-                  [
-                    'administrator',
-                    'pendeta',
-                    'sekretaris',
-                    'bendahara',
-                    'editor',
-                    'penulis',
-                    'kontributor',
-                  ] as UserRole[]
-                ).map((r) => (
-                  <option key={r} value={r}>
-                    {ROLE_LABELS[r]}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {/* Howdy / Halo, [nama] */}
           <div

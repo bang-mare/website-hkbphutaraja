@@ -38,7 +38,7 @@ const DEFAULT_WIJK_LIST: WijkStat[] = [
 ];
 
 export function DashboardPage() {
-  const { profile, isSupabaseReady, isPreviewSession } = useAuth();
+  const { profile, isSupabaseReady } = useAuth();
   const { widgetVisibility, addNotice, setHelpTabs } = useAdmin();
 
   const [counts, setCounts] = useState({
@@ -56,7 +56,7 @@ export function DashboardPage() {
   const [draftTitle, setDraftTitle] = useState('');
   const [draftContent, setDraftContent] = useState('');
   const [savingDraft, setSavingDraft] = useState(false);
-  const [localDrafts, setLocalDrafts] = useState<
+  const [recentDrafts, setRecentDrafts] = useState<
     Array<{ id: string; title: string; excerpt: string; created_at: string }>
   >([]);
 
@@ -148,7 +148,7 @@ export function DashboardPage() {
         if (recentRes.data) {
           const allRecent = recentRes.data as PostSummary[];
           setRecentPosts(allRecent);
-          setLocalDrafts(
+          setRecentDrafts(
             allRecent
               .filter((p) => p.status === 'draft')
               .slice(0, 3)
@@ -229,60 +229,54 @@ export function DashboardPage() {
       return;
     }
 
+    if (!supabase || !isSupabaseReady || !profile) {
+      addNotice({
+        type: 'error',
+        message:
+          'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase dan masuk dengan akun pengelola untuk menyimpan draf.',
+      });
+      return;
+    }
+
     setSavingDraft(true);
     const title = draftTitle.trim() || '(Tanpa Judul)';
     const contentText = draftContent.trim();
 
-    if (supabase && isSupabaseReady && profile) {
-      const slug = `draf-${Date.now()}`;
-      const { data, error } = await supabase
-        .from('posts')
-        .insert({
-          type: 'post',
-          title,
-          slug,
-          content: [{ id: 'b1', type: 'paragraph', content: contentText }],
-          content_html: contentText ? `<p>${contentText}</p>` : '',
-          excerpt: contentText.slice(0, 140),
-          status: 'draft',
-          author_id: profile.id,
-        })
-        .select('id, title, excerpt, created_at')
-        .single();
+    const slug = `draf-${Date.now()}`;
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({
+        type: 'post',
+        title,
+        slug,
+        content: [{ id: 'b1', type: 'paragraph', content: contentText }],
+        content_html: contentText ? `<p>${contentText}</p>` : '',
+        excerpt: contentText.slice(0, 140),
+        status: 'draft',
+        author_id: profile.id,
+      })
+      .select('id, title, excerpt, created_at')
+      .single();
 
-      setSavingDraft(false);
+    setSavingDraft(false);
 
-      if (error) {
-        addNotice({
-          type: 'error',
-          message: `Gagal menyimpan draf: ${error.message}`,
-        });
-        return;
-      }
+    if (error) {
+      addNotice({
+        type: 'error',
+        message: `Gagal menyimpan draf: ${error.message}`,
+      });
+      return;
+    }
 
-      if (data) {
-        setLocalDrafts((prev) => [data, ...prev].slice(0, 3));
-      }
-    } else {
-      setSavingDraft(false);
-      setLocalDrafts((prev) =>
-        [
-          {
-            id: `draft-${Date.now()}`,
-            title,
-            excerpt: contentText,
-            created_at: new Date().toISOString(),
-          },
-          ...prev,
-        ].slice(0, 3)
-      );
+    if (data) {
+      setRecentDrafts((prev) => [data, ...prev].slice(0, 3));
     }
 
     setDraftTitle('');
     setDraftContent('');
     addNotice({
       type: 'success',
-      message: 'Draf cepat berhasil disimpan.',
+      message: 'Draf cepat berhasil disimpan ke Supabase.',
       linkLabel: 'Lihat semua pos',
       linkTo: '/admin/posts',
     });
@@ -307,11 +301,6 @@ export function DashboardPage() {
         <h1 className="text-[23px] font-normal text-[#1d2327] leading-tight">
           Dasbor
         </h1>
-        {isPreviewSession && (
-          <span className="text-[12px] text-[#50575e] bg-white border border-[#c3c4c7] px-2.5 py-1">
-            Mode Pratinjau UI Lokal — hubungkan Supabase untuk data langsung
-          </span>
-        )}
       </div>
 
       {/* Welcome Panel ringkas khas WordPress */}
@@ -565,13 +554,13 @@ export function DashboardPage() {
                 </button>
               </form>
 
-              {localDrafts.length > 0 && (
+              {recentDrafts.length > 0 && (
                 <div className="mt-4 pt-3 border-t border-[#f0f0f1] text-[13px]">
                   <h3 className="font-semibold text-[#1d2327] mb-2">
                     Draf Terbaru Anda
                   </h3>
                   <ul className="space-y-2">
-                    {localDrafts.map((d) => (
+                    {recentDrafts.map((d) => (
                       <li key={d.id}>
                         <div className="flex items-center gap-2">
                           <Link

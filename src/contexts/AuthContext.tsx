@@ -1,8 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
-import { ROLE_LABELS } from '../lib/roles';
-import type { Profile, UserRole } from '../types/cms';
+import type { Profile } from '../types/cms';
 
 interface AuthContextValue {
   user: User | null;
@@ -11,7 +10,6 @@ interface AuthContextValue {
   profileError: string | null;
   loading: boolean;
   isSupabaseReady: boolean;
-  isPreviewSession: boolean;
   signIn: (
     email: string,
     password: string
@@ -25,29 +23,9 @@ interface AuthContextValue {
     phone: string;
     bio: string;
   }) => Promise<{ error: string | null }>;
-  enterPreviewSession: (role: UserRole) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-function createPreviewProfile(role: UserRole): Profile {
-  const now = new Date().toISOString();
-  const name = `Pratinjau ${ROLE_LABELS[role]}`;
-  return {
-    id: `preview-${role}`,
-    email: `${role}@hkbphutaraja.or.id`,
-    full_name: name,
-    display_name: name,
-    role,
-    avatar_url: '',
-    phone: '0812-0000-0000',
-    wijk_id: null,
-    bio: 'Akun pratinjau lokal untuk menguji tata letak dan hak akses wp-admin sebelum koneksi Supabase diisi.',
-    is_active: true,
-    created_at: now,
-    updated_at: now,
-  };
-}
 
 function translateAuthError(message: string): string {
   const lower = message.toLowerCase();
@@ -72,7 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(isSupabaseConfigured);
-  const [isPreviewSession, setIsPreviewSession] = useState<boolean>(false);
 
   const fetchProfile = useCallback(
     async (
@@ -212,7 +189,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: 'Galat: Data pengguna tidak diterima dari Supabase.', profile: null };
       }
 
-      setIsPreviewSession(false);
       setSession(data.session);
       setUser(data.user);
 
@@ -232,7 +208,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (supabase && session) {
       await supabase.auth.signOut();
     }
-    setIsPreviewSession(false);
     setSession(null);
     setUser(null);
     setProfile(null);
@@ -260,10 +235,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     phone: string;
     bio: string;
   }) => {
-    if (isPreviewSession && profile) {
-      setProfile({ ...profile, ...updates, updated_at: new Date().toISOString() });
-      return { error: null };
-    }
     if (!supabase || !user) {
       return { error: 'Sesi pengguna tidak ditemukan.' };
     }
@@ -279,12 +250,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   };
 
-  const enterPreviewSession = (role: UserRole) => {
-    if (isSupabaseConfigured) return;
-    setIsPreviewSession(true);
-    setProfile(createPreviewProfile(role));
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -294,13 +259,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profileError,
         loading,
         isSupabaseReady: isSupabaseConfigured,
-        isPreviewSession,
         signIn,
         signOut,
         resetPassword,
         refreshProfile,
         updateOwnProfile,
-        enterPreviewSession,
       }}
     >
       {children}

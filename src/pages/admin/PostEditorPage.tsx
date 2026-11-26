@@ -88,7 +88,7 @@ const BLOCK_ICONS: Record<BlockType, React.ComponentType<{ className?: string }>
 export function PostEditorPage({ postType }: PostEditorPageProps) {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, isSupabaseReady } = useAuth();
   const { addNotice } = useAdmin();
 
   const metaInfo = BACK_ROUTES[postType];
@@ -465,13 +465,14 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
   latestSaveRef.current = performSave;
 
   useEffect(() => {
+    if (!isSupabaseReady || !profile) return;
     if (!isDirty || (!title.trim() && blocks.length === 1 && !blocks[0].content)) return;
     const timer = window.setTimeout(() => {
       const target = status === 'publish' ? 'publish' : 'draft';
       void latestSaveRef.current(target, { isAuto: true, createRevision: false });
     }, 20000);
     return () => window.clearTimeout(timer);
-  }, [isDirty, title, blocks, status]);
+  }, [isSupabaseReady, profile, isDirty, title, blocks, status]);
 
   const handleAddInlineCategory = async (e: React.FormEvent) => {
     e.preventDefault();

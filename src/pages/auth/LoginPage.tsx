@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { HkbpLogo } from '../../components/HkbpLogo';
 import { DEFAULT_SITE_OPTIONS, fetchSiteOptions } from '../../lib/publicData';
 import { hasCapability, ROLE_LABELS } from '../../lib/roles';
-import type { SiteOptionsMap, UserRole } from '../../types/cms';
+import type { SiteOptionsMap } from '../../types/cms';
 
 function isSafeImageUrl(url: string | undefined): string {
   if (!url) return '';
@@ -28,7 +28,6 @@ export function LoginPage() {
     signIn,
     signOut,
     resetPassword,
-    enterPreviewSession,
   } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,7 +44,6 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [previewRole, setPreviewRole] = useState<UserRole>('administrator');
 
   useEffect(() => {
     fetchSiteOptions().then((opts) => {
@@ -135,11 +133,6 @@ export function LoginPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handlePreviewEnter = () => {
-    enterPreviewSession(previewRole);
-    navigate('/admin');
   };
 
   return (
@@ -278,7 +271,7 @@ export function LoginPage() {
 
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !isSupabaseReady}
                   className="px-5 py-2 min-h-[44px] sm:min-h-[36px] bg-[#2271b1] hover:bg-[#135e96] disabled:opacity-60 text-white text-[14px] sm:text-[13px] font-medium rounded-[3px] transition-colors cursor-pointer whitespace-nowrap"
                 >
                   {submitting ? 'Memeriksa...' : 'Masuk'}
@@ -352,43 +345,22 @@ export function LoginPage() {
           </Link>
         </div>
 
-        {/* Panel Pratinjau UI saat Supabase belum diisi di env */}
+        {/* Pemberitahuan saat Supabase belum dikonfigurasi di environment */}
         {!isSupabaseReady && (
-          <div className="mt-6 bg-white border border-[#c3c4c7] border-l-4 border-l-[#dba617] p-4 text-[13px] sm:text-[12px] text-[#3c434a] shadow-[0_1px_1px_rgba(0,0,0,0.04)]">
-            <div className="flex items-start gap-2 mb-2">
-              <Info className="w-4 h-4 text-[#996800] shrink-0 mt-0.5" />
+          <div className="mt-6 bg-white border border-[#c3c4c7] border-l-4 border-l-[#d63638] p-4 text-[13px] sm:text-[12px] text-[#3c434a] shadow-[0_1px_1px_rgba(0,0,0,0.04)]">
+            <div className="flex items-start gap-2">
+              <Info className="w-4 h-4 text-[#d63638] shrink-0 mt-0.5" />
               <div className="min-w-0">
                 <p className="font-semibold text-[#1d2327]">
                   Supabase Belum Terhubung
                 </p>
-                <p className="text-[#50575e] mt-0.5 leading-relaxed">
-                  Isi <code className="bg-[#f0f0f1] px-1 rounded">VITE_SUPABASE_URL</code> dan{' '}
-                  <code className="bg-[#f0f0f1] px-1 rounded">VITE_SUPABASE_ANON_KEY</code> untuk login Supabase nyata. Sementara itu, Anda dapat menguji tata letak &amp; hak akses peran di bawah ini:
+                <p className="text-[#50575e] mt-1 leading-relaxed">
+                  Penyimpanan lokal telah dinonaktifkan. Atur environment variable{' '}
+                  <code className="bg-[#f0f0f1] px-1 rounded">VITE_SUPABASE_URL</code> dan{' '}
+                  <code className="bg-[#f0f0f1] px-1 rounded">VITE_SUPABASE_ANON_KEY</code>{' '}
+                  pada konfigurasi server/Secrets agar admin dapat masuk dan seluruh data dasbor langsung tersimpan ke Supabase.
                 </p>
               </div>
-            </div>
-            <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
-              <select
-                value={previewRole}
-                onChange={(e) => setPreviewRole(e.target.value as UserRole)}
-                aria-label="Pilih peran untuk pratinjau"
-                className="flex-1 min-h-[44px] sm:min-h-[34px] h-10 sm:h-8 px-2 text-base sm:text-[12px] bg-white border border-[#8c8f94] rounded-[3px] text-[#1d2327]"
-              >
-                {(['administrator', 'pendeta', 'sekretaris', 'bendahara', 'editor', 'penulis', 'kontributor'] as UserRole[]).map(
-                  (r) => (
-                    <option key={r} value={r}>
-                      {ROLE_LABELS[r]}
-                    </option>
-                  )
-                )}
-              </select>
-              <button
-                type="button"
-                onClick={handlePreviewEnter}
-                className="px-3 min-h-[44px] sm:min-h-[34px] h-10 sm:h-8 bg-[#f6f7f7] hover:bg-[#f0f0f1] border border-[#2271b1] text-[#2271b1] font-medium rounded-[3px] cursor-pointer whitespace-nowrap"
-              >
-                Uji Dasbor
-              </button>
             </div>
           </div>
         )}

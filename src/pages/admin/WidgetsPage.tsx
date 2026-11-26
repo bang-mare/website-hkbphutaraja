@@ -90,10 +90,15 @@ export function WidgetsPage() {
     if (target < 0 || target >= areaWidgets.length) return;
     const a = areaWidgets[idx];
     const b = areaWidgets[target];
-    await Promise.all([
+    const [resA, resB] = await Promise.all([
       saveWidgetRecord({ ...a, sort_order: b.sort_order }),
       saveWidgetRecord({ ...b, sort_order: a.sort_order }),
     ]);
+    const err = resA.error || resB.error;
+    if (err) {
+      addNotice({ type: 'error', message: err });
+      return;
+    }
     void loadWidgets();
   };
 

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import {
+  AlertTriangle,
   Cake,
   CheckCircle2,
   ClipboardList,
@@ -11,6 +12,7 @@ import {
   Paperclip,
   Plus,
   Search,
+  Trash2,
   Upload,
   Users,
   XCircle,
@@ -24,9 +26,7 @@ import {
   finalizePermohonanAndSync,
   KELENGKAPAN_LABELS,
   PERMOHONAN_STATUS_META,
-  readPreviewJemaat,
   verifySintuaPermohonan,
-  writePreviewJemaat,
 } from '../../lib/jemaatData';
 import type {
   JemaatRecord,
@@ -165,6 +165,12 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
   const [importing, setImporting] = useState(false);
   const [monthFilter, setMonthFilter] = useState<number>(new Date().getMonth() + 1);
 
+  // Hapus Kolektif State
+  const [selectedJemaatIds, setSelectedJemaatIds] = useState<string[]>([]);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+  const [bulkDeleteAcknowledged, setBulkDeleteAcknowledged] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
   const normalizeExcelDate = (raw: unknown): string | null => {
     const val = String(raw ?? '').trim();
     if (!val || val === '-') return null;
@@ -226,9 +232,14 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
     if (!wijkId && wks[0]) setWijkId(wks[0].id);
 
     if (!isSupabaseConfigured || !supabase) {
-      setJemaatList(readPreviewJemaat());
+      setJemaatList([]);
+      setPermohonanList([]);
       setLoading(false);
-      await loadPermohonan();
+      addNotice({
+        type: 'error',
+        message:
+          'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk memuat dan menyimpan data jemaat.',
+      });
       return;
     }
 
@@ -262,6 +273,15 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
     void loadData();
   }, []);
 
+  useEffect(() => {
+    if (selectedJemaatIds.length === 0) return;
+    const validIds = new Set(jemaatList.map((j) => j.id));
+    setSelectedJemaatIds((prev) => {
+      const next = prev.filter((id) => validIds.has(id));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [jemaatList, selectedJemaatIds.length]);
+
   const filteredList = useMemo(() => {
     return jemaatList.filter((j) => {
       if (wijkFilter !== 'all' && j.wijk_id !== wijkFilter) return false;
@@ -277,6 +297,24 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
       return true;
     });
   }, [jemaatList, wijkFilter, search]);
+
+  const selectedJemaatSet = useMemo(
+    () => new Set(selectedJemaatIds),
+    [selectedJemaatIds]
+  );
+
+  const selectedJemaatRecords = useMemo(
+    () => jemaatList.filter((j) => selectedJemaatSet.has(j.id)),
+    [jemaatList, selectedJemaatSet]
+  );
+
+  const allFilteredSelected =
+    filteredList.length > 0 &&
+    filteredList.every((j) => selectedJemaatSet.has(j.id));
+
+  const someFilteredSelected =
+    filteredList.some((j) => selectedJemaatSet.has(j.id)) &&
+    !allFilteredSelected;
 
   const summaryStats = useMemo(() => {
     const aktif = jemaatList.filter((j) => j.status_keanggotaan === 'aktif');
@@ -457,37 +495,11 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
     };
 
     if (!isSupabaseConfigured || !supabase) {
-      const wijkObj = wijkList.find((w) => w.id === payload.wijk_id) || null;
-      const nowIso = new Date().toISOString();
-      const existing = readPreviewJemaat();
-      let nextRows: JemaatRecord[];
-      if (editId) {
-        nextRows = existing.map((row) =>
-          row.id === editId
-            ? {
-                ...row,
-                ...payload,
-                updated_at: nowIso,
-                wijk: wijkObj ? { id: wijkObj.id, name: wijkObj.name } : null,
-              }
-            : row
-        );
-      } else {
-        const created: JemaatRecord = {
-          id: `jmt-${Date.now()}`,
-          family_head_id: null,
-          created_at: nowIso,
-          updated_at: nowIso,
-          ...payload,
-          wijk: wijkObj ? { id: wijkObj.id, name: wijkObj.name } : null,
-        };
-        nextRows = [created, ...existing];
-      }
-      writePreviewJemaat(nextRows);
-      setJemaatList(nextRows);
-      addNotice({ type: 'success', message: 'Data jemaat disimpan di mode pratinjau lokal.' });
-      resetForm();
-      setShowForm(false);
+      addNotice({
+        type: 'error',
+        message:
+          'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk menyimpan data jemaat.',
+      });
       return;
     }
 
@@ -515,10 +527,11 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
 
   const handleDeleteJemaat = async (id: string) => {
     if (!isSupabaseConfigured || !supabase) {
-      const nextRows = readPreviewJemaat().filter((x) => x.id !== id);
-      writePreviewJemaat(nextRows);
-      setJemaatList(nextRows);
-      addNotice({ type: 'success', message: 'Data jemaat dihapus dari pratinjau lokal.' });
+      addNotice({
+        type: 'error',
+        message:
+          'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk menghapus data jemaat.',
+      });
       return;
     }
 
@@ -527,8 +540,106 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
       addNotice({ type: 'error', message: error.message });
     } else {
       setJemaatList((prev) => prev.filter((x) => x.id !== id));
+      setSelectedJemaatIds((prev) => prev.filter((x) => x !== id));
       addNotice({ type: 'success', message: 'Data jemaat dihapus.' });
     }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedJemaatIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllFiltered = () => {
+    const filteredIds = filteredList.map((j) => j.id);
+    if (filteredIds.length === 0) return;
+    if (allFilteredSelected) {
+      const removeSet = new Set(filteredIds);
+      setSelectedJemaatIds((prev) => prev.filter((id) => !removeSet.has(id)));
+    } else {
+      setSelectedJemaatIds((prev) => {
+        const merged = new Set([...prev, ...filteredIds]);
+        return Array.from(merged);
+      });
+    }
+  };
+
+  const toggleSelectGroup = (members: JemaatRecord[]) => {
+    const memberIds = members.map((m) => m.id);
+    if (memberIds.length === 0) return;
+    const allGroupSelected = memberIds.every((id) => selectedJemaatSet.has(id));
+    if (allGroupSelected) {
+      const removeSet = new Set(memberIds);
+      setSelectedJemaatIds((prev) => prev.filter((id) => !removeSet.has(id)));
+    } else {
+      setSelectedJemaatIds((prev) => {
+        const merged = new Set([...prev, ...memberIds]);
+        return Array.from(merged);
+      });
+    }
+  };
+
+  const openBulkDeleteModal = () => {
+    if (selectedJemaatRecords.length === 0) return;
+    setBulkDeleteAcknowledged(false);
+    setBulkDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmBulkDelete = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bulkDeleteAcknowledged || selectedJemaatRecords.length === 0) return;
+
+    if (!isSupabaseConfigured || !supabase) {
+      addNotice({
+        type: 'error',
+        message:
+          'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk menghapus data jemaat.',
+      });
+      return;
+    }
+
+    setBulkDeleting(true);
+    const idsToDelete = selectedJemaatRecords.map((j) => j.id);
+    const CHUNK_SIZE = 150;
+    const deletedIds: string[] = [];
+    let deleteError: string | null = null;
+
+    for (let i = 0; i < idsToDelete.length; i += CHUNK_SIZE) {
+      const chunk = idsToDelete.slice(i, i + CHUNK_SIZE);
+      const { error } = await supabase.from('jemaat').delete().in('id', chunk);
+      if (error) {
+        deleteError = error.message;
+        break;
+      }
+      deletedIds.push(...chunk);
+    }
+
+    setBulkDeleting(false);
+
+    if (deletedIds.length > 0) {
+      const deletedSet = new Set(deletedIds);
+      setJemaatList((prev) => prev.filter((x) => !deletedSet.has(x.id)));
+      setSelectedJemaatIds((prev) => prev.filter((id) => !deletedSet.has(id)));
+    }
+
+    if (deleteError) {
+      addNotice({
+        type: 'error',
+        message:
+          deletedIds.length > 0
+            ? `Sebagian data (${deletedIds.length} dari ${idsToDelete.length}) terhapus, namun terjadi kendala: ${deleteError}`
+            : `Gagal menghapus data jemaat secara kolektif: ${deleteError}`,
+      });
+      return;
+    }
+
+    setBulkDeleteConfirmOpen(false);
+    setBulkDeleteAcknowledged(false);
+    addNotice({
+      type: 'success',
+      message: `${deletedIds.length} data jemaat berhasil dihapus secara kolektif dari Supabase.`,
+    });
   };
 
   const handleExportXlsx = () => {
@@ -732,41 +843,11 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
     }
 
     if (!isSupabaseConfigured || !supabase) {
-      const nowIso = new Date().toISOString();
-      let current = [...readPreviewJemaat()];
-      toUpdate.forEach((u) => {
-        current = current.map((row) => {
-          if (row.id !== u.id) return row;
-          const wObj = wijkList.find((w) => w.id === u.payload.wijk_id);
-          return {
-            ...row,
-            ...(u.payload as Partial<JemaatRecord>),
-            updated_at: nowIso,
-            wijk: wObj ? { id: wObj.id, name: wObj.name } : null,
-          };
-        });
-      });
-      const added: JemaatRecord[] = toInsert.map((item, idx) => {
-        const wObj = wijkList.find((w) => w.id === item.wijk_id);
-        return {
-          id: `jmt-imp-${Date.now()}-${idx}`,
-          family_head_id: null,
-          created_at: nowIso,
-          updated_at: nowIso,
-          ...(item as Omit<JemaatRecord, 'id' | 'family_head_id' | 'created_at' | 'updated_at'>),
-          wijk: wObj ? { id: wObj.id, name: wObj.name } : null,
-        };
-      });
-      const merged = [...added, ...current];
-      writePreviewJemaat(merged);
-      setJemaatList(merged);
       setImporting(false);
-      setImportRows([]);
       addNotice({
-        type: 'success',
-        message: `Impor pratinjau selesai: ${toInsert.length} anggota ditambahkan${
-          toUpdate.length > 0 ? `, ${toUpdate.length} diperbarui` : ''
-        }${skippedCount > 0 ? `, ${skippedCount} dilewati` : ''}.`,
+        type: 'error',
+        message:
+          'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk mengimpor data jemaat ke database.',
       });
       return;
     }
@@ -1272,6 +1353,54 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
             </div>
           </div>
 
+          {/* Bulk Selection & Action Bar */}
+          {(filteredList.length > 0 || selectedJemaatRecords.length > 0) && (
+            <div className="bg-white border border-[#c3c4c7] px-3 py-2.5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="inline-flex items-center gap-2 cursor-pointer select-none min-h-[36px] sm:min-h-0">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = someFilteredSelected;
+                    }}
+                    onChange={toggleSelectAllFiltered}
+                    disabled={filteredList.length === 0}
+                    className="w-4 h-4 accent-[#2271b1] cursor-pointer"
+                  />
+                  <span className="text-[12px] font-medium text-[#1d2327]">
+                    Pilih semua ({filteredList.length} jemaat tampil)
+                  </span>
+                </label>
+
+                {selectedJemaatRecords.length > 0 && (
+                  <div className="flex items-center gap-2 text-[12px]">
+                    <span className="px-2 py-0.5 bg-[#fcf0f1] border border-[#d63638]/30 text-[#b32d2e] font-semibold tabular-nums rounded-[2px]">
+                      {selectedJemaatRecords.length} data dipilih
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedJemaatIds([])}
+                      className="text-[#2271b1] hover:underline cursor-pointer"
+                    >
+                      Batalkan pilihan
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                disabled={selectedJemaatRecords.length === 0}
+                onClick={openBulkDeleteModal}
+                className="inline-flex items-center gap-1.5 min-h-[38px] sm:min-h-0 px-3 py-1.5 bg-[#d63638] hover:bg-[#b32d2e] disabled:bg-[#f0f0f1] disabled:text-[#8c8f94] disabled:border-[#c3c4c7] border border-transparent text-white text-[12px] font-medium rounded-[3px] cursor-pointer disabled:cursor-not-allowed transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Hapus Kolektif ({selectedJemaatRecords.length})</span>
+              </button>
+            </div>
+          )}
+
           {viewMode === 'kk' ? (
             <div className="space-y-3">
               {loading ? (
@@ -1293,13 +1422,30 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
                         r.includes('suami')
                       );
                     }) || members[0];
+                  const allGroupSelected = members.every((m) =>
+                    selectedJemaatSet.has(m.id)
+                  );
+                  const someGroupSelected =
+                    members.some((m) => selectedJemaatSet.has(m.id)) &&
+                    !allGroupSelected;
+
                   return (
                     <div
                       key={kkKey}
                       className="bg-white border border-[#c3c4c7] p-4 space-y-2.5"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#f0f0f1]">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <input
+                            type="checkbox"
+                            checked={allGroupSelected}
+                            ref={(el) => {
+                              if (el) el.indeterminate = someGroupSelected;
+                            }}
+                            onChange={() => toggleSelectGroup(members)}
+                            aria-label={`Pilih semua anggota KK ${kkKey}`}
+                            className="w-4 h-4 accent-[#2271b1] cursor-pointer"
+                          />
                           <Users className="w-4 h-4 text-[#2271b1]" />
                           <span className="font-mono tabular-nums text-[12px] text-[#2271b1] font-semibold">
                             {kkKey}
@@ -1314,31 +1460,52 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
                       </div>
 
                       <div className="divide-y divide-[#f0f0f1]">
-                        {members.map((m) => (
-                          <div
-                            key={m.id}
-                            className="py-1.5 flex flex-wrap items-center justify-between gap-2 text-[12px]"
-                          >
-                            <div>
-                              <span className="font-medium text-[#1d2327]">
-                                {m.full_name}
-                              </span>{' '}
-                              <span className="text-[#50575e]">({m.family_role})</span>
+                        {members.map((m) => {
+                          const isSelected = selectedJemaatSet.has(m.id);
+                          return (
+                            <div
+                              key={m.id}
+                              className={`py-1.5 px-1.5 -mx-1.5 flex flex-wrap items-center justify-between gap-2 text-[12px] rounded-[2px] ${
+                                isSelected ? 'bg-[#fcf0f1]/70' : ''
+                              }`}
+                            >
+                              <label className="inline-flex items-center gap-2.5 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleSelectOne(m.id)}
+                                  aria-label={`Pilih ${m.full_name}`}
+                                  className="w-4 h-4 accent-[#2271b1] cursor-pointer"
+                                />
+                                <span>
+                                  <span className="font-medium text-[#1d2327]">
+                                    {m.full_name}
+                                  </span>{' '}
+                                  <span className="text-[#50575e]">({m.family_role})</span>
+                                </span>
+                              </label>
+                              <div className="flex items-center gap-3">
+                                <span className="tabular-nums text-[#50575e]">
+                                  {m.birth_date || '-'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => openEditJemaat(m)}
+                                  className="text-[#2271b1] hover:underline cursor-pointer"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => void handleDeleteJemaat(m.id)}
+                                  className="text-[#d63638] hover:underline cursor-pointer"
+                                >
+                                  Hapus
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="tabular-nums text-[#50575e]">
-                                {m.birth_date || '-'}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => openEditJemaat(m)}
-                                className="text-[#2271b1] hover:underline cursor-pointer"
-                              >
-                                Edit
-                              </button>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -1347,9 +1514,22 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
             </div>
           ) : (
             <div className="bg-white border border-[#c3c4c7] overflow-x-auto">
-              <table className="w-full border-collapse min-w-[680px]">
+              <table className="w-full border-collapse min-w-[720px]">
                 <thead>
                   <tr className="border-b border-[#c3c4c7] text-left">
+                    <th className="p-2.5 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={allFilteredSelected}
+                        ref={(el) => {
+                          if (el) el.indeterminate = someFilteredSelected;
+                        }}
+                        onChange={toggleSelectAllFiltered}
+                        disabled={filteredList.length === 0}
+                        aria-label="Pilih semua data jemaat yang ditampilkan"
+                        className="w-4 h-4 accent-[#2271b1] cursor-pointer align-middle"
+                      />
+                    </th>
                     <th className="p-2.5 font-semibold">No. Registrasi</th>
                     <th className="p-2.5 font-semibold">Nama Lengkap</th>
                     <th className="p-2.5 font-semibold">Wijk</th>
@@ -1362,56 +1542,192 @@ export function CongregationPage({ tab }: { tab: JemaatTab }) {
                 <tbody className="divide-y divide-[#f0f0f1]">
                   {loading ? (
                     <tr>
-                      <td colSpan={7} className="p-6 text-center text-[#50575e]">
+                      <td colSpan={8} className="p-6 text-center text-[#50575e]">
                         Memuat data jemaat...
                       </td>
                     </tr>
                   ) : filteredList.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-6 text-center text-[#50575e]">
+                      <td colSpan={8} className="p-6 text-center text-[#50575e]">
                         Belum ada data jemaat. Tambahkan manual atau gunakan Import XLSX.
                       </td>
                     </tr>
                   ) : (
-                    filteredList.map((j) => (
-                      <tr key={j.id} className="hover:bg-[#f6f7f7]">
-                        <td className="p-2.5 tabular-nums font-medium text-[#2271b1]">
-                          {j.no_registrasi || '-'}
-                        </td>
-                        <td className="p-2.5">
-                          <div className="font-semibold text-[#1d2327]">{j.full_name}</div>
-                          <div className="text-[11px] text-[#50575e]">{j.family_role}</div>
-                        </td>
-                        <td className="p-2.5">Wijk {j.wijk?.name || '-'}</td>
-                        <td className="p-2.5">{j.gender || '-'}</td>
-                        <td className="p-2.5 tabular-nums">{j.birth_date || '-'}</td>
-                        <td className="p-2.5">
-                          <div>{j.phone || '-'}</div>
-                          <div className="text-[11px] text-[#50575e] capitalize">
-                            {j.status_keanggotaan}
-                          </div>
-                        </td>
-                        <td className="p-2.5 space-x-2 whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => openEditJemaat(j)}
-                            className="text-[#2271b1] hover:underline cursor-pointer"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void handleDeleteJemaat(j.id)}
-                            className="text-[#d63638] hover:underline cursor-pointer"
-                          >
-                            Hapus
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                    filteredList.map((j) => {
+                      const isSelected = selectedJemaatSet.has(j.id);
+                      return (
+                        <tr
+                          key={j.id}
+                          className={
+                            isSelected
+                              ? 'bg-[#fcf0f1]/70 hover:bg-[#fcf0f1]'
+                              : 'hover:bg-[#f6f7f7]'
+                          }
+                        >
+                          <td className="p-2.5 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelectOne(j.id)}
+                              aria-label={`Pilih ${j.full_name}`}
+                              className="w-4 h-4 accent-[#2271b1] cursor-pointer align-middle"
+                            />
+                          </td>
+                          <td className="p-2.5 tabular-nums font-medium text-[#2271b1]">
+                            {j.no_registrasi || '-'}
+                          </td>
+                          <td className="p-2.5">
+                            <div className="font-semibold text-[#1d2327]">{j.full_name}</div>
+                            <div className="text-[11px] text-[#50575e]">{j.family_role}</div>
+                          </td>
+                          <td className="p-2.5">Wijk {j.wijk?.name || '-'}</td>
+                          <td className="p-2.5">{j.gender || '-'}</td>
+                          <td className="p-2.5 tabular-nums">{j.birth_date || '-'}</td>
+                          <td className="p-2.5">
+                            <div>{j.phone || '-'}</div>
+                            <div className="text-[11px] text-[#50575e] capitalize">
+                              {j.status_keanggotaan}
+                            </div>
+                          </td>
+                          <td className="p-2.5 space-x-2 whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => openEditJemaat(j)}
+                              className="text-[#2271b1] hover:underline cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void handleDeleteJemaat(j.id)}
+                              className="text-[#d63638] hover:underline cursor-pointer"
+                            >
+                              Hapus
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Confirmation Modal Hapus Kolektif */}
+          {bulkDeleteConfirmOpen && (
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="bulk-delete-jemaat-title"
+              className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            >
+              <form
+                onSubmit={(e) => void handleConfirmBulkDelete(e)}
+                className="bg-white border border-[#c3c4c7] w-full max-w-lg p-5 space-y-4 shadow-xl"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#fcf0f1] border border-[#d63638]/30 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-5 h-5 text-[#d63638]" />
+                  </div>
+                  <div className="space-y-1">
+                    <h2
+                      id="bulk-delete-jemaat-title"
+                      className="text-[16px] font-semibold text-[#1d2327]"
+                    >
+                      Konfirmasi Penghapusan Data Jemaat Kolektif
+                    </h2>
+                    <p className="text-[12px] text-[#50575e]">
+                      Tindakan ini akan menghapus{' '}
+                      <strong className="text-[#d63638] tabular-nums">
+                        {selectedJemaatRecords.length} data jemaat
+                      </strong>{' '}
+                      sekaligus dari database Supabase.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-[#fcf0f1] border border-[#d63638]/30 border-l-4 border-l-[#d63638] p-3 text-[12px] text-[#1d2327] leading-relaxed">
+                  <strong>Pernyataan Konfirmasi:</strong> Data jemaat yang dihapus secara
+                  kolektif akan hilang secara <strong>permanen</strong> dari server dan{' '}
+                  <strong>tidak dapat dibatalkan atau dipulihkan kembali</strong>. Pastikan
+                  seluruh nama yang dipilih sudah benar.
+                </div>
+
+                <div className="border border-[#c3c4c7] bg-[#f6f7f7] p-2.5 space-y-1.5">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-[#50575e]">
+                    Daftar Data yang Akan Dihapus ({selectedJemaatRecords.length} Jiwa):
+                  </div>
+                  <ul className="max-h-36 overflow-y-auto divide-y divide-[#e5e7eb] text-[12px]">
+                    {selectedJemaatRecords.slice(0, 12).map((item) => (
+                      <li
+                        key={item.id}
+                        className="py-1 flex items-center justify-between gap-2"
+                      >
+                        <span className="font-medium text-[#1d2327] truncate">
+                          {item.full_name}
+                        </span>
+                        <span className="text-[11px] text-[#50575e] shrink-0 tabular-nums">
+                          {item.no_registrasi || '-'} &middot; Wijk {item.wijk?.name || '-'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  {selectedJemaatRecords.length > 12 && (
+                    <div className="text-[11px] text-[#50575e] pt-1 border-t border-[#e5e7eb]">
+                      ... dan{' '}
+                      <strong className="tabular-nums">
+                        {selectedJemaatRecords.length - 12}
+                      </strong>{' '}
+                      data jemaat lainnya.
+                    </div>
+                  )}
+                </div>
+
+                <label className="flex items-start gap-2.5 p-2.5 border border-[#c3c4c7] rounded-[3px] cursor-pointer select-none hover:bg-[#f6f7f7]">
+                  <input
+                    type="checkbox"
+                    checked={bulkDeleteAcknowledged}
+                    onChange={(e) => setBulkDeleteAcknowledged(e.target.checked)}
+                    disabled={bulkDeleting}
+                    className="w-4 h-4 mt-0.5 accent-[#d63638] cursor-pointer shrink-0"
+                  />
+                  <span className="text-[12px] text-[#1d2327] leading-snug">
+                    Saya menyatakan yakin untuk menghapus{' '}
+                    <strong className="tabular-nums">
+                      {selectedJemaatRecords.length} data jemaat
+                    </strong>{' '}
+                    terpilih secara kolektif dan memahami bahwa tindakan ini bersifat
+                    permanen.
+                  </span>
+                </label>
+
+                <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-[#f0f0f1]">
+                  <button
+                    type="button"
+                    disabled={bulkDeleting}
+                    onClick={() => {
+                      setBulkDeleteConfirmOpen(false);
+                      setBulkDeleteAcknowledged(false);
+                    }}
+                    className="min-h-[38px] sm:min-h-0 px-3.5 py-1.5 border border-[#c3c4c7] bg-[#f6f7f7] hover:bg-[#f0f0f1] text-[#50575e] rounded-[3px] cursor-pointer disabled:opacity-60"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!bulkDeleteAcknowledged || bulkDeleting}
+                    className="inline-flex items-center gap-1.5 min-h-[38px] sm:min-h-0 px-4 py-1.5 bg-[#d63638] hover:bg-[#b32d2e] disabled:opacity-50 text-white font-medium rounded-[3px] cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>
+                      {bulkDeleting
+                        ? 'Menghapus...'
+                        : `Ya, Hapus ${selectedJemaatRecords.length} Data Permanen`}
+                    </span>
+                  </button>
+                </div>
+              </form>
             </div>
           )}
         </div>

@@ -34,8 +34,12 @@ export function UsersAdminPage({ createMode = false }: { createMode?: boolean })
     setWijkList(wks);
 
     if (!isSupabaseConfigured || !supabase) {
-      setUsers(currentUser ? [currentUser] : []);
+      setUsers([]);
       setLoading(false);
+      addNotice({
+        type: 'error',
+        message: 'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk mengelola pengguna.',
+      });
       return;
     }
 
@@ -100,8 +104,8 @@ export function UsersAdminPage({ createMode = false }: { createMode?: boolean })
     e.preventDefault();
     if (!isSupabaseConfigured || !supabase) {
       addNotice({
-        type: 'warning',
-        message: 'Hubungkan Supabase terlebih dahulu untuk membuat akun baru.',
+        type: 'error',
+        message: 'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase terlebih dahulu untuk membuat akun baru.',
       });
       return;
     }

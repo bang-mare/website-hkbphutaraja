@@ -5,35 +5,13 @@ import {
 } from './googleDriveAuth';
 import type { MediaItem } from '../types/cms';
 
-// Simpanan sementara untuk mode pratinjau lokal (tanpa koneksi Supabase)
-const previewMediaStore: MediaItem[] = [
-  {
-    id: 'preview-media-1',
-    drive_file_id: 'preview-drive-1',
-    drive_folder_id: '',
-    nama: 'Gedung-Gereja-HKBP-Hutaraja.jpg',
-    mime: 'image/jpeg',
-    ukuran: 482340,
-    alt: 'Gedung Gereja HKBP Ressort Hutaraja',
-    caption: 'Ruang kebaktian utama HKBP Ressort Hutaraja, Distrik VI Dairi',
-    deskripsi: 'Foto pratinjau lokal gedung gereja HKBP Ressort Hutaraja.',
-    width: 1600,
-    height: 1066,
-    thumbnails: {},
-    year_month: '2026/11',
-    uploaded_by: 'preview-administrator',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+const SUPABASE_REQUIRED_ERROR =
+  'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase (VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY) untuk mengelola pustaka media.';
 
 export function getMediaProxyUrl(
   mediaId: string,
   options?: { width?: 150 | 300 | 768 | 1024; download?: boolean }
 ): string {
-  if (mediaId === 'preview-media-1') {
-    return '/src/assets/images/church_hero_sanctuary_1795501235668.jpg';
-  }
   const params = new URLSearchParams();
   if (options?.width) params.set('w', String(options.width));
   if (options?.download) params.set('download', '1');
@@ -53,7 +31,7 @@ export async function fetchMediaLibrary(): Promise<{
   error: string | null;
 }> {
   if (!isSupabaseConfigured || !supabase) {
-    return { items: [...previewMediaStore], error: null };
+    return { items: [], error: SUPABASE_REQUIRED_ERROR };
   }
 
   const { data, error } = await supabase
@@ -142,6 +120,10 @@ export async function uploadMediaFile(
   file: File,
   meta?: { alt?: string; caption?: string; deskripsi?: string; preserveAspect?: boolean }
 ): Promise<{ media: MediaItem | null; error: string | null }> {
+  if (!isSupabaseConfigured || !supabase) {
+    return { media: null, error: SUPABASE_REQUIRED_ERROR };
+  }
+
   const shouldStandardize =
     !meta?.preserveAspect &&
     file.type.startsWith('image/') &&
@@ -151,29 +133,6 @@ export async function uploadMediaFile(
   const processedFile = shouldStandardize
     ? await resizeImageToStandard(file, STANDARD_IMAGE_WIDTH, STANDARD_IMAGE_HEIGHT)
     : file;
-
-  if (!isSupabaseConfigured || !supabase) {
-    const newItem: MediaItem = {
-      id: `preview-media-${Date.now()}`,
-      drive_file_id: `preview-drive-${Date.now()}`,
-      drive_folder_id: '',
-      nama: processedFile.name,
-      mime: processedFile.type || 'application/octet-stream',
-      ukuran: processedFile.size,
-      alt: meta?.alt || processedFile.name.replace(/\.[^.]+$/, ''),
-      caption: meta?.caption || '',
-      deskripsi: meta?.deskripsi || '',
-      width: shouldStandardize ? STANDARD_IMAGE_WIDTH : null,
-      height: shouldStandardize ? STANDARD_IMAGE_HEIGHT : null,
-      thumbnails: {},
-      year_month: new Date().toISOString().slice(0, 7).replace('-', '/'),
-      uploaded_by: 'preview-administrator',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    previewMediaStore.unshift(newItem);
-    return { media: newItem, error: null };
-  }
 
   const { data: sessionData } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;
@@ -221,15 +180,7 @@ export async function updateMediaMeta(
   updates: { nama: string; alt: string; caption: string; deskripsi: string }
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured || !supabase) {
-    const idx = previewMediaStore.findIndex((m) => m.id === id);
-    if (idx !== -1) {
-      previewMediaStore[idx] = {
-        ...previewMediaStore[idx],
-        ...updates,
-        updated_at: new Date().toISOString(),
-      };
-    }
-    return { error: null };
+    return { error: SUPABASE_REQUIRED_ERROR };
   }
 
   const { error } = await supabase.from('media').update(updates).eq('id', id);
@@ -240,12 +191,7 @@ export async function deleteMediaItems(ids: string[]): Promise<{ error: string |
   if (ids.length === 0) return { error: null };
 
   if (!isSupabaseConfigured || !supabase) {
-    for (let i = previewMediaStore.length - 1; i >= 0; i--) {
-      if (ids.includes(previewMediaStore[i].id)) {
-        previewMediaStore.splice(i, 1);
-      }
-    }
-    return { error: null };
+    return { error: SUPABASE_REQUIRED_ERROR };
   }
 
   const { data: sessionData } = await supabase.auth.getSession();

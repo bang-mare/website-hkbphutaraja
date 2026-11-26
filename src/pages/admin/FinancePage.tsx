@@ -48,6 +48,10 @@ export function FinancePage() {
     setLoading(true);
     if (!isSupabaseConfigured || !supabase) {
       setLoading(false);
+      addNotice({
+        type: 'error',
+        message: 'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk memuat transaksi keuangan.',
+      });
       return;
     }
 
@@ -119,7 +123,10 @@ export function FinancePage() {
       return;
     }
     if (!isSupabaseConfigured || !supabase) {
-      addNotice({ type: 'warning', message: 'Hubungkan Supabase untuk menyimpan transaksi.' });
+      addNotice({
+        type: 'error',
+        message: 'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk menyimpan transaksi keuangan.',
+      });
       return;
     }
 
@@ -148,7 +155,13 @@ export function FinancePage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!supabase) return;
+    if (!isSupabaseConfigured || !supabase) {
+      addNotice({
+        type: 'error',
+        message: 'Penyimpanan lokal dinonaktifkan. Hubungkan Supabase untuk menghapus transaksi.',
+      });
+      return;
+    }
     const { error } = await supabase.from('keuangan').delete().eq('id', id);
     if (error) {
       addNotice({ type: 'error', message: error.message });

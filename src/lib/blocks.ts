@@ -1,5 +1,130 @@
+import type React from 'react';
 import DOMPurify from 'dompurify';
-import type { BlockType, GutenbergBlock } from '../types/cms';
+import type {
+  BlockFontFamily,
+  BlockFontSize,
+  BlockType,
+  GutenbergBlock,
+} from '../types/cms';
+
+export const BLOCK_FONT_FAMILY_OPTIONS: Array<{
+  value: BlockFontFamily;
+  label: string;
+  css: string;
+}> = [
+  { value: 'default', label: 'Default Tema', css: '' },
+  {
+    value: 'sans',
+    label: 'Sans-Serif (Plus Jakarta)',
+    css: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+  },
+  {
+    value: 'serif',
+    label: 'Serif Elegan (Playfair)',
+    css: "'Playfair Display', Georgia, serif",
+  },
+  {
+    value: 'mono',
+    label: 'Monospace (JetBrains)',
+    css: "'JetBrains Mono', ui-monospace, SFMono-Regular, monospace",
+  },
+];
+
+export const BLOCK_FONT_SIZE_OPTIONS: Array<{
+  value: BlockFontSize;
+  label: string;
+  css: string;
+}> = [
+  { value: 'sm', label: 'Kecil (14px)', css: '0.875rem' },
+  { value: 'base', label: 'Normal (16px)', css: '1rem' },
+  { value: 'lg', label: 'Sedang (18px)', css: '1.125rem' },
+  { value: 'xl', label: 'Besar (22px)', css: '1.375rem' },
+  { value: '2xl', label: 'Ekstra Besar (26px)', css: '1.625rem' },
+];
+
+export const TEXT_COLOR_PRESETS = [
+  { label: 'Hitam Standar', value: '#1d2327' },
+  { label: 'Abu Gelap', value: '#50575e' },
+  { label: 'Navy HKBP', value: '#0f294a' },
+  { label: 'Biru Aksen', value: '#1d4ed8' },
+  { label: 'Emas Hangat', value: '#b45309' },
+  { label: 'Merah Marun', value: '#991b1b' },
+  { label: 'Hijau Zaitun', value: '#166534' },
+  { label: 'Ungu Liturgi', value: '#6b21a8' },
+];
+
+export const HIGHLIGHT_COLOR_PRESETS = [
+  { label: 'Kuning Lembut', value: '#fef08a' },
+  { label: 'Biru Muda', value: '#dbeafe' },
+  { label: 'Hijau Muda', value: '#dcfce7' },
+  { label: 'Persik Hangat', value: '#ffedd5' },
+  { label: 'Merah Muda', value: '#fce7f3' },
+  { label: 'Abu Terang', value: '#f1f5f9' },
+];
+
+export function isSafeHexColor(val: string | undefined): string {
+  if (!val) return '';
+  const trimmed = val.trim();
+  return /^#[0-9a-fA-F]{3,8}$/.test(trimmed) ? trimmed : '';
+}
+
+export function getBlockTypographyStyle(
+  block: Pick<
+    GutenbergBlock,
+    'align' | 'fontFamily' | 'fontSize' | 'textColor' | 'backgroundColor' | 'type'
+  >
+): React.CSSProperties {
+  const style: React.CSSProperties = {};
+  if (block.align) {
+    style.textAlign = block.align;
+  }
+  const ff = BLOCK_FONT_FAMILY_OPTIONS.find((f) => f.value === block.fontFamily);
+  if (ff && ff.css) {
+    style.fontFamily = ff.css;
+  }
+  if (block.type !== 'heading') {
+    const fs = BLOCK_FONT_SIZE_OPTIONS.find((s) => s.value === block.fontSize);
+    if (fs && block.fontSize && block.fontSize !== 'base') {
+      style.fontSize = fs.css;
+    }
+  }
+  const color = isSafeHexColor(block.textColor);
+  if (color) style.color = color;
+  const bg = isSafeHexColor(block.backgroundColor);
+  if (bg) style.backgroundColor = bg;
+  return style;
+}
+
+function buildBlockInlineStyleAttr(
+  block: Pick<
+    GutenbergBlock,
+    'align' | 'fontFamily' | 'fontSize' | 'textColor' | 'backgroundColor' | 'type'
+  >
+): string {
+  const decls: string[] = [];
+  if (block.align) {
+    decls.push(`text-align:${block.align}`);
+  }
+  const ff = BLOCK_FONT_FAMILY_OPTIONS.find((f) => f.value === block.fontFamily);
+  if (ff && ff.css) {
+    decls.push(`font-family:${ff.css}`);
+  }
+  if (block.type !== 'heading') {
+    const fs = BLOCK_FONT_SIZE_OPTIONS.find((s) => s.value === block.fontSize);
+    if (fs && block.fontSize && block.fontSize !== 'base') {
+      decls.push(`font-size:${fs.css}`);
+    }
+  }
+  const color = isSafeHexColor(block.textColor);
+  if (color) decls.push(`color:${color}`);
+  const bg = isSafeHexColor(block.backgroundColor);
+  if (bg) {
+    decls.push(`background-color:${bg}`);
+    decls.push('padding:0.75rem 1rem');
+    decls.push('border-radius:0.5rem');
+  }
+  return decls.length > 0 ? ` style="${decls.join(';')}"` : '';
+}
 
 export const BLOCK_DEFINITIONS: Array<{
   type: BlockType;
@@ -152,7 +277,7 @@ export function extractYouTubeId(url: string | undefined): string | null {
   return null;
 }
 
-function escapeHtml(str: string): string {
+export function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -161,9 +286,64 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;');
 }
 
+export function sanitizeInlineHtml(html: string): string {
+  if (!html) return '';
+  const normalizedBreaks = html
+    .replace(/<\/(p|div)>\s*<(p|div)[^>]*>/gi, '<br />')
+    .replace(/<(p|div)[^>]*>/gi, '')
+    .replace(/<\/(p|div)>/gi, '');
+
+  return DOMPurify.sanitize(normalizedBreaks, {
+    ALLOWED_TAGS: [
+      'b',
+      'strong',
+      'i',
+      'em',
+      'u',
+      's',
+      'strike',
+      'del',
+      'sub',
+      'sup',
+      'mark',
+      'span',
+      'a',
+      'br',
+      'code',
+      'font',
+    ],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'color', 'class'],
+  });
+}
+
+export function renderRichOrPlainHtml(richHtml?: string, plainText?: string): string {
+  if (richHtml !== undefined && richHtml !== null && richHtml !== '') {
+    return sanitizeInlineHtml(richHtml);
+  }
+  return escapeHtml(plainText || '').replace(/\n/g, '<br />');
+}
+
+export function htmlToPlainText(html: string): string {
+  if (!html) return '';
+  if (typeof DOMParser !== 'undefined') {
+    const withNewlines = html.replace(/<br\s*\/?>/gi, '\n');
+    const doc = new DOMParser().parseFromString(withNewlines, 'text/html');
+    return (doc.body.textContent || '').replace(/\u00a0/g, ' ');
+  }
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+}
+
 export function sanitizeHtml(html: string): string {
   return DOMPurify.sanitize(html, {
-    ADD_TAGS: ['iframe'],
+    ADD_TAGS: ['iframe', 'mark', 'u', 's', 'sub', 'sup', 'font'],
     ADD_ATTR: [
       'allow',
       'allowfullscreen',
@@ -175,6 +355,7 @@ export function sanitizeHtml(html: string): string {
       'rel',
       'class',
       'style',
+      'color',
     ],
   });
 }
@@ -183,14 +364,15 @@ export function serializeBlocksToHtml(blocks: GutenbergBlock[]): string {
   const parts = blocks.map((block) => {
     switch (block.type) {
       case 'paragraph': {
-        const align = block.align ? ` style="text-align:${block.align}"` : '';
-        const text = escapeHtml(block.content || '').replace(/\n/g, '<br />');
-        return `<p${align}>${text}</p>`;
+        const styleAttr = buildBlockInlineStyleAttr(block);
+        const text = renderRichOrPlainHtml(block.contentHtml, block.content);
+        return `<p${styleAttr}>${text}</p>`;
       }
       case 'heading': {
         const lvl = block.level || 2;
-        const align = block.align ? ` style="text-align:${block.align}"` : '';
-        return `<h${lvl}${align}>${escapeHtml(block.content || '')}</h${lvl}>`;
+        const styleAttr = buildBlockInlineStyleAttr(block);
+        const text = renderRichOrPlainHtml(block.contentHtml, block.content);
+        return `<h${lvl}${styleAttr}>${text}</h${lvl}>`;
       }
       case 'image': {
         const safeUrl = isSafeHttpOrRelativeUrl(block.url);
@@ -214,15 +396,25 @@ export function serializeBlocksToHtml(blocks: GutenbergBlock[]): string {
       }
       case 'list': {
         const tag = block.ordered ? 'ol' : 'ul';
-        const lis = (block.items || [])
-          .filter((i) => i.trim() !== '')
-          .map((i) => `<li>${escapeHtml(i)}</li>`)
-          .join('');
-        return lis ? `<${tag}>${lis}</${tag}>` : '';
+        const styleAttr = buildBlockInlineStyleAttr(block);
+        const plainItems = block.items || [];
+        const htmlItems = block.itemsHtml || [];
+        const count = Math.max(plainItems.length, htmlItems.length);
+        const lis: string[] = [];
+        for (let i = 0; i < count; i++) {
+          const rawPlain = plainItems[i] ?? '';
+          const rawHtml = htmlItems[i];
+          const textCheck = rawPlain.trim() || htmlToPlainText(rawHtml || '').trim();
+          if (!textCheck) continue;
+          lis.push(`<li>${renderRichOrPlainHtml(rawHtml, rawPlain)}</li>`);
+        }
+        return lis.length > 0 ? `<${tag}${styleAttr}>${lis.join('')}</${tag}>` : '';
       }
       case 'quote': {
         const cite = block.citation ? `<cite>${escapeHtml(block.citation)}</cite>` : '';
-        return `<blockquote><p>${escapeHtml(block.content || '').replace(/\n/g, '<br />')}</p>${cite}</blockquote>`;
+        const styleAttr = buildBlockInlineStyleAttr(block);
+        const text = renderRichOrPlainHtml(block.contentHtml, block.content);
+        return `<blockquote${styleAttr}><p>${text}</p>${cite}</blockquote>`;
       }
       case 'button': {
         const safeUrl = isSafeHttpOrRelativeUrl(block.buttonUrl) || '#';
@@ -231,13 +423,17 @@ export function serializeBlocksToHtml(blocks: GutenbergBlock[]): string {
         return `<div class="wp-block-button align-${align}"><a class="wp-btn wp-btn-${variant}" href="${escapeHtml(safeUrl)}">${escapeHtml(block.buttonText || 'Tombol')}</a></div>`;
       }
       case 'columns': {
+        const styleAttr = buildBlockInlineStyleAttr(block);
         const cols = (block.columns || [])
-          .map(
-            (c) =>
-              `<div class="wp-block-column">${c.heading ? `<h4>${escapeHtml(c.heading)}</h4>` : ''}<p>${escapeHtml(c.body || '').replace(/\n/g, '<br />')}</p></div>`
-          )
+          .map((c) => {
+            const headingHtml = c.headingHtml || c.heading
+              ? `<h4>${renderRichOrPlainHtml(c.headingHtml, c.heading)}</h4>`
+              : '';
+            const bodyHtml = `<p>${renderRichOrPlainHtml(c.bodyHtml, c.body)}</p>`;
+            return `<div class="wp-block-column">${headingHtml}${bodyHtml}</div>`;
+          })
           .join('');
-        return `<div class="wp-block-columns cols-${block.columnsCount || 2}">${cols}</div>`;
+        return `<div class="wp-block-columns cols-${block.columnsCount || 2}"${styleAttr}>${cols}</div>`;
       }
       case 'youtube': {
         const ytId = extractYouTubeId(block.url);
@@ -259,6 +455,7 @@ export function extractPlainExcerpt(blocks: GutenbergBlock[], maxLength = 150): 
   const texts: string[] = [];
   for (const b of blocks) {
     if (b.content) texts.push(b.content);
+    else if (b.contentHtml) texts.push(htmlToPlainText(b.contentHtml));
     if (b.items) texts.push(b.items.join(' '));
     if (b.columns) texts.push(b.columns.map((c) => `${c.heading || ''} ${c.body}`).join(' '));
   }

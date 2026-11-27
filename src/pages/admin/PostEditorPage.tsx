@@ -26,14 +26,36 @@ import {
   MousePointerClick,
   Minus,
   Images,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Subscript,
+  Superscript,
+  Code,
+  Palette,
+  Highlighter,
+  Link2,
+  Unlink,
+  RemoveFormatting,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Type,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAdmin } from '../../contexts/AdminContext';
 import {
   BLOCK_DEFINITIONS,
+  BLOCK_FONT_FAMILY_OPTIONS,
+  BLOCK_FONT_SIZE_OPTIONS,
+  HIGHLIGHT_COLOR_PRESETS,
+  TEXT_COLOR_PRESETS,
   createBlock,
   extractPlainExcerpt,
   extractYouTubeId,
+  getBlockTypographyStyle,
   isSafeHttpOrRelativeUrl,
   sanitizeHtml,
   serializeBlocksToHtml,
@@ -49,8 +71,16 @@ import {
 } from '../../lib/cmsData';
 import { hasCapability } from '../../lib/roles';
 import { MediaPickerModal } from '../../components/admin/MediaPickerModal';
+import {
+  RichTextInput,
+  type ActiveInlineFormats,
+  type RichTextEditorHandle,
+} from '../../components/admin/RichTextInput';
 import { getMediaProxyUrl } from '../../lib/mediaClient';
 import type {
+  BlockFontFamily,
+  BlockFontSize,
+  BlockTextAlign,
   BlockType,
   GutenbergBlock,
   MediaItem,
@@ -148,6 +178,23 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
   const [saving, setSaving] = useState(false);
   const [autosaveStatus, setAutosaveStatus] = useState<string>('');
   const [isDirty, setIsDirty] = useState(false);
+
+  // Rich Text Formatting Controls
+  const activeEditorHandleRef = useRef<RichTextEditorHandle | null>(null);
+  const blockPrimaryEditorRefs = useRef<Record<string, RichTextEditorHandle | null>>({});
+  const [activeFormats, setActiveFormats] = useState<ActiveInlineFormats>({
+    bold: false,
+    italic: false,
+    underline: false,
+    strikeThrough: false,
+    subscript: false,
+    superscript: false,
+    link: false,
+  });
+  const [openFormatMenu, setOpenFormatMenu] = useState<
+    null | 'textColor' | 'highlight' | 'link'
+  >(null);
+  const [linkUrlInput, setLinkUrlInput] = useState('https://');
 
   // Accordion Panels di Panel Kanan
   const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
@@ -536,6 +583,113 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
     [blocks, selectedBlockId]
   );
 
+  const isTextFormattingBlock = Boolean(
+    selectedBlock &&
+      (selectedBlock.type === 'paragraph' ||
+        selectedBlock.type === 'heading' ||
+        selectedBlock.type === 'list' ||
+        selectedBlock.type === 'quote' ||
+        selectedBlock.type === 'columns')
+  );
+
+  const refreshActiveFormats = useCallback(() => {
+    const handle = activeEditorHandleRef.current;
+    if (!handle) {
+      setActiveFormats({
+        bold: false,
+        italic: false,
+        underline: false,
+        strikeThrough: false,
+        subscript: false,
+        superscript: false,
+        link: false,
+      });
+      return;
+    }
+    setActiveFormats(handle.getActiveFormats());
+  }, []);
+
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      refreshActiveFormats();
+    };
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, [refreshActiveFormats]);
+
+  const getTargetEditorHandle = useCallback((): RichTextEditorHandle | null => {
+    if (activeEditorHandleRef.current) return activeEditorHandleRef.current;
+    if (selectedBlockId && blockPrimaryEditorRefs.current[selectedBlockId]) {
+      return blockPrimaryEditorRefs.current[selectedBlockId];
+    }
+    const firstTextBlock = blocks.find(
+      (b) =>
+        b.type === 'paragraph' ||
+        b.type === 'heading' ||
+        b.type === 'list' ||
+        b.type === 'quote' ||
+        b.type === 'columns'
+    );
+    if (firstTextBlock && blockPrimaryEditorRefs.current[firstTextBlock.id]) {
+      setSelectedBlockId(firstTextBlock.id);
+      return blockPrimaryEditorRefs.current[firstTextBlock.id];
+    }
+    return null;
+  }, [blocks, selectedBlockId]);
+
+  const runInlineCommand = (command: string) => {
+    const handle = getTargetEditorHandle();
+    if (!handle) {
+      addNotice({
+        type: 'info',
+        message: 'Pilih blok teks terlebih dahulu untuk menerapkan gaya huruf.',
+      });
+      return;
+    }
+    activeEditorHandleRef.current = handle;
+    handle.execCommand(command);
+    refreshActiveFormats();
+  };
+
+  const runInlineColor = (kind: 'foreColor' | 'hiliteColor', hex: string) => {
+    const handle = getTargetEditorHandle();
+    if (!handle) return;
+    activeEditorHandleRef.current = handle;
+    handle.applyColor(kind, hex);
+    setOpenFormatMenu(null);
+    refreshActiveFormats();
+  };
+
+  const runInlineCode = () => {
+    const handle = getTargetEditorHandle();
+    if (!handle) return;
+    activeEditorHandleRef.current = handle;
+    handle.toggleInlineCode();
+    refreshActiveFormats();
+  };
+
+  const runClearFormatting = () => {
+    const handle = getTargetEditorHandle();
+    if (!handle) return;
+    activeEditorHandleRef.current = handle;
+    handle.clearFormatting();
+    setOpenFormatMenu(null);
+    refreshActiveFormats();
+  };
+
+  const handleApplyLink = (e: React.FormEvent) => {
+    e.preventDefault();
+    const handle = getTargetEditorHandle();
+    if (!handle) return;
+    activeEditorHandleRef.current = handle;
+    handle.insertLink(linkUrlInput);
+    setOpenFormatMenu(null);
+    setLinkUrlInput('https://');
+    refreshActiveFormats();
+  };
+
   const filteredInserterBlocks = useMemo(() => {
     const q = inserterSearch.trim().toLowerCase();
     if (!q) return BLOCK_DEFINITIONS;
@@ -709,13 +863,411 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
       </div>
 
       {/* ====================================================================
+          BAR FORMAT TEKS & GAYA HURUF (STICKY)
+         ==================================================================== */}
+      <div className="sticky top-[102px] md:top-[88px] z-10 bg-[#f6f7f7] border-b border-[#e0e0e0] px-2.5 sm:px-4 py-1.5 flex flex-wrap items-center gap-1.5 text-[12px]">
+        {/* Jenis Huruf (Font Family) */}
+        <div className="inline-flex items-center gap-1">
+          <Type className="w-3.5 h-3.5 text-[#50575e] shrink-0" />
+          <select
+            aria-label="Jenis Huruf (Font Family)"
+            disabled={!isTextFormattingBlock}
+            value={selectedBlock?.fontFamily || 'default'}
+            onChange={(e) => {
+              if (!selectedBlock) return;
+              updateBlock(selectedBlock.id, {
+                fontFamily: e.target.value as BlockFontFamily,
+              });
+            }}
+            className="h-7 px-1.5 bg-white border border-[#c3c4c7] rounded-[2px] text-[12px] text-[#1d2327] disabled:opacity-50"
+          >
+            {BLOCK_FONT_FAMILY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Ukuran Huruf (Font Size) */}
+        <select
+          aria-label="Ukuran Huruf"
+          disabled={!isTextFormattingBlock || selectedBlock?.type === 'heading'}
+          value={selectedBlock?.fontSize || 'base'}
+          onChange={(e) => {
+            if (!selectedBlock) return;
+            updateBlock(selectedBlock.id, {
+              fontSize: e.target.value as BlockFontSize,
+            });
+          }}
+          className="h-7 px-1.5 bg-white border border-[#c3c4c7] rounded-[2px] text-[12px] text-[#1d2327] disabled:opacity-50"
+        >
+          {BLOCK_FONT_SIZE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+
+        <span className="h-5 w-px bg-[#dcdcde] mx-0.5 hidden sm:inline-block" />
+
+        {/* Format Inline: Bold, Italic, Underline, Strikethrough, Sub, Sup, Code */}
+        <div className="inline-flex items-center border border-[#c3c4c7] bg-white rounded-[2px] overflow-hidden">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => runInlineCommand('bold')}
+            title="Tebal / Bold (Ctrl+B)"
+            aria-label="Bold"
+            className={`w-7 h-7 inline-flex items-center justify-center cursor-pointer transition-colors ${
+              activeFormats.bold
+                ? 'bg-[#2271b1] text-white'
+                : 'text-[#1d2327] hover:bg-[#f0f6fc]'
+            }`}
+          >
+            <Bold className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => runInlineCommand('italic')}
+            title="Miring / Italic (Ctrl+I)"
+            aria-label="Italic"
+            className={`w-7 h-7 inline-flex items-center justify-center border-l border-[#e0e0e0] cursor-pointer transition-colors ${
+              activeFormats.italic
+                ? 'bg-[#2271b1] text-white'
+                : 'text-[#1d2327] hover:bg-[#f0f6fc]'
+            }`}
+          >
+            <Italic className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => runInlineCommand('underline')}
+            title="Garis Bawah / Underline (Ctrl+U)"
+            aria-label="Underline"
+            className={`w-7 h-7 inline-flex items-center justify-center border-l border-[#e0e0e0] cursor-pointer transition-colors ${
+              activeFormats.underline
+                ? 'bg-[#2271b1] text-white'
+                : 'text-[#1d2327] hover:bg-[#f0f6fc]'
+            }`}
+          >
+            <Underline className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => runInlineCommand('strikeThrough')}
+            title="Coret / Strikethrough"
+            aria-label="Strikethrough"
+            className={`w-7 h-7 inline-flex items-center justify-center border-l border-[#e0e0e0] cursor-pointer transition-colors ${
+              activeFormats.strikeThrough
+                ? 'bg-[#2271b1] text-white'
+                : 'text-[#1d2327] hover:bg-[#f0f6fc]'
+            }`}
+          >
+            <Strikethrough className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => runInlineCommand('subscript')}
+            title="Subskrip (X₂)"
+            aria-label="Subscript"
+            className={`w-7 h-7 inline-flex items-center justify-center border-l border-[#e0e0e0] cursor-pointer transition-colors ${
+              activeFormats.subscript
+                ? 'bg-[#2271b1] text-white'
+                : 'text-[#1d2327] hover:bg-[#f0f6fc]'
+            }`}
+          >
+            <Subscript className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => runInlineCommand('superscript')}
+            title="Superskrip (X²)"
+            aria-label="Superscript"
+            className={`w-7 h-7 inline-flex items-center justify-center border-l border-[#e0e0e0] cursor-pointer transition-colors ${
+              activeFormats.superscript
+                ? 'bg-[#2271b1] text-white'
+                : 'text-[#1d2327] hover:bg-[#f0f6fc]'
+            }`}
+          >
+            <Superscript className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={runInlineCode}
+            title="Kode Sebaris (Inline Code)"
+            aria-label="Inline Code"
+            className="w-7 h-7 inline-flex items-center justify-center border-l border-[#e0e0e0] text-[#1d2327] hover:bg-[#f0f6fc] cursor-pointer"
+          >
+            <Code className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Warna Teks, Stabilo/Highlight, Tautan, Hapus Format */}
+        <div className="relative inline-flex items-center border border-[#c3c4c7] bg-white rounded-[2px]">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() =>
+              setOpenFormatMenu((cur) => (cur === 'textColor' ? null : 'textColor'))
+            }
+            title="Warna Huruf (Text Color)"
+            aria-label="Warna Huruf"
+            className={`w-7 h-7 inline-flex items-center justify-center cursor-pointer ${
+              openFormatMenu === 'textColor'
+                ? 'bg-[#1d2327] text-white'
+                : 'text-[#1d2327] hover:bg-[#f0f6fc]'
+            }`}
+          >
+            <Palette className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() =>
+              setOpenFormatMenu((cur) => (cur === 'highlight' ? null : 'highlight'))
+            }
+            title="Warna Stabilo / Sorotan Teks"
+            aria-label="Warna Sorotan"
+            className={`w-7 h-7 inline-flex items-center justify-center border-l border-[#e0e0e0] cursor-pointer ${
+              openFormatMenu === 'highlight'
+                ? 'bg-[#1d2327] text-white'
+                : 'text-[#1d2327] hover:bg-[#f0f6fc]'
+            }`}
+          >
+            <Highlighter className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setOpenFormatMenu((cur) => (cur === 'link' ? null : 'link'))}
+            title="Sisipkan Tautan / Link"
+            aria-label="Sisipkan Tautan"
+            className={`w-7 h-7 inline-flex items-center justify-center border-l border-[#e0e0e0] cursor-pointer ${
+              activeFormats.link || openFormatMenu === 'link'
+                ? 'bg-[#2271b1] text-white'
+                : 'text-[#1d2327] hover:bg-[#f0f6fc]'
+            }`}
+          >
+            <Link2 className="w-3.5 h-3.5" />
+          </button>
+          {activeFormats.link && (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                const handle = getTargetEditorHandle();
+                handle?.unlink();
+                refreshActiveFormats();
+              }}
+              title="Hapus Tautan"
+              aria-label="Hapus Tautan"
+              className="w-7 h-7 inline-flex items-center justify-center border-l border-[#e0e0e0] text-[#d63638] hover:bg-[#fceaea] cursor-pointer"
+            >
+              <Unlink className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={runClearFormatting}
+            title="Hapus Semua Format Teks (Clear Formatting)"
+            aria-label="Hapus Format Teks"
+            className="w-7 h-7 inline-flex items-center justify-center border-l border-[#e0e0e0] text-[#50575e] hover:bg-[#f0f6fc] cursor-pointer"
+          >
+            <RemoveFormatting className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Popover Warna Teks */}
+          {openFormatMenu === 'textColor' && (
+            <div className="absolute left-0 top-full mt-1.5 z-40 w-56 bg-white border border-[#c3c4c7] shadow-xl p-2.5 rounded-[2px] space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-[#1d2327]">
+                <span>Warna Huruf Terpilih</span>
+                <button
+                  type="button"
+                  onClick={() => setOpenFormatMenu(null)}
+                  className="text-[#50575e] hover:text-[#1d2327] cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {TEXT_COLOR_PRESETS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => runInlineColor('foreColor', c.value)}
+                    title={c.label}
+                    className="h-7 border border-[#dcdcde] rounded-[2px] flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
+                    style={{ backgroundColor: c.value }}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-[#f0f0f1]">
+                <label className="text-[11px] text-[#50575e] flex items-center gap-1.5">
+                  <span>Kustom:</span>
+                  <input
+                    type="color"
+                    defaultValue="#0f294a"
+                    onChange={(e) => runInlineColor('foreColor', e.target.value)}
+                    className="w-7 h-6 border border-[#c3c4c7] rounded cursor-pointer"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => runInlineColor('foreColor', '#1d2327')}
+                  className="text-[11px] text-[#2271b1] hover:underline cursor-pointer"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Popover Highlight / Stabilo */}
+          {openFormatMenu === 'highlight' && (
+            <div className="absolute left-0 top-full mt-1.5 z-40 w-56 bg-white border border-[#c3c4c7] shadow-xl p-2.5 rounded-[2px] space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-[#1d2327]">
+                <span>Warna Sorotan (Stabilo)</span>
+                <button
+                  type="button"
+                  onClick={() => setOpenFormatMenu(null)}
+                  className="text-[#50575e] hover:text-[#1d2327] cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {HIGHLIGHT_COLOR_PRESETS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => runInlineColor('hiliteColor', c.value)}
+                    title={c.label}
+                    className="h-7 border border-[#c3c4c7] rounded-[2px] text-[10px] font-medium text-[#1d2327] cursor-pointer hover:opacity-90"
+                    style={{ backgroundColor: c.value }}
+                  >
+                    Aa
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center justify-between pt-1.5 border-t border-[#f0f0f1]">
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => runInlineColor('hiliteColor', 'transparent')}
+                  className="text-[11px] text-[#d63638] hover:underline cursor-pointer"
+                >
+                  Hapus Sorotan
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Popover Link */}
+          {openFormatMenu === 'link' && (
+            <form
+              onSubmit={handleApplyLink}
+              className="absolute left-0 top-full mt-1.5 z-40 w-64 bg-white border border-[#c3c4c7] shadow-xl p-2.5 rounded-[2px] space-y-2"
+            >
+              <div className="flex items-center justify-between text-[11px] font-semibold text-[#1d2327]">
+                <span>Sisipkan Tautan pada Teks</span>
+                <button
+                  type="button"
+                  onClick={() => setOpenFormatMenu(null)}
+                  className="text-[#50575e] hover:text-[#1d2327] cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <input
+                type="url"
+                required
+                value={linkUrlInput}
+                onChange={(e) => setLinkUrlInput(e.target.value)}
+                placeholder="https://contoh.com"
+                autoFocus
+                className="w-full h-7 px-2 border border-[#8c8f94] rounded-[2px] text-[12px]"
+              />
+              <div className="flex items-center justify-end gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setOpenFormatMenu(null)}
+                  className="px-2 py-1 text-[11px] text-[#50575e] cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-2.5 py-1 bg-[#2271b1] hover:bg-[#135e96] text-white text-[11px] font-medium rounded-[2px] cursor-pointer"
+                >
+                  Terapkan Tautan
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+
+        <span className="h-5 w-px bg-[#dcdcde] mx-0.5 hidden sm:inline-block" />
+
+        {/* Perataan Teks Blok */}
+        <div className="inline-flex items-center border border-[#c3c4c7] bg-white rounded-[2px] overflow-hidden">
+          {(
+            [
+              { align: 'left', Icon: AlignLeft, label: 'Rata Kiri' },
+              { align: 'center', Icon: AlignCenter, label: 'Rata Tengah' },
+              { align: 'right', Icon: AlignRight, label: 'Rata Kanan' },
+              { align: 'justify', Icon: AlignJustify, label: 'Rata Kiri-Kanan' },
+            ] as Array<{
+              align: BlockTextAlign;
+              Icon: React.ComponentType<{ className?: string }>;
+              label: string;
+            }>
+          ).map(({ align, Icon, label }, idx) => (
+            <button
+              key={align}
+              type="button"
+              disabled={!isTextFormattingBlock}
+              onClick={() => {
+                if (!selectedBlock) return;
+                updateBlock(selectedBlock.id, { align });
+              }}
+              title={label}
+              aria-label={label}
+              className={`w-7 h-7 inline-flex items-center justify-center cursor-pointer disabled:opacity-40 ${
+                idx > 0 ? 'border-l border-[#e0e0e0]' : ''
+              } ${
+                (selectedBlock?.align || 'left') === align && isTextFormattingBlock
+                  ? 'bg-[#2271b1] text-white'
+                  : 'text-[#1d2327] hover:bg-[#f0f6fc]'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ====================================================================
           BODY: CANVAS TENGAH + PANEL KANAN (POS / BLOK)
          ==================================================================== */}
       <div className="relative flex flex-1 min-h-0">
         {/* Canvas Editor Tengah */}
         <div
           className="flex-1 min-w-0 overflow-y-auto px-4 sm:px-10 py-6 sm:py-10 bg-white"
-          onClick={() => setInserterOpen(false)}
+          onClick={() => {
+            setInserterOpen(false);
+            setOpenFormatMenu(null);
+          }}
         >
           <div className="max-w-3xl mx-auto">
             {/* Judul Besar ala Gutenberg */}
@@ -831,21 +1383,34 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                     {/* Render Isi Blok sesuai Tipe */}
                     {block.type === 'paragraph' && (
                       <div className="relative">
-                        <textarea
-                          rows={Math.max(2, (block.content || '').split('\n').length)}
-                          value={block.content || ''}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            updateBlock(block.id, { content: val });
-                            if (val === '/') {
+                        <RichTextInput
+                          ref={(handle) => {
+                            blockPrimaryEditorRefs.current[block.id] = handle;
+                          }}
+                          multiline
+                          html={block.contentHtml}
+                          plainText={block.content}
+                          placeholder="Mulai menulis atau ketik / untuk memilih blok..."
+                          onFocusEditor={(handle) => {
+                            activeEditorHandleRef.current = handle;
+                            setSelectedBlockId(block.id);
+                          }}
+                          onSelectionStateChange={refreshActiveFormats}
+                          onChange={(nextHtml, nextPlain) => {
+                            updateBlock(block.id, {
+                              content: nextPlain,
+                              contentHtml: nextHtml,
+                            });
+                            if (nextPlain === '/') {
                               setSlashBlockId(block.id);
                             } else if (slashBlockId === block.id) {
                               setSlashBlockId(null);
                             }
                           }}
-                          placeholder="Mulai menulis atau ketik / untuk memilih blok..."
-                          style={{ textAlign: block.align || 'left' }}
-                          className="w-full text-[16px] leading-relaxed text-[#1d2327] placeholder:text-[#a7aaad] focus:outline-none resize-none bg-transparent"
+                          style={getBlockTypographyStyle(block)}
+                          className={`w-full text-[16px] leading-relaxed text-[#1d2327] bg-transparent ${
+                            block.backgroundColor ? 'p-3 rounded-[4px]' : ''
+                          }`}
                         />
                         {slashBlockId === block.id && (
                           <div className="absolute left-0 top-full z-30 w-64 bg-white border border-[#c3c4c7] shadow-lg p-1.5 rounded-[2px]">
@@ -872,13 +1437,29 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                     )}
 
                     {block.type === 'heading' && (
-                      <input
-                        type="text"
-                        value={block.content || ''}
-                        onChange={(e) => updateBlock(block.id, { content: e.target.value })}
+                      <RichTextInput
+                        ref={(handle) => {
+                          blockPrimaryEditorRefs.current[block.id] = handle;
+                        }}
+                        multiline={false}
+                        html={block.contentHtml}
+                        plainText={block.content}
                         placeholder={`Subjudul H${block.level || 2}...`}
-                        style={{ textAlign: block.align || 'left' }}
-                        className={`w-full font-display font-semibold text-[#1d2327] placeholder:text-[#a7aaad] focus:outline-none bg-transparent ${
+                        onFocusEditor={(handle) => {
+                          activeEditorHandleRef.current = handle;
+                          setSelectedBlockId(block.id);
+                        }}
+                        onSelectionStateChange={refreshActiveFormats}
+                        onChange={(nextHtml, nextPlain) =>
+                          updateBlock(block.id, {
+                            content: nextPlain,
+                            contentHtml: nextHtml,
+                          })
+                        }
+                        style={getBlockTypographyStyle(block)}
+                        className={`w-full font-display font-semibold text-[#1d2327] bg-transparent ${
+                          block.backgroundColor ? 'p-2.5 rounded-[4px]' : ''
+                        } ${
                           block.level === 4
                             ? 'text-lg'
                             : block.level === 3
@@ -1026,30 +1607,61 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                     )}
 
                     {block.type === 'list' && (
-                      <div className="space-y-1.5 pl-2">
+                      <div
+                        style={getBlockTypographyStyle(block)}
+                        className={`space-y-1.5 pl-2 ${
+                          block.backgroundColor ? 'p-3 rounded-[4px]' : ''
+                        }`}
+                      >
                         {(block.items || ['']).map((item, iIdx) => (
-                          <div key={iIdx} className="flex items-center gap-2">
-                            <span className="text-[#50575e] w-5 text-right tabular-nums text-[13px]">
+                          <div key={iIdx} className="flex items-start gap-2">
+                            <span className="text-[#50575e] w-5 text-right tabular-nums text-[13px] pt-0.5 shrink-0">
                               {block.ordered ? `${iIdx + 1}.` : '•'}
                             </span>
-                            <input
-                              type="text"
-                              value={item}
-                              onChange={(e) => {
-                                const nextItems = [...(block.items || [])];
-                                nextItems[iIdx] = e.target.value;
-                                updateBlock(block.id, { items: nextItems });
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  const nextItems = [...(block.items || [])];
-                                  nextItems.splice(iIdx + 1, 0, '');
-                                  updateBlock(block.id, { items: nextItems });
+                            <RichTextInput
+                              ref={(handle) => {
+                                if (iIdx === 0) {
+                                  blockPrimaryEditorRefs.current[block.id] = handle;
                                 }
                               }}
+                              multiline={false}
+                              html={block.itemsHtml?.[iIdx]}
+                              plainText={item}
                               placeholder="Tulis item daftar (tekan Enter untuk baris baru)..."
-                              className="flex-1 text-[15px] py-0.5 focus:outline-none border-b border-transparent focus:border-[#dcdcde]"
+                              onFocusEditor={(handle) => {
+                                activeEditorHandleRef.current = handle;
+                                setSelectedBlockId(block.id);
+                              }}
+                              onSelectionStateChange={refreshActiveFormats}
+                              onChange={(nextHtml, nextPlain) => {
+                                const nextItems = [...(block.items || [])];
+                                nextItems[iIdx] = nextPlain;
+                                const nextItemsHtml = [...(block.itemsHtml || [])];
+                                while (nextItemsHtml.length < nextItems.length) {
+                                  nextItemsHtml.push('');
+                                }
+                                nextItemsHtml[iIdx] = nextHtml;
+                                updateBlock(block.id, {
+                                  items: nextItems,
+                                  itemsHtml: nextItemsHtml,
+                                });
+                              }}
+                              onEnter={() => {
+                                const nextItems = [...(block.items || [])];
+                                nextItems.splice(iIdx + 1, 0, '');
+                                const nextItemsHtml = [...(block.itemsHtml || [])];
+                                while (nextItemsHtml.length < nextItems.length - 1) {
+                                  nextItemsHtml.push('');
+                                }
+                                nextItemsHtml.splice(iIdx + 1, 0, '');
+                                updateBlock(block.id, {
+                                  items: nextItems,
+                                  itemsHtml: nextItemsHtml,
+                                });
+                              }}
+                              className={`flex-1 py-0.5 border-b border-transparent focus:border-[#dcdcde] ${
+                                !block.fontSize || block.fontSize === 'base' ? 'text-[15px]' : ''
+                              }`}
                             />
                             {(block.items || []).length > 1 && (
                               <button
@@ -1058,9 +1670,15 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                                   const nextItems = (block.items || []).filter(
                                     (_, i) => i !== iIdx
                                   );
-                                  updateBlock(block.id, { items: nextItems });
+                                  const nextItemsHtml = (block.itemsHtml || []).filter(
+                                    (_, i) => i !== iIdx
+                                  );
+                                  updateBlock(block.id, {
+                                    items: nextItems,
+                                    itemsHtml: nextItemsHtml,
+                                  });
                                 }}
-                                className="text-[11px] text-[#787c82] hover:text-[#d63638] cursor-pointer"
+                                className="text-[11px] text-[#787c82] hover:text-[#d63638] cursor-pointer pt-1"
                               >
                                 ×
                               </button>
@@ -1071,13 +1689,40 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                     )}
 
                     {block.type === 'quote' && (
-                      <div className="p-4 bg-[#FBF9F5] border border-stone-200 rounded-[2px] space-y-2">
-                        <textarea
-                          rows={2}
-                          value={block.content || ''}
-                          onChange={(e) => updateBlock(block.id, { content: e.target.value })}
+                      <div
+                        style={getBlockTypographyStyle(block)}
+                        className="p-4 bg-[#FBF9F5] border border-stone-200 rounded-[2px] space-y-2"
+                      >
+                        <RichTextInput
+                          ref={(handle) => {
+                            blockPrimaryEditorRefs.current[block.id] = handle;
+                          }}
+                          multiline
+                          html={block.contentHtml}
+                          plainText={block.content}
                           placeholder="Tulis kutipan atau ayat Alkitab..."
-                          className="w-full font-display italic text-lg text-[#1C1917] bg-transparent focus:outline-none resize-none"
+                          onFocusEditor={(handle) => {
+                            activeEditorHandleRef.current = handle;
+                            setSelectedBlockId(block.id);
+                          }}
+                          onSelectionStateChange={refreshActiveFormats}
+                          onChange={(nextHtml, nextPlain) =>
+                            updateBlock(block.id, {
+                              content: nextPlain,
+                              contentHtml: nextHtml,
+                            })
+                          }
+                          style={{
+                            fontFamily: getBlockTypographyStyle(block).fontFamily,
+                            fontSize: getBlockTypographyStyle(block).fontSize,
+                            color: getBlockTypographyStyle(block).color,
+                            textAlign: block.align,
+                          }}
+                          className={`w-full italic bg-transparent ${
+                            !block.fontFamily || block.fontFamily === 'default' ? 'font-display' : ''
+                          } ${
+                            !block.fontSize || block.fontSize === 'base' ? 'text-lg' : ''
+                          } ${!block.textColor ? 'text-[#1C1917]' : ''}`}
                         />
                         <input
                           type="text"
@@ -1128,6 +1773,7 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
 
                     {block.type === 'columns' && (
                       <div
+                        style={getBlockTypographyStyle(block)}
                         className={`grid gap-4 ${
                           block.columnsCount === 3
                             ? 'grid-cols-1 md:grid-cols-3'
@@ -1139,27 +1785,52 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
                             key={cIdx}
                             className="border border-dashed border-[#c3c4c7] p-3 rounded-[2px] space-y-1.5"
                           >
-                            <input
-                              type="text"
-                              value={col.heading || ''}
-                              onChange={(e) => {
-                                const nextCols = [...(block.columns || [])];
-                                nextCols[cIdx] = { ...nextCols[cIdx], heading: e.target.value };
-                                updateBlock(block.id, { columns: nextCols });
-                              }}
+                            <RichTextInput
+                              multiline={false}
+                              html={col.headingHtml}
+                              plainText={col.heading}
                               placeholder={`Judul Kolom ${cIdx + 1}`}
-                              className="w-full font-semibold text-[14px] focus:outline-none"
-                            />
-                            <textarea
-                              rows={3}
-                              value={col.body}
-                              onChange={(e) => {
+                              onFocusEditor={(handle) => {
+                                activeEditorHandleRef.current = handle;
+                                setSelectedBlockId(block.id);
+                              }}
+                              onSelectionStateChange={refreshActiveFormats}
+                              onChange={(nextHtml, nextPlain) => {
                                 const nextCols = [...(block.columns || [])];
-                                nextCols[cIdx] = { ...nextCols[cIdx], body: e.target.value };
+                                nextCols[cIdx] = {
+                                  ...nextCols[cIdx],
+                                  heading: nextPlain,
+                                  headingHtml: nextHtml,
+                                };
                                 updateBlock(block.id, { columns: nextCols });
                               }}
+                              className="w-full font-semibold text-[14px]"
+                            />
+                            <RichTextInput
+                              ref={(handle) => {
+                                if (cIdx === 0) {
+                                  blockPrimaryEditorRefs.current[block.id] = handle;
+                                }
+                              }}
+                              multiline
+                              html={col.bodyHtml}
+                              plainText={col.body}
                               placeholder="Isi kolom..."
-                              className="w-full text-[13px] focus:outline-none resize-none"
+                              onFocusEditor={(handle) => {
+                                activeEditorHandleRef.current = handle;
+                                setSelectedBlockId(block.id);
+                              }}
+                              onSelectionStateChange={refreshActiveFormats}
+                              onChange={(nextHtml, nextPlain) => {
+                                const nextCols = [...(block.columns || [])];
+                                nextCols[cIdx] = {
+                                  ...nextCols[cIdx],
+                                  body: nextPlain,
+                                  bodyHtml: nextHtml,
+                                };
+                                updateBlock(block.id, { columns: nextCols });
+                              }}
+                              className="w-full text-[13px] min-h-[4rem]"
                             />
                           </div>
                         ))}
@@ -1798,24 +2469,190 @@ export function PostEditorPage({ postType }: PostEditorPageProps) {
 
                     {(selectedBlock.type === 'paragraph' ||
                       selectedBlock.type === 'heading' ||
+                      selectedBlock.type === 'list' ||
+                      selectedBlock.type === 'quote' ||
+                      selectedBlock.type === 'columns' ||
                       selectedBlock.type === 'button') && (
                       <div>
                         <p className="font-medium text-[#1d2327] mb-1.5">Perataan Teks</p>
                         <div className="flex border border-[#8c8f94] rounded-[2px] overflow-hidden">
-                          {(['left', 'center', 'right'] as const).map((al) => (
+                          {(selectedBlock.type === 'button'
+                            ? (['left', 'center', 'right'] as const)
+                            : (['left', 'center', 'right', 'justify'] as const)
+                          ).map((al) => (
                             <button
                               key={al}
                               type="button"
                               onClick={() => updateBlock(selectedBlock.id, { align: al })}
-                              className={`flex-1 py-1 text-[12px] cursor-pointer ${
+                              className={`flex-1 py-1 text-[11px] cursor-pointer ${
                                 (selectedBlock.align || 'left') === al
                                   ? 'bg-[#2271b1] text-white'
                                   : 'bg-white text-[#3c434a]'
                               }`}
                             >
-                              {al === 'left' ? 'Kiri' : al === 'center' ? 'Tengah' : 'Kanan'}
+                              {al === 'left'
+                                ? 'Kiri'
+                                : al === 'center'
+                                  ? 'Tengah'
+                                  : al === 'right'
+                                    ? 'Kanan'
+                                    : 'Penuh'}
                             </button>
                           ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {(selectedBlock.type === 'paragraph' ||
+                      selectedBlock.type === 'heading' ||
+                      selectedBlock.type === 'list' ||
+                      selectedBlock.type === 'quote' ||
+                      selectedBlock.type === 'columns') && (
+                      <div className="space-y-3 pt-2 border-t border-[#e0e0e0]">
+                        <p className="font-semibold text-[#1d2327]">
+                          Gaya Huruf &amp; Warna Blok
+                        </p>
+
+                        <div>
+                          <label className="block text-[12px] text-[#50575e] mb-1">
+                            Jenis Huruf (Font Family)
+                          </label>
+                          <select
+                            value={selectedBlock.fontFamily || 'default'}
+                            onChange={(e) =>
+                              updateBlock(selectedBlock.id, {
+                                fontFamily: e.target.value as BlockFontFamily,
+                              })
+                            }
+                            className="w-full h-8 px-2 border border-[#8c8f94] rounded-[2px]"
+                          >
+                            {BLOCK_FONT_FAMILY_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {selectedBlock.type !== 'heading' && (
+                          <div>
+                            <label className="block text-[12px] text-[#50575e] mb-1">
+                              Ukuran Huruf
+                            </label>
+                            <select
+                              value={selectedBlock.fontSize || 'base'}
+                              onChange={(e) =>
+                                updateBlock(selectedBlock.id, {
+                                  fontSize: e.target.value as BlockFontSize,
+                                })
+                              }
+                              className="w-full h-8 px-2 border border-[#8c8f94] rounded-[2px]"
+                            >
+                              {BLOCK_FONT_SIZE_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[12px] text-[#50575e]">
+                              Warna Teks Blok
+                            </span>
+                            {selectedBlock.textColor && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateBlock(selectedBlock.id, { textColor: undefined })
+                                }
+                                className="text-[11px] text-[#2271b1] hover:underline cursor-pointer"
+                              >
+                                Reset
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {TEXT_COLOR_PRESETS.map((c) => (
+                              <button
+                                key={c.value}
+                                type="button"
+                                onClick={() =>
+                                  updateBlock(selectedBlock.id, { textColor: c.value })
+                                }
+                                title={c.label}
+                                className={`w-6 h-6 rounded-[2px] border cursor-pointer ${
+                                  selectedBlock.textColor === c.value
+                                    ? 'ring-2 ring-[#2271b1] border-white'
+                                    : 'border-[#c3c4c7]'
+                                }`}
+                                style={{ backgroundColor: c.value }}
+                              />
+                            ))}
+                            <input
+                              type="color"
+                              value={selectedBlock.textColor || '#1d2327'}
+                              onChange={(e) =>
+                                updateBlock(selectedBlock.id, { textColor: e.target.value })
+                              }
+                              title="Pilih warna teks kustom"
+                              className="w-7 h-6 border border-[#c3c4c7] rounded cursor-pointer"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[12px] text-[#50575e]">
+                              Warna Latar Blok
+                            </span>
+                            {selectedBlock.backgroundColor && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateBlock(selectedBlock.id, {
+                                    backgroundColor: undefined,
+                                  })
+                                }
+                                className="text-[11px] text-[#2271b1] hover:underline cursor-pointer"
+                              >
+                                Reset
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {HIGHLIGHT_COLOR_PRESETS.map((c) => (
+                              <button
+                                key={c.value}
+                                type="button"
+                                onClick={() =>
+                                  updateBlock(selectedBlock.id, {
+                                    backgroundColor: c.value,
+                                  })
+                                }
+                                title={c.label}
+                                className={`w-6 h-6 rounded-[2px] border cursor-pointer ${
+                                  selectedBlock.backgroundColor === c.value
+                                    ? 'ring-2 ring-[#2271b1] border-[#1d2327]'
+                                    : 'border-[#c3c4c7]'
+                                }`}
+                                style={{ backgroundColor: c.value }}
+                              />
+                            ))}
+                            <input
+                              type="color"
+                              value={selectedBlock.backgroundColor || '#f8fafc'}
+                              onChange={(e) =>
+                                updateBlock(selectedBlock.id, {
+                                  backgroundColor: e.target.value,
+                                })
+                              }
+                              title="Pilih warna latar kustom"
+                              className="w-7 h-6 border border-[#c3c4c7] rounded cursor-pointer"
+                            />
+                          </div>
                         </div>
                       </div>
                     )}

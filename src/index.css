@@ -160,6 +160,40 @@
 }
 
 /* Konten HTML Rich Text & Blok Gutenberg di Halaman Publik */
+.hkbp-rich-input {
+  min-height: 1.5em;
+  word-break: break-word;
+}
+
+.hkbp-rich-input:empty::before {
+  content: attr(data-placeholder);
+  color: #a7aaad;
+  pointer-events: none;
+}
+
+.hkbp-rich-input a,
+.hkbp-prose a {
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.hkbp-rich-input code,
+.hkbp-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+.hkbp-rich-input mark,
+.hkbp-prose mark {
+  padding: 0.05em 0.2em;
+  border-radius: 3px;
+}
+
 .hkbp-prose {
   overflow-wrap: anywhere;
   word-break: break-word;

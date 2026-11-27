@@ -63,23 +63,35 @@ export interface GalleryItem {
   caption?: string;
 }
 
+export type BlockFontFamily = 'default' | 'serif' | 'sans' | 'mono';
+export type BlockFontSize = 'sm' | 'base' | 'lg' | 'xl' | '2xl';
+export type BlockTextAlign = 'left' | 'center' | 'right' | 'justify';
+
 export interface ColumnItem {
   heading?: string;
+  headingHtml?: string;
   body: string;
+  bodyHtml?: string;
 }
 
 export interface GutenbergBlock {
   id: string;
   type: BlockType;
   content?: string;
+  contentHtml?: string;
   level?: 2 | 3 | 4;
-  align?: 'left' | 'center' | 'right';
+  align?: BlockTextAlign;
+  fontFamily?: BlockFontFamily;
+  fontSize?: BlockFontSize;
+  textColor?: string;
+  backgroundColor?: string;
   url?: string;
   alt?: string;
   caption?: string;
   mediaId?: string;
   ordered?: boolean;
   items?: string[];
+  itemsHtml?: string[];
   citation?: string;
   buttonText?: string;
   buttonUrl?: string;

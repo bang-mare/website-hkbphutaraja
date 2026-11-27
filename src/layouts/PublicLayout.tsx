@@ -18,6 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { hasCapability } from '../lib/roles';
 import {
   DEFAULT_HEADER_MENU_ITEMS,
+  DEFAULT_PROFILE_SUBMENU_ITEMS,
   DEFAULT_SITE_OPTIONS,
   DEFAULT_WIDGETS,
   DEFAULT_WIJK,
@@ -37,12 +38,14 @@ interface PublicSiteContextValue {
   options: SiteOptionsMap;
   widgets: WidgetRecord[];
   wijkList: Wijk[];
+  updateSiteOptions: (next: SiteOptionsMap) => void;
 }
 
 const PublicSiteContext = createContext<PublicSiteContextValue>({
   options: DEFAULT_SITE_OPTIONS,
   widgets: DEFAULT_WIDGETS,
   wijkList: DEFAULT_WIJK,
+  updateSiteOptions: () => {},
 });
 
 export function usePublicSite() {
@@ -65,7 +68,7 @@ export function PublicLayout() {
 
   useEffect(() => {
     setMobileOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -94,9 +97,70 @@ export function PublicLayout() {
 
   const primaryColor = options.theme_primary_color || '#0f294a';
   const accentColor = options.theme_accent_color || '#d97706';
-  const topMenuItems = headerItems.filter((i) => !i.parent_id);
+
+  // Pastikan menu Profil (/tentang-kami atau /profil) selalu memiliki 4 anak menu tab bila belum dikustomisasi di DB
+  const resolvedHeaderItems = React.useMemo(() => {
+    const items = headerItems.map((item) => {
+      const normalizedUrl = item.url.split('?')[0].replace(/\/+$/, '') || '/';
+      if (!item.parent_id && (normalizedUrl === '/tentang-kami' || normalizedUrl === '/profil')) {
+        return {
+          ...item,
+          title: item.title === 'Tentang Kami' ? 'Profil' : item.title,
+        };
+      }
+      return item;
+    });
+
+    const profileParent = items.find((item) => {
+      const normalizedUrl = item.url.split('?')[0].replace(/\/+$/, '') || '/';
+      return !item.parent_id && (normalizedUrl === '/tentang-kami' || normalizedUrl === '/profil');
+    });
+
+    if (profileParent) {
+      const hasExistingChildren = items.some((item) => item.parent_id === profileParent.id);
+      if (!hasExistingChildren) {
+        return [
+          ...items,
+          ...DEFAULT_PROFILE_SUBMENU_ITEMS.map((sub) => ({
+            ...sub,
+            menu_id: profileParent.menu_id,
+            parent_id: profileParent.id,
+          })),
+        ];
+      }
+    }
+
+    return items;
+  }, [headerItems]);
+
+  const topMenuItems = resolvedHeaderItems.filter((i) => !i.parent_id);
   const getChildren = (parentId: string) =>
-    headerItems.filter((i) => i.parent_id === parentId);
+    resolvedHeaderItems
+      .filter((i) => i.parent_id === parentId)
+      .sort((a, b) => a.sort_order - b.sort_order);
+
+  const isNavItemActive = (url: string) => {
+    const cleanTarget = url.split('?')[0].replace(/\/+$/, '') || '/';
+    const cleanPath = location.pathname.replace(/\/+$/, '') || '/';
+    if (cleanTarget === '/') return cleanPath === '/';
+    if (cleanTarget === '/tentang-kami' || cleanTarget === '/profil') {
+      return cleanPath === '/tentang-kami' || cleanPath === '/profil';
+    }
+    return cleanPath.startsWith(cleanTarget);
+  };
+
+  const isSubmenuItemActive = (url: string) => {
+    const [targetPathRaw, targetQuery] = url.split('?');
+    const targetPath = targetPathRaw.replace(/\/+$/, '') || '/';
+    const cleanPath = location.pathname.replace(/\/+$/, '') || '/';
+    const onProfilePage = cleanPath === '/tentang-kami' || cleanPath === '/profil';
+    if ((targetPath === '/tentang-kami' || targetPath === '/profil') && onProfilePage) {
+      const currentTab = new URLSearchParams(location.search).get('tab') || 'sejarah';
+      const targetTab = new URLSearchParams(targetQuery || '').get('tab') || 'sejarah';
+      return currentTab === targetTab;
+    }
+    return cleanPath === targetPath && location.search === (targetQuery ? `?${targetQuery}` : '');
+  };
 
   // Konfigurasi data footer (isi URL media sosial di bawah ini; platform yang kosong tidak ditampilkan)
   const FOOTER_CONFIG = {
@@ -151,12 +215,18 @@ export function PublicLayout() {
   ].filter((item) => Boolean(item.url));
 
   // Susun tautan Peta Situs agar genap (8 item) dan seimbang dalam 2 kolom
-  const baseSitemapItems =
-    footerItems.length > 0 ? footerItems : DEFAULT_HEADER_MENU_ITEMS;
+  const baseSitemapItems = (
+    footerItems.length > 0 ? footerItems : DEFAULT_HEADER_MENU_ITEMS
+  ).filter((item) => !item.parent_id);
   const sitemapLinks = (() => {
     const list = baseSitemapItems.map((item) => ({
       id: item.id,
-      title: item.title === 'Warta Jemaat' || item.title === 'Warta' ? 'Warta Jemaat' : item.title,
+      title:
+        item.title === 'Warta Jemaat' || item.title === 'Warta'
+          ? 'Warta Jemaat'
+          : item.url === '/tentang-kami' && item.title === 'Profil'
+            ? 'Tentang Kami'
+            : item.title,
       url: item.url,
     }));
     const hasPelayanan = list.some((i) => i.title.toLowerCase() === 'pelayanan');
@@ -165,7 +235,7 @@ export function PublicLayout() {
       const pelayananItem = {
         id: 'footer-pelayanan',
         title: 'Pelayanan',
-        url: '/tentang-kami',
+        url: '/tentang-kami?tab=pimpinan',
       };
       if (kontakIdx >= 0) {
         list.splice(kontakIdx, 0, pelayananItem);
@@ -177,7 +247,9 @@ export function PublicLayout() {
   })();
 
   return (
-    <PublicSiteContext.Provider value={{ options, widgets, wijkList }}>
+    <PublicSiteContext.Provider
+      value={{ options, widgets, wijkList, updateSiteOptions: setOptions }}
+    >
       <div className="min-h-dvh bg-[#f8fafc] text-[#0f172a] flex flex-col">
         {/* Top Navigation Bar (White Navbar, Navy Brand, Gold Hover/Active Underline) */}
         <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-[#e2e8f0] pt-[env(safe-area-inset-top)]">
@@ -211,10 +283,7 @@ export function PublicLayout() {
               {topMenuItems.map((item) => {
                 const children = getChildren(item.id);
                 const isExternal = item.url.startsWith('http');
-                const active =
-                  item.url === '/'
-                    ? location.pathname === '/'
-                    : location.pathname.startsWith(item.url);
+                const active = isNavItemActive(item.url);
 
                 const linkStyle = active
                   ? { color: primaryColor, borderBottomColor: accentColor }
@@ -235,16 +304,23 @@ export function PublicLayout() {
                         <span>{item.title}</span>
                         <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
                       </Link>
-                      <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full min-w-[220px] bg-white border border-[#e2e8f0] rounded-[10px] shadow-[0_12px_28px_rgba(15,41,74,0.12)] p-1.5 z-40">
-                        {children.map((ch) => (
-                          <Link
-                            key={ch.id}
-                            to={ch.url}
-                            className="flex items-center min-h-[40px] px-3 py-2 text-[13.5px] text-slate-700 rounded-md hover:bg-slate-100 hover:text-[#0f294a]"
-                          >
-                            {ch.title}
-                          </Link>
-                        ))}
+                      <div className="hidden group-hover:block group-focus-within:block absolute left-0 top-full min-w-[250px] bg-white border border-[#e2e8f0] rounded-[10px] shadow-[0_12px_28px_rgba(15,41,74,0.12)] p-1.5 z-40">
+                        {children.map((ch) => {
+                          const childActive = isSubmenuItemActive(ch.url);
+                          return (
+                            <Link
+                              key={ch.id}
+                              to={ch.url}
+                              className={`flex items-center min-h-[40px] px-3 py-2 text-[13.5px] rounded-md transition-colors ${
+                                childActive
+                                  ? 'bg-[#0f294a] text-white font-semibold'
+                                  : 'text-slate-700 hover:bg-slate-100 hover:text-[#0f294a]'
+                              }`}
+                            >
+                              {ch.title}
+                            </Link>
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -313,10 +389,7 @@ export function PublicLayout() {
                 className="lg:hidden relative z-40 border-t border-slate-200 bg-white px-4 sm:px-6 py-3 space-y-1 max-h-[calc(100dvh-4rem)] overflow-y-auto shadow-lg"
               >
                 {topMenuItems.map((item) => {
-                  const active =
-                    item.url === '/'
-                      ? location.pathname === '/'
-                      : location.pathname.startsWith(item.url);
+                  const active = isNavItemActive(item.url);
                   const isExternal = item.url.startsWith('http');
                   return (
                     <div key={item.id}>
@@ -343,16 +416,23 @@ export function PublicLayout() {
                           {item.title}
                         </Link>
                       )}
-                      {getChildren(item.id).map((ch) => (
-                        <Link
-                          key={ch.id}
-                          to={ch.url}
-                          onClick={() => setMobileOpen(false)}
-                          className="flex items-center min-h-[44px] pl-6 pr-2 rounded-lg text-[15px] text-slate-600 hover:bg-slate-50 hover:text-[#0f294a]"
-                        >
-                          {ch.title}
-                        </Link>
-                      ))}
+                      {getChildren(item.id).map((ch) => {
+                        const childActive = isSubmenuItemActive(ch.url);
+                        return (
+                          <Link
+                            key={ch.id}
+                            to={ch.url}
+                            onClick={() => setMobileOpen(false)}
+                            className={`flex items-center min-h-[44px] pl-6 pr-3 rounded-lg text-[15px] transition-colors ${
+                              childActive
+                                ? 'font-semibold text-[#0f294a] bg-slate-50'
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-[#0f294a]'
+                            }`}
+                          >
+                            {ch.title}
+                          </Link>
+                        );
+                      })}
                     </div>
                   );
                 })}

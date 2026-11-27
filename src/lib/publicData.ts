@@ -1,6 +1,7 @@
 import { isSupabaseConfigured, supabase } from './supabase';
 import { getMediaProxyUrl } from './mediaClient';
 import type {
+  ChurchProfileData,
   HomepageSectionConfig,
   HomepageSectionId,
   IbadahMinggu,
@@ -130,6 +131,166 @@ export function normalizeHomepageLayout(
   return result;
 }
 
+export const DEFAULT_CHURCH_PROFILE: ChurchProfileData = {
+  eyebrow: 'INFO HURIA · PROFIL GEREJA',
+  page_title: 'Profil & Struktur HKBP Ressort Hutaraja',
+  page_subtitle:
+    'Sejarah penginjilan HKBP & jemaat lokal, visi-misi & konfesi, direktori Parhalado, fungsionaris gereja, serta Huria Pagaran.',
+  sejarah_umum_title: 'Sejarah Singkat HKBP Umum (RMG & I.L. Nommensen)',
+  sejarah_umum_body:
+    'Huria Kristen Batak Protestan (HKBP) lahir dari karya pekabaran Injil di Tanah Batak oleh para penginjil Rhenish Missionary Society (RMG) dari Jerman, yang berpuncak pada penetapan berdirinya HKBP pada 7 Oktober 1861 di Sipirok dan pelayanan Dr. Ingwer Ludwig Nommensen (Apostel ni Halak Batak).',
+  sejarah_lokal_title: 'Sejarah Jemaat Lokal HKBP Ressort Hutaraja',
+  sejarah_lokal_body:
+    'HKBP Ressort Hutaraja (Distrik VI Dairi) berdiri dari semangat persekutuan warga Kristen Batak di wilayah Siempat Nempu, Kabupaten Dairi. Jemaat berkembang melayani 6 Wijk (Letare, Exaudi, Judika, Galatia, Efesus, dan Jeremia) dalam semangat Koinonia, Marturia, dan Diakonia.',
+  visi_title: 'Visi Pelayanan Huria',
+  visi_body:
+    'Menjadi gereja yang inklusif, berakar kuat pada Firman Tuhan, serta menghadirkan damai sejahtera di tengah enam lingkungan (Wijk), gereja pagaran, dan masyarakat Kabupaten Dairi.',
+  misi_items: [
+    'Koinonia (Persekutuan): Memperkuat persekutuan ibadah minggu, PHD Lingkungan di 6 Wijk, serta pembinaan kategorial Sekolah Minggu, Remaja, Naposobulung, Ama, Ina, dan Lansia.',
+    'Marturia (Kesaksian): Memberitakan Injil Kristus melalui pekabaran firman, katekisasi sidi, paduan suara, dan kesaksian hidup warga jemaat di tengah masyarakat.',
+    'Diakonia (Pelayanan Kasih): Menggerakkan kepedulian sosial, kunjungan pastoral keluarga, beasiswa pendidikan, dan pelayanan diakonia yang transparan serta akuntabel.',
+  ],
+  konfesi_title: 'Konfesi HKBP (Pengakuan Iman)',
+  konfesi_body:
+    'Sebagai bagian dari gereja reformasi Lutheran di Indonesia, HKBP Ressort Hutaraja berpegang teguh pada Alkitab (Perjanjian Lama & Perjanjian Baru) sebagai sumber kebenaran tertinggi, tiga Pengakuan Iman Oikumenis (Rasuli, Nicea-Konstantinopel, Athanasius), serta Konfesi HKBP Tahun 1951 dan 1996.',
+  konfesi_points: [
+    'Keselamatan hanya oleh kasih karunia Allah di dalam Yesus Kristus melalui iman (Sola Gratia, Sola Fide, Sola Scriptura).',
+    'Gereja adalah persekutuan orang percaya yang kudus dan am, dipanggil memberitakan firman dan melayani dua sakramen: Baptisan Kudus dan Perjamuan Kudus.',
+    'Pengakuan iman HKBP meneguhkan tanggung jawab orang percaya terhadap keluarga, kebudayaan Batak yang ditransformasi Injil, keadilan sosial, dan pelestarian ciptaan.',
+  ],
+  leaders: [
+    {
+      id: 'ldr-1',
+      role: 'Pendeta Ressort',
+      name: 'Pdt. (Pendeta Ressort Hutaraja)',
+      desc: 'Pemimpin umum ressort, pelayanan firman, sakramen, serta penggembalaan jemaat di induk maupun pagaran.',
+    },
+    {
+      id: 'ldr-2',
+      role: 'Guru Huria',
+      name: 'Gr. (Guru Huria Induk)',
+      desc: 'Pembinaan katekisasi sidi, pengajaran Sekolah Minggu, liturgi jemaat, dan administrasi pelayanan gerejawi.',
+    },
+    {
+      id: 'ldr-3',
+      role: 'Bibelvrouw',
+      name: 'Bvr. (Bibelvrouw Ressort)',
+      desc: 'Pelayanan firman bagi Punguan Ina, kaum perempuan, diakonia sosial, dan kunjungan pastoral keluarga.',
+    },
+    {
+      id: 'ldr-4',
+      role: 'Sekretaris & Bendahara Huria',
+      name: 'St. (Sekretaris / Parartaon)',
+      desc: 'Pengelolaan tata usaha kesekretariatan, registrasi database jemaat, serta pelaporan keuangan yang transparan.',
+    },
+  ],
+  functionaries: [
+    {
+      id: 'fn-1',
+      unit: 'Dewan Koinonia',
+      chairperson: 'Ketua Dewan Koinonia',
+      members: 'Seksi Sekolah Minggu, Remaja, Naposobulung, Parompuan, Ama, dan Lansia',
+      desc: 'Mengkoordinasikan seluruh persekutuan kategorial dan pembinaan kerohanian antar-generasi.',
+    },
+    {
+      id: 'fn-2',
+      unit: 'Dewan Marturia',
+      chairperson: 'Ketua Dewan Marturia',
+      members: 'Seksi Pekabaran Injil & Seksi Musik / Song Leader / Koor',
+      desc: 'Membina pelayanan musik gerejawi, paduan suara, liturgi ibadah, serta pekabaran Injil di lingkungan dan pagaran.',
+    },
+    {
+      id: 'fn-3',
+      unit: 'Dewan Diakonia',
+      chairperson: 'Ketua Dewan Diakonia',
+      members: 'Seksi Diakoni Sosial, Kesehatan, Pendidikan, dan Kemasyarakatan',
+      desc: 'Menyalurkan diakonia duka/sakit, bantuan pendidikan, serta pelayanan kasih bagi jemaat dan warga sekitar.',
+    },
+    {
+      id: 'fn-4',
+      unit: 'Parartaon & Badan Audit Huria',
+      chairperson: 'Ketua Parartaon & Tim Pemeriksa Keuangan',
+      members: 'Majelis Perbendaharaan, Bendahara Huria, dan Tim Audit Internal',
+      desc: 'Menjaga aset gereja, menyusun anggaran tahunan huria, serta mengaudit pembukuan kas jemaat dan sentralisasi.',
+    },
+  ],
+  pagaran: [
+    {
+      id: 'pg-1',
+      name: 'HKBP Hutaraja (Huria Sabungan / Induk)',
+      location: 'Jl. Persada No. 205 Sidikalang / Kec. Siempat Nempu, Kab. Dairi',
+      leader: 'Pdt. Ressort & Majelis Parhalado (6 Wijk)',
+      service_time: 'Minggu Pagi 08.00 WIB · Minggu Siang 10.30 WIB',
+      notes: 'Pusat administrasi dan pelayanan HKBP Ressort Hutaraja Distrik VI Dairi.',
+    },
+    {
+      id: 'pg-2',
+      name: 'HKBP Pagaran I (Gereja Pagaran)',
+      location: 'Wilayah Pelayanan Ressort Hutaraja, Kab. Dairi',
+      leader: 'Uluan Huria & Majelis Sintua Pagaran',
+      service_time: 'Minggu Pagi / Siang 10.00 WIB',
+      notes: 'Melayani jemaat di wilayah pagaran bersama pembinaan berkala dari Pendeta Ressort.',
+    },
+    {
+      id: 'pg-3',
+      name: 'HKBP Pagaran II (Gereja Pagaran)',
+      location: 'Wilayah Pelayanan Ressort Hutaraja, Kab. Dairi',
+      leader: 'Uluan Huria & Majelis Sintua Pagaran',
+      service_time: 'Minggu 10.00 WIB',
+      notes: 'Persekutuan ibadah minggu, Sekolah Minggu, dan PHD lingkungan pagaran.',
+    },
+  ],
+};
+
+export function normalizeChurchProfile(
+  raw?: Partial<ChurchProfileData> | null
+): ChurchProfileData {
+  if (!raw || typeof raw !== 'object') {
+    return {
+      ...DEFAULT_CHURCH_PROFILE,
+      misi_items: [...DEFAULT_CHURCH_PROFILE.misi_items],
+      konfesi_points: [...DEFAULT_CHURCH_PROFILE.konfesi_points],
+      leaders: DEFAULT_CHURCH_PROFILE.leaders.map((item) => ({ ...item })),
+      functionaries: DEFAULT_CHURCH_PROFILE.functionaries.map((item) => ({ ...item })),
+      pagaran: DEFAULT_CHURCH_PROFILE.pagaran.map((item) => ({ ...item })),
+    };
+  }
+
+  return {
+    eyebrow: raw.eyebrow?.trim() || DEFAULT_CHURCH_PROFILE.eyebrow,
+    page_title: raw.page_title?.trim() || DEFAULT_CHURCH_PROFILE.page_title,
+    page_subtitle: raw.page_subtitle?.trim() || DEFAULT_CHURCH_PROFILE.page_subtitle,
+    sejarah_umum_title: raw.sejarah_umum_title?.trim() || DEFAULT_CHURCH_PROFILE.sejarah_umum_title,
+    sejarah_umum_body: raw.sejarah_umum_body?.trim() || DEFAULT_CHURCH_PROFILE.sejarah_umum_body,
+    sejarah_lokal_title: raw.sejarah_lokal_title?.trim() || DEFAULT_CHURCH_PROFILE.sejarah_lokal_title,
+    sejarah_lokal_body: raw.sejarah_lokal_body?.trim() || DEFAULT_CHURCH_PROFILE.sejarah_lokal_body,
+    visi_title: raw.visi_title?.trim() || DEFAULT_CHURCH_PROFILE.visi_title,
+    visi_body: raw.visi_body?.trim() || DEFAULT_CHURCH_PROFILE.visi_body,
+    misi_items:
+      Array.isArray(raw.misi_items) && raw.misi_items.length > 0
+        ? raw.misi_items.filter((m) => typeof m === 'string' && m.trim().length > 0)
+        : [...DEFAULT_CHURCH_PROFILE.misi_items],
+    konfesi_title: raw.konfesi_title?.trim() || DEFAULT_CHURCH_PROFILE.konfesi_title,
+    konfesi_body: raw.konfesi_body?.trim() || DEFAULT_CHURCH_PROFILE.konfesi_body,
+    konfesi_points:
+      Array.isArray(raw.konfesi_points) && raw.konfesi_points.length > 0
+        ? raw.konfesi_points.filter((p) => typeof p === 'string' && p.trim().length > 0)
+        : [...DEFAULT_CHURCH_PROFILE.konfesi_points],
+    leaders:
+      Array.isArray(raw.leaders) && raw.leaders.length > 0
+        ? raw.leaders
+        : DEFAULT_CHURCH_PROFILE.leaders.map((item) => ({ ...item })),
+    functionaries:
+      Array.isArray(raw.functionaries) && raw.functionaries.length > 0
+        ? raw.functionaries
+        : DEFAULT_CHURCH_PROFILE.functionaries.map((item) => ({ ...item })),
+    pagaran:
+      Array.isArray(raw.pagaran) && raw.pagaran.length > 0
+        ? raw.pagaran
+        : DEFAULT_CHURCH_PROFILE.pagaran.map((item) => ({ ...item })),
+  };
+}
+
 export const DEFAULT_SITE_OPTIONS: SiteOptionsMap = {
   site_title: 'HKBP Ressort Hutaraja',
   site_tagline: 'Distrik VI Dairi — Huria Kristen Batak Protestan',
@@ -164,6 +325,7 @@ export const DEFAULT_SITE_OPTIONS: SiteOptionsMap = {
     text: 'Hendaklah kamu berakar di dalam Dia dan dibangun di atas Dia, hendaklah kamu bertambah teguh dalam iman yang telah diajarkan kepadamu, dan hendaklah hatimu melimpah dengan syukur.',
   },
   homepage_layout: DEFAULT_HOMEPAGE_LAYOUT,
+  church_profile: DEFAULT_CHURCH_PROFILE,
 };
 
 export const DEFAULT_WIJK: Wijk[] = [
@@ -223,9 +385,17 @@ export const DEFAULT_WIJK: Wijk[] = [
   },
 ];
 
+export const DEFAULT_PROFILE_SUBMENU_ITEMS: MenuItemRecord[] = [
+  { id: 'dm-2-sejarah', menu_id: 'default', parent_id: 'dm-2', title: 'Sejarah', item_type: 'custom', object_id: null, url: '/tentang-kami?tab=sejarah', target: '_self', sort_order: 1, created_at: '', updated_at: '' },
+  { id: 'dm-2-visi-misi', menu_id: 'default', parent_id: 'dm-2', title: 'Visi, Misi & Konfesi', item_type: 'custom', object_id: null, url: '/tentang-kami?tab=visi-misi', target: '_self', sort_order: 2, created_at: '', updated_at: '' },
+  { id: 'dm-2-pimpinan', menu_id: 'default', parent_id: 'dm-2', title: 'Pimpinan, Sintua & Fungsionaris', item_type: 'custom', object_id: null, url: '/tentang-kami?tab=pimpinan', target: '_self', sort_order: 3, created_at: '', updated_at: '' },
+  { id: 'dm-2-pagaran', menu_id: 'default', parent_id: 'dm-2', title: 'Huria Pagaran', item_type: 'custom', object_id: null, url: '/tentang-kami?tab=huria-pagaran', target: '_self', sort_order: 4, created_at: '', updated_at: '' },
+];
+
 export const DEFAULT_HEADER_MENU_ITEMS: MenuItemRecord[] = [
   { id: 'dm-1', menu_id: 'default', parent_id: null, title: 'Beranda', item_type: 'custom', object_id: null, url: '/', target: '_self', sort_order: 1, created_at: '', updated_at: '' },
-  { id: 'dm-2', menu_id: 'default', parent_id: null, title: 'Tentang Kami', item_type: 'custom', object_id: null, url: '/tentang-kami', target: '_self', sort_order: 2, created_at: '', updated_at: '' },
+  { id: 'dm-2', menu_id: 'default', parent_id: null, title: 'Profil', item_type: 'custom', object_id: null, url: '/tentang-kami', target: '_self', sort_order: 2, created_at: '', updated_at: '' },
+  ...DEFAULT_PROFILE_SUBMENU_ITEMS,
   { id: 'dm-3', menu_id: 'default', parent_id: null, title: 'Jadwal Ibadah', item_type: 'custom', object_id: null, url: '/jadwal-ibadah', target: '_self', sort_order: 3, created_at: '', updated_at: '' },
   { id: 'dm-4', menu_id: 'default', parent_id: null, title: 'Warta Jemaat', item_type: 'custom', object_id: null, url: '/warta', target: '_self', sort_order: 4, created_at: '', updated_at: '' },
   { id: 'dm-8', menu_id: 'default', parent_id: null, title: 'Data Jemaat', item_type: 'custom', object_id: null, url: '/data-jemaat', target: '_self', sort_order: 5, created_at: '', updated_at: '' },

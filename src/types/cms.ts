@@ -271,6 +271,49 @@ export interface HomepageSectionConfig {
   variant?: 'split' | 'centered' | 'banner' | 'compact';
 }
 
+export interface ChurchProfileLeader {
+  id: string;
+  role: string;
+  name: string;
+  desc: string;
+}
+
+export interface ChurchProfileFunctionary {
+  id: string;
+  unit: string;
+  chairperson: string;
+  members: string;
+  desc: string;
+}
+
+export interface HuriaPagaranItem {
+  id: string;
+  name: string;
+  location: string;
+  leader: string;
+  service_time: string;
+  notes: string;
+}
+
+export interface ChurchProfileData {
+  eyebrow?: string;
+  page_title?: string;
+  page_subtitle?: string;
+  sejarah_umum_title: string;
+  sejarah_umum_body: string;
+  sejarah_lokal_title: string;
+  sejarah_lokal_body: string;
+  visi_title: string;
+  visi_body: string;
+  misi_items: string[];
+  konfesi_title: string;
+  konfesi_body: string;
+  konfesi_points: string[];
+  leaders: ChurchProfileLeader[];
+  functionaries: ChurchProfileFunctionary[];
+  pagaran: HuriaPagaranItem[];
+}
+
 export interface SiteOptionsMap {
   site_title: string;
   site_tagline: string;
@@ -296,6 +339,7 @@ export interface SiteOptionsMap {
   church_phone?: string;
   daily_verse: { reference: string; text: string };
   homepage_layout?: HomepageSectionConfig[];
+  church_profile?: ChurchProfileData;
 }
 
 export interface JemaatRecord {

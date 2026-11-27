@@ -57,6 +57,7 @@ export default function App() {
             <Route element={<PublicLayout />}>
               <Route path="/" element={<PublicHomePage />} />
               <Route path="/tentang-kami" element={<AboutPage />} />
+              <Route path="/profil" element={<AboutPage />} />
               <Route path="/jadwal-ibadah" element={<SchedulePublicPage />} />
               <Route path="/warta" element={<WartaPublicPage />} />
               <Route path="/warta/:slug" element={<WartaPublicPage />} />

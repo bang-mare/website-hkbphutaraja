@@ -713,7 +713,7 @@ export function PublicHomePage() {
                   </h2>
                 </div>
                 <Link
-                  to="/tentang-kami"
+                  to="/tentang-kami?tab=pimpinan"
                   className="inline-flex items-center min-h-[44px] sm:min-h-0 text-[15px] font-semibold hover:underline"
                   style={{ color: primaryColor }}
                 >

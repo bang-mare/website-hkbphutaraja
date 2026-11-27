@@ -22,6 +22,9 @@ export const DEFAULT_HOMEPAGE_LAYOUT: HomepageSectionConfig[] = [
   {
     id: 'hero',
     enabled: true,
+    subtitle: 'Distrik VI Dairi · Huria Kristen Batak Protestan',
+    description:
+      'Melayani persekutuan (Koinonia), kesaksian (Marturia), dan pelayanan kasih (Diakonia) bagi seluruh ruas ni huria yang tersebar di enam lingkungan (Wijk) pelayanan.',
     variant: 'split',
   },
   {
@@ -116,6 +119,8 @@ export function normalizeHomepageLayout(
       enabled: typeof item.enabled === 'boolean' ? item.enabled : base.enabled,
       title: typeof item.title === 'string' ? item.title : base.title,
       subtitle: typeof item.subtitle === 'string' ? item.subtitle : base.subtitle,
+      description:
+        typeof item.description === 'string' ? item.description : base.description,
       columns: validCols,
       limit: validLimit,
       variant: validVariant,

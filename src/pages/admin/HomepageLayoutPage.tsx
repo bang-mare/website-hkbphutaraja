@@ -25,6 +25,7 @@ interface SectionDescriptor {
   description: string;
   hasTitle?: boolean;
   hasSubtitle?: boolean;
+  hasDescription?: boolean;
   columnOptions?: Array<1 | 2 | 3 | 4>;
   limitRange?: { min: number; max: number; label: string };
   variantOptions?: Array<{ value: NonNullable<HomepageSectionConfig['variant']>; label: string }>;
@@ -34,6 +35,9 @@ const SECTION_META: Record<HomepageSectionId, SectionDescriptor> = {
   hero: {
     name: 'Hero & Ayat Renungan',
     description: 'Banner utama identitas huria, ayat renungan harian, tombol aksi, dan kartu ibadah terdekat.',
+    hasSubtitle: true,
+    hasTitle: true,
+    hasDescription: true,
     variantOptions: [
       { value: 'split', label: 'Kiri-Kanan (Teks + Kartu Ibadah & Foto)' },
       { value: 'centered', label: 'Terpusat (Teks & Ayat di Tengah)' },
@@ -421,10 +425,31 @@ export function HomepageLayoutPage() {
                           <input
                             type="text"
                             value={item.title || ''}
+                            placeholder={
+                              item.id === 'hero'
+                                ? 'Kosongkan untuk pakai Judul Situs'
+                                : undefined
+                            }
                             onChange={(e) =>
                               updateItem(item.id, { title: e.target.value })
                             }
                             className="w-full h-8 px-2.5 bg-white border border-[#8c8f94] rounded-[3px]"
+                          />
+                        </div>
+                      )}
+
+                      {meta.hasDescription && (
+                        <div className="sm:col-span-2">
+                          <label className="block font-medium text-[#1d2327] mb-1">
+                            Teks Deskripsi
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={item.description || ''}
+                            onChange={(e) =>
+                              updateItem(item.id, { description: e.target.value })
+                            }
+                            className="w-full p-2.5 bg-white border border-[#8c8f94] rounded-[3px] leading-relaxed"
                           />
                         </div>
                       )}

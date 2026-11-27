@@ -129,6 +129,13 @@ export function PublicHomePage() {
     switch (section.id) {
       case 'hero': {
         const isCentered = section.variant === 'centered';
+        const heroEyebrow =
+          section.subtitle?.trim() || 'Distrik VI Dairi · Huria Kristen Batak Protestan';
+        const heroHeading = section.title?.trim() || options.site_title;
+        const heroDescription =
+          section.description?.trim() ||
+          'Melayani persekutuan (Koinonia), kesaksian (Marturia), dan pelayanan kasih (Diakonia) bagi seluruh ruas ni huria yang tersebar di enam lingkungan (Wijk) pelayanan.';
+
         return (
           <section
             key="hero"
@@ -144,13 +151,13 @@ export function PublicHomePage() {
             {isCentered ? (
               <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
                 <p className="text-xs uppercase tracking-[0.14em] font-semibold text-[#fbbf24] mb-2">
-                  Distrik VI Dairi &middot; Huria Kristen Batak Protestan
+                  {heroEyebrow}
                 </p>
                 <h1 className="font-display heading-hero font-bold text-white tracking-tight mb-3 [text-wrap:balance]">
-                  {options.site_title}
+                  {heroHeading}
                 </h1>
                 <p className="text-base text-white/85 leading-relaxed max-w-2xl mb-4">
-                  Melayani persekutuan (Koinonia), kesaksian (Marturia), dan pelayanan kasih (Diakonia) bagi seluruh ruas ni huria yang tersebar di enam lingkungan (Wijk) pelayanan.
+                  {heroDescription}
                 </p>
                 <div
                   className="w-16 h-[2px] mb-5"
@@ -190,13 +197,13 @@ export function PublicHomePage() {
                 {/* Kolom Kiri: Identitas, Visi & Ayat Renungan */}
                 <div className="lg:col-span-7 flex flex-col justify-center min-w-0">
                   <p className="text-xs uppercase tracking-[0.14em] font-semibold text-[#fbbf24] mb-2">
-                    Distrik VI Dairi &middot; Huria Kristen Batak Protestan
+                    {heroEyebrow}
                   </p>
                   <h1 className="font-display heading-hero font-bold text-white tracking-tight mb-3 [text-wrap:balance]">
-                    {options.site_title}
+                    {heroHeading}
                   </h1>
                   <p className="text-base text-white/85 leading-relaxed max-w-2xl mb-4">
-                    Melayani persekutuan (Koinonia), kesaksian (Marturia), dan pelayanan kasih (Diakonia) bagi seluruh ruas ni huria yang tersebar di enam lingkungan (Wijk) pelayanan.
+                    {heroDescription}
                   </p>
                   <div
                     className="w-16 h-[2px] mb-5"

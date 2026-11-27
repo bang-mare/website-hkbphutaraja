@@ -266,6 +266,7 @@ export interface HomepageSectionConfig {
   enabled: boolean;
   title?: string;
   subtitle?: string;
+  description?: string;
   columns?: 1 | 2 | 3 | 4;
   limit?: number;
   variant?: 'split' | 'centered' | 'banner' | 'compact';
